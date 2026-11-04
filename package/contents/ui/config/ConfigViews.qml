@@ -16,8 +16,6 @@ import "../lib/Base64Compat.js" as Base64Compat
 ConfigPage {
 	id: page
 
-	readonly property bool agendaMode: page.configBridge.read("popupMode", "classic") === 'classic'
-
 	ColumnLayout {
 		Layout.fillWidth: true
 		spacing: 0
@@ -306,7 +304,7 @@ ConfigPage {
 			FormCard.FormDelegateSeparator {}
 			FormConfigSwitch {
 				text: i18n("Weather")
-				description: i18n("Forecast in the day headers and, in the Day view, a weather panel.")
+				description: i18n("The forecast in the Week view's day headers, on each Agenda day, and the weather panel of the Day view and the Agenda.")
 				configKey: 'weatherShowInViews'
 			}
 			FormCard.FormDelegateSeparator {}
@@ -317,7 +315,7 @@ ConfigPage {
 					spacing: Kirigami.Units.smallSpacing
 					QQC2.Label {
 						Layout.fillWidth: true
-						text: i18n("Day view shows")
+						text: i18n("Day view and Agenda show")
 						textFormat: Text.PlainText
 					}
 					Flow {
@@ -326,7 +324,7 @@ ConfigPage {
 						Repeater {
 							model: [
 								{ key: 'dayShowMiniMonth', text: i18n("Small calendar") },
-								{ key: 'dayShowUpNext', text: i18n("Up next") },
+								{ key: 'dayShowUpNext', text: i18n("Up next (Day view)") }, // The Agenda is what's next
 								{ key: 'dayShowMoon', text: i18n("Moon"), off: true }, // Off by default
 								{ key: 'dayShowWeather', text: i18n("Weather") },
 								{ key: 'dayShowTasks', text: i18n("Tasks") },
@@ -358,13 +356,11 @@ ConfigPage {
 			}
 		}
 
-		//--- Agenda (classic mode only)
+		//--- Agenda (shown also when it isn't the default view: its tab opens it)
 		FormCard.FormHeader {
-			visible: page.agendaMode
 			title: i18n("Agenda")
 		}
 		FormCard.FormCard {
-			visible: page.agendaMode
 			FormConfigSwitch {
 				text: i18n("Event descriptions")
 				configKey: 'agendaShowEventDescription'
@@ -378,45 +374,6 @@ ConfigPage {
 			FormConfigSwitch {
 				text: i18n("Multi-day events on every day")
 				configKey: 'agendaBreakupMultiDayEvents'
-			}
-			FormCard.FormDelegateSeparator {}
-			FormConfigSwitch {
-				text: i18n("Meteogram above the agenda")
-				configKey: 'widgetShowMeteogram'
-			}
-			FormCard.FormDelegateSeparator {}
-			FormConfigSwitch {
-				id: widgetShowTimer
-				text: i18n("Timer above the agenda")
-				configKey: 'widgetShowTimer'
-			}
-			FormCard.FormDelegateSeparator {
-				visible: widgetShowTimer.checked
-			}
-			FormCard.AbstractFormDelegate {
-				visible: widgetShowTimer.checked
-				background: null
-				contentItem: RowLayout {
-					spacing: Kirigami.Units.largeSpacing
-					QQC2.Label {
-						text: i18n("Timer sound")
-					}
-					ConfigSound {
-						Layout.fillWidth: true
-						label: ""
-						sfxEnabledKey: 'timerSfxEnabled'
-						sfxPathKey: 'timerSfxFilepath'
-						sfxPathDefaultValue: '/usr/share/sounds/ocean/stereo/alarm-clock-elapsed.oga'
-					}
-				}
-			}
-			FormCard.FormDelegateSeparator {}
-			FormConfigSpin {
-				label: i18n("Meteogram / timer height")
-				configKey: 'topRowHeight'
-				suffix: i18n(" px")
-				from: 50
-				to: 3000
 			}
 		}
 

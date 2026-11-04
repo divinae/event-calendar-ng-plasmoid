@@ -16,16 +16,6 @@ KCM.SimpleKCM {
 	property var cfg_debuggingDefault
 	property var cfg_pin
 	property var cfg_pinDefault
-	property var cfg_widgetShowMeteogram
-	property var cfg_widgetShowMeteogramDefault
-	property var cfg_widgetShowTimer
-	property var cfg_widgetShowTimerDefault
-	property var cfg_timerSfxEnabled
-	property var cfg_timerSfxEnabledDefault
-	property var cfg_timerSfxFilepath
-	property var cfg_timerSfxFilepathDefault
-	property var cfg_timerRepeats
-	property var cfg_timerRepeatsDefault
 	property var cfg_clockFontFamily
 	property var cfg_clockFontFamilyDefault
 	property var cfg_clockTimeFormat1
@@ -50,8 +40,6 @@ KCM.SimpleKCM {
 	property var cfg_clockMouseWheelDownDefault
 	property var cfg_showBackground
 	property var cfg_showBackgroundDefault
-	property var cfg_topRowHeight
-	property var cfg_topRowHeightDefault
 	property var cfg_rightColumnWidth
 	property var cfg_rightColumnWidthDefault
 	property var cfg_v73Migration
@@ -338,6 +326,8 @@ KCM.SimpleKCM {
 	property var cfg_dayShowTasksDefault
 	property var cfg_dayAllDayTiles
 	property var cfg_dayAllDayTilesDefault
+	property var cfg_glanceShareEvents
+	property var cfg_glanceShareEventsDefault
 	// END AUTO CFG PROPS
 
 	property QtObject configBridge: QtObject {

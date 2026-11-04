@@ -36,12 +36,41 @@ PlasmoidItem {
 	property alias agendaModel: agendaModel
 	
 	TimeModel { id: timeModel }
-	TimerModel { id: timerModel }
 	EventCache { id: eventCache }
 	EventModel { id: eventModel }
 	UpcomingEvents {
 		id: upcomingEvents
 		onMeetingAlertRequested: function(eventItem) { root.showMeetingAlert(eventItem) }
+	}
+	// Today's and tomorrow's events for Glance (the panel widget), over D-Bus
+	GlancePublisher {
+		upcomingEvents: upcomingEvents
+		eventModel: eventModel
+		logic: logic
+		weatherByDay: root.weatherByDay
+	}
+
+	// An event's details in the popup (Glance, on a click on its line): the day it's on, then its
+	// card (or the browser, with "Open events in the browser"). Called in-process by id.
+	function showEvent(calendarId, eventId) {
+		var eventItem = upcomingEvents.getEvent(String(calendarId), String(eventId))
+			|| eventModel.getEvent(String(calendarId), String(eventId))
+		root.expanded = true
+		if (!eventItem) {
+			return
+		}
+		Qt.callLater(function() {
+			var popupItem = root.fullRepresentationItem
+			if (!popupItem) {
+				return
+			}
+			if (typeof popupItem.goToDay === 'function' && eventItem.startDateTime) {
+				popupItem.goToDay(eventItem.startDateTime)
+			}
+			if (typeof popupItem.activateEvent === 'function') {
+				popupItem.activateEvent(eventItem)
+			}
+		})
 	}
 
 	// The popup opened in a view (a notification's Show All / Show Tasks): after it opens in the
