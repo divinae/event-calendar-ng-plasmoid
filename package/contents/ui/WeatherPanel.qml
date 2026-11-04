@@ -21,9 +21,61 @@ ColumnLayout {
 	property bool isToday: true // false: the view shows another day
 	property bool isSetup: true
 	property string locationName: ""
-	// Its place (WeatherApi.place): the chart's nights by the sun there. NaN: by the hour.
+	// Its place (WeatherApi.place): the chart's nights by the sun there, sunrise and sunset. NaN: by
+	// the hour, no sunrise and sunset.
 	property real latitude: NaN
 	property real longitude: NaN
+	property date day: new Date() // The shown day: its sunrise and sunset
+	// The day's start: the day passed can be the current time, ticking (the same day: no change).
+	readonly property double dayStart: new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime()
+	readonly property var sun: Moon.sunRiseSet(new Date(dayStart), latitude, longitude)
+	// Sunrise and sunset beside the temperature, above the high and the low; a narrow card: below.
+	readonly property bool sunBeside: width >= Kirigami.Units.gridUnit * 14
+
+	// Sunrise and sunset (Moon.sunRiseSet) as the high and the low ("↑ 10°"): the Weather Icons glyph
+	// at the text's size, then the time; sunset dimmed as the low (lowOpacity).
+	component SunTimes: RowLayout {
+		id: sunTimes
+		property var sun: null
+		property real lowOpacity: 1
+		readonly property bool crossing: !!sun && (!!sun.rise || !!sun.set)
+		function timeText(date) {
+			return date ? Shared.formatTime(date, appletConfig.timeFormat) : ""
+		}
+		spacing: Kirigami.Units.largeSpacing
+		Accessible.name: crossing
+			? [sun.rise ? i18nc("%1 = time", "Sunrise %1", timeText(sun.rise)) : "",
+				sun.set ? i18nc("%1 = time", "Sunset %1", timeText(sun.set)) : ""].filter(Boolean).join(" · ")
+			: polarLabel.text
+		Repeater {
+			model: sunTimes.crossing ? [
+				{ glyph: "\uf051", at: sunTimes.sun.rise, opacity: 1 }, // wi-sunrise
+				{ glyph: "\uf052", at: sunTimes.sun.set, opacity: sunTimes.lowOpacity }, // wi-sunset
+			].filter(function(entry) { return !!entry.at }) : []
+			Row {
+				spacing: Math.max(2, Math.round(timeLabel.font.pixelSize / 4)) // A space
+				opacity: modelData.opacity
+				PlasmaComponents3.Label {
+					anchors.baseline: timeLabel.baseline
+					font.family: "weathericons"
+					font.pointSize: Kirigami.Theme.defaultFont.pointSize
+					text: modelData.glyph
+				}
+				PlasmaComponents3.Label {
+					id: timeLabel
+					textFormat: Text.PlainText
+					text: sunTimes.timeText(modelData.at)
+				}
+			}
+		}
+		// Close to the pole
+		PlasmaComponents3.Label {
+			id: polarLabel
+			visible: !sunTimes.crossing
+			textFormat: Text.PlainText
+			text: sunTimes.sun && sunTimes.sun.alwaysUp ? i18nc("the sun up all day", "Midnight sun") : i18nc("the sun down all day", "Polar night")
+		}
+	}
 	property string forecastUrl: "" // The full forecast on the web (WeatherApi.forecastPageUrl): the location opens it
 	property bool compact: false // One row above the grid when the popup is narrow
 	// Sections left out where there's little height (the Day view's right column above the tasks).
@@ -319,10 +371,19 @@ ColumnLayout {
 		// Today: the high and the low, then the rain (when there is any) on a light blue pill with a
 		// drop, on the right, in the room beside the temperature.
 		ColumnLayout {
-			visible: !panel.compact && !!panel.today && panel.isToday
+			readonly property bool todayRange: !!panel.today && panel.isToday
+			visible: !panel.compact && (todayRange || (!!panel.sun && panel.sunBeside))
 			Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 			spacing: Kirigami.Units.smallSpacing
+			// Above the high and the low (room enough): sunrise and sunset.
+			SunTimes {
+				visible: !!panel.sun && panel.sunBeside
+				Layout.alignment: Qt.AlignRight // The rows here lined up on the right
+				sun: panel.sun
+				lowOpacity: panel.dimOpacity * 0.8
+			}
 			RowLayout {
+				visible: parent.todayRange
 				Layout.alignment: Qt.AlignRight
 				spacing: Kirigami.Units.largeSpacing
 				Accessible.name: panel.today ? i18nc("high / low temperature", "High %1 · Low %2", Shared.formatTemp(panel.today.temp.max), Shared.formatTemp(panel.today.temp.min)) : ""
@@ -340,7 +401,7 @@ ColumnLayout {
 				id: rainPill
 				readonly property string rain: panel.today ? panel.precipitationText(panel.today.precipitation) : ""
 				readonly property color tint: appletConfig.darkTheme ? "#7db8ff" : "#1f6fd6"
-				visible: !!rain
+				visible: !!rain && parent.todayRange
 				Layout.alignment: Qt.AlignRight
 				implicitWidth: rainRow.implicitWidth + Kirigami.Units.largeSpacing * 2
 				implicitHeight: rainRow.implicitHeight + Kirigami.Units.smallSpacing * 2
@@ -392,6 +453,13 @@ ColumnLayout {
 			text: panel.today ? i18nc("high / low temperature", "High %1 · Low %2", Shared.formatTemp(panel.today.temp.max), Shared.formatTemp(panel.today.temp.min)) : ""
 			opacity: panel.dimOpacity
 		}
+	}
+	// A narrow card: sunrise and sunset in a row of their own, the conditions keep their room.
+	SunTimes {
+		visible: panel.showData && !panel.compact && !!panel.sun && !panel.sunBeside && (!!panel.current || !!panel.today)
+		Layout.alignment: Qt.AlignRight
+		sun: panel.sun
+		lowOpacity: panel.dimOpacity * 0.8
 	}
 	// Another day: its rain (the high / low are in the heading).
 	PlasmaComponents3.Label {

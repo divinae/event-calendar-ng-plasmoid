@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-03 16:59+0100\n"
+"POT-Creation-Date: 2026-11-04 09:21+0100\n"
 "PO-Revision-Date: 2017-06-10 HO:MI+ZONE\n"
 "Last-Translator: Kepa Badiola <badiol@yahoo.es>\n"
 "Language-Team: Spanish <LL@li.org>\n"
@@ -1391,6 +1391,10 @@ msgid "Islands (cards)"
 msgstr "Islas (tarjetas)"
 
 #: ../contents/ui/config/ConfigViews.qml
+msgid "Islands, translucent cards"
+msgstr "Islas, tarjetas translúcidas"
+
+#: ../contents/ui/config/ConfigViews.qml
 msgid "Flat"
 msgstr "Plano"
 
@@ -1551,7 +1555,7 @@ msgstr "A continuación"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Moon"
-msgstr ""
+msgstr "Luna"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Up next shows"
@@ -3422,92 +3426,92 @@ msgstr[1] "%2, %1 eventos"
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "New moon"
-msgstr ""
+msgstr "Luna nueva"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waxing crescent"
-msgstr ""
+msgstr "Luna creciente"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "First quarter"
-msgstr ""
+msgstr "Cuarto creciente"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waxing gibbous"
-msgstr ""
+msgstr "Gibosa creciente"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Full moon"
-msgstr ""
+msgstr "Luna llena"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waning gibbous"
-msgstr ""
+msgstr "Gibosa menguante"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Last quarter"
-msgstr ""
+msgstr "Cuarto menguante"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waning crescent"
-msgstr ""
+msgstr "Luna menguante"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon"
 msgid "Up all day"
-msgstr ""
+msgstr "Sobre el horizonte todo el día"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon"
 msgid "Down all day"
-msgstr ""
+msgstr "Bajo el horizonte todo el día"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 and %2 = times"
 msgid "Rises %1, sets %2"
-msgstr ""
+msgstr "Sale %1, se pone %2"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 and %2 = times"
 msgid "Sets %1, rises %2"
-msgstr ""
+msgstr "Se pone %1, sale %2"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 = time"
 msgid "Rises %1"
-msgstr ""
+msgstr "Sale %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 = time"
 msgid "Sets %1"
-msgstr ""
+msgstr "Se pone %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "%1 = date"
 msgid "Full moon %1"
-msgstr ""
+msgstr "Luna llena %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "%1 = date"
 msgid "New moon %1"
-msgstr ""
+msgstr "Luna nueva %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase %1 at time %2"
 msgid "%1 at %2"
-msgstr ""
+msgstr "%1 a las %2"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 = percent"
 msgid "%1% lit"
-msgstr ""
+msgstr "%1% iluminada"
 
 #: ../contents/ui/NewEventForm.qml
 msgid "Eg: 9am-5pm Work"
@@ -4353,6 +4357,26 @@ msgid "Unknown"
 msgstr "Desconocido"
 
 #: ../contents/ui/WeatherPanel.qml
+msgctxt "%1 = time"
+msgid "Sunrise %1"
+msgstr "Amanecer %1"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "%1 = time"
+msgid "Sunset %1"
+msgstr "Atardecer %1"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "the sun up all day"
+msgid "Midnight sun"
+msgstr "Sol de medianoche"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "the sun down all day"
+msgid "Polar night"
+msgstr "Noche polar"
+
+#: ../contents/ui/WeatherPanel.qml
 msgid "Set a location in Settings > Weather to see the forecast here."
 msgstr "Configura una ubicación en Ajustes > Tiempo para ver aquí la previsión."
 
@@ -4436,6 +4460,14 @@ msgstr "No hay más eventos hoy"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Lugar de trabajo: %1"
+
+#~ msgctxt "the sun"
+#~ msgid "Up all day (midnight sun)"
+#~ msgstr "Sobre el horizonte todo el día (sol de medianoche)"
+
+#~ msgctxt "the sun"
+#~ msgid "Down all day (polar night)"
+#~ msgstr "Bajo el horizonte todo el día (noche polar)"
 
 #~ msgid "Skipped %1 setting this version doesn't have: %2"
 #~ msgid_plural "Skipped %1 settings this version doesn't have: %2"

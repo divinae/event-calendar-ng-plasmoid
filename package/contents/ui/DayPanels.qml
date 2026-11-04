@@ -48,7 +48,7 @@ Item {
 	readonly property bool wantsWeather: plasmoid.configuration.dayShowWeather !== false
 		&& (Object.keys(weatherByDay).length > 0 || weatherIsSetup)
 	readonly property bool wantsTasks: plasmoid.configuration.dayShowTasks !== false
-	readonly property bool wantsMoon: plasmoid.configuration.dayShowMoon !== false
+	readonly property bool wantsMoon: plasmoid.configuration.dayShowMoon === true // Off by default
 	readonly property bool tasksShown: rightShown && wantsTasks && tasksPanel.hasLists
 	readonly property bool moonShown: rightShown && wantsMoon
 	readonly property bool weatherShown: rightShown && wantsWeather
@@ -127,6 +127,7 @@ Item {
 		width: panels.sideWidth
 		height: implicitHeight
 		MoonPanel {
+			active: panels.moonShown
 			day: panels.day
 			latitude: panels.weatherPlace.latitude
 			longitude: panels.weatherPlace.longitude
@@ -151,6 +152,7 @@ Item {
 			isToday: panels.showingToday
 			current: panels.showingToday ? panels.weatherCurrent : null
 			today: panels.dayWeather(panels.day)
+			day: panels.day
 			latitude: panels.weatherPlace.latitude
 			longitude: panels.weatherPlace.longitude
 			showHourly: weatherCard.room >= Kirigami.Units.gridUnit * 25

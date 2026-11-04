@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-03 16:59+0100\n"
+"POT-Creation-Date: 2026-11-04 09:21+0100\n"
 "PO-Revision-Date: 2022-03-21 23:40+ZONE\n"
 "Last-Translator: Ilpo Kantonen <ilpo@iki.fi>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1393,6 +1393,10 @@ msgid "Islands (cards)"
 msgstr "Saaret (kortit)"
 
 #: ../contents/ui/config/ConfigViews.qml
+msgid "Islands, translucent cards"
+msgstr "Saarekkeet, läpikuultavat kortit"
+
+#: ../contents/ui/config/ConfigViews.qml
 msgid "Flat"
 msgstr "Tasainen"
 
@@ -1553,7 +1557,7 @@ msgstr "Seuraavaksi"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Moon"
-msgstr ""
+msgstr "Kuu"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Up next shows"
@@ -3424,92 +3428,92 @@ msgstr[1] "%2, %1 tapahtumaa"
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "New moon"
-msgstr ""
+msgstr "Uusikuu"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waxing crescent"
-msgstr ""
+msgstr "Kasvava sirppi"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "First quarter"
-msgstr ""
+msgstr "Ensimmäinen neljännes"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waxing gibbous"
-msgstr ""
+msgstr "Kasvava kuu"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Full moon"
-msgstr ""
+msgstr "Täysikuu"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waning gibbous"
-msgstr ""
+msgstr "Vähenevä kuu"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Last quarter"
-msgstr ""
+msgstr "Viimeinen neljännes"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waning crescent"
-msgstr ""
+msgstr "Vähenevä sirppi"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon"
 msgid "Up all day"
-msgstr ""
+msgstr "Taivaalla koko päivän"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon"
 msgid "Down all day"
-msgstr ""
+msgstr "Horisontin alla koko päivän"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 and %2 = times"
 msgid "Rises %1, sets %2"
-msgstr ""
+msgstr "Nousee %1, laskee %2"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 and %2 = times"
 msgid "Sets %1, rises %2"
-msgstr ""
+msgstr "Laskee %1, nousee %2"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 = time"
 msgid "Rises %1"
-msgstr ""
+msgstr "Nousee %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 = time"
 msgid "Sets %1"
-msgstr ""
+msgstr "Laskee %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "%1 = date"
 msgid "Full moon %1"
-msgstr ""
+msgstr "Täysikuu %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "%1 = date"
 msgid "New moon %1"
-msgstr ""
+msgstr "Uusikuu %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase %1 at time %2"
 msgid "%1 at %2"
-msgstr ""
+msgstr "%1 klo %2"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 = percent"
 msgid "%1% lit"
-msgstr ""
+msgstr "%1 % valaistu"
 
 #: ../contents/ui/NewEventForm.qml
 msgid "Eg: 9am-5pm Work"
@@ -4355,6 +4359,26 @@ msgid "Unknown"
 msgstr "Tuntematon"
 
 #: ../contents/ui/WeatherPanel.qml
+msgctxt "%1 = time"
+msgid "Sunrise %1"
+msgstr "Auringonnousu %1"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "%1 = time"
+msgid "Sunset %1"
+msgstr "Auringonlasku %1"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "the sun up all day"
+msgid "Midnight sun"
+msgstr "Yötön yö"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "the sun down all day"
+msgid "Polar night"
+msgstr "Kaamos"
+
+#: ../contents/ui/WeatherPanel.qml
 msgid "Set a location in Settings > Weather to see the forecast here."
 msgstr "Aseta sijainti kohdassa Asetukset > Sää, niin ennuste näytetään tässä."
 
@@ -4438,6 +4462,14 @@ msgstr "Ei enää tapahtumia tänään"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Työskentelypaikka: %1"
+
+#~ msgctxt "the sun"
+#~ msgid "Up all day (midnight sun)"
+#~ msgstr "Taivaalla koko päivän (yötön yö)"
+
+#~ msgctxt "the sun"
+#~ msgid "Down all day (polar night)"
+#~ msgstr "Horisontin alla koko päivän (kaamos)"
 
 #~ msgid "Skipped %1 setting this version doesn't have: %2"
 #~ msgid_plural "Skipped %1 settings this version doesn't have: %2"

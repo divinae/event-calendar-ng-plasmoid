@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-03 16:59+0100\n"
+"POT-Creation-Date: 2026-11-04 09:21+0100\n"
 "PO-Revision-Date: 2022-10-25 17:15+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1653,6 +1653,10 @@ msgid "Islands (cards)"
 msgstr "아일랜드 (카드)"
 
 #: ../contents/ui/config/ConfigViews.qml
+msgid "Islands, translucent cards"
+msgstr "아일랜드, 반투명 카드"
+
+#: ../contents/ui/config/ConfigViews.qml
 msgid "Flat"
 msgstr "플랫"
 
@@ -1822,7 +1826,7 @@ msgstr "다음 일정"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Moon"
-msgstr ""
+msgstr "달"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Up next shows"
@@ -3778,92 +3782,92 @@ msgstr[0] "%2, 일정 %1개"
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "New moon"
-msgstr ""
+msgstr "삭"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waxing crescent"
-msgstr ""
+msgstr "초승달"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "First quarter"
-msgstr ""
+msgstr "상현달"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waxing gibbous"
-msgstr ""
+msgstr "차오르는 달"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Full moon"
-msgstr ""
+msgstr "보름달"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waning gibbous"
-msgstr ""
+msgstr "기우는 달"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Last quarter"
-msgstr ""
+msgstr "하현달"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waning crescent"
-msgstr ""
+msgstr "그믐달"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon"
 msgid "Up all day"
-msgstr ""
+msgstr "종일 지평선 위"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon"
 msgid "Down all day"
-msgstr ""
+msgstr "종일 지평선 아래"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 and %2 = times"
 msgid "Rises %1, sets %2"
-msgstr ""
+msgstr "월출 %1, 월몰 %2"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 and %2 = times"
 msgid "Sets %1, rises %2"
-msgstr ""
+msgstr "월몰 %1, 월출 %2"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 = time"
 msgid "Rises %1"
-msgstr ""
+msgstr "월출 %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 = time"
 msgid "Sets %1"
-msgstr ""
+msgstr "월몰 %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "%1 = date"
 msgid "Full moon %1"
-msgstr ""
+msgstr "보름달 %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "%1 = date"
 msgid "New moon %1"
-msgstr ""
+msgstr "삭 %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase %1 at time %2"
 msgid "%1 at %2"
-msgstr ""
+msgstr "%2에 %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 = percent"
 msgid "%1% lit"
-msgstr ""
+msgstr "%1% 밝음"
 
 #: ../contents/ui/NewEventForm.qml
 msgid "Eg: 9am-5pm Work"
@@ -4702,6 +4706,26 @@ msgid "Unknown"
 msgstr "알 수 없음"
 
 #: ../contents/ui/WeatherPanel.qml
+msgctxt "%1 = time"
+msgid "Sunrise %1"
+msgstr "일출 %1"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "%1 = time"
+msgid "Sunset %1"
+msgstr "일몰 %1"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "the sun up all day"
+msgid "Midnight sun"
+msgstr "백야"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "the sun down all day"
+msgid "Polar night"
+msgstr "극야"
+
+#: ../contents/ui/WeatherPanel.qml
 msgid "Set a location in Settings > Weather to see the forecast here."
 msgstr "여기에 일기 예보를 표시하려면 설정 > 날씨에서 위치를 설정하십시오."
 
@@ -4784,6 +4808,14 @@ msgstr "오늘은 더 이상 일정이 없습니다"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "근무 위치: %1"
+
+#~ msgctxt "the sun"
+#~ msgid "Up all day (midnight sun)"
+#~ msgstr "종일 지평선 위 (백야)"
+
+#~ msgctxt "the sun"
+#~ msgid "Down all day (polar night)"
+#~ msgstr "종일 지평선 아래 (극야)"
 
 #~ msgid "Skipped %1 setting this version doesn't have: %2"
 #~ msgid_plural "Skipped %1 settings this version doesn't have: %2"

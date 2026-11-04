@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-03 16:59+0100\n"
+"POT-Creation-Date: 2026-11-04 09:21+0100\n"
 "PO-Revision-Date: 2019-06-02 22:28+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -1677,6 +1677,10 @@ msgid "Islands (cards)"
 msgstr "Adalar (kartlar)"
 
 #: ../contents/ui/config/ConfigViews.qml
+msgid "Islands, translucent cards"
+msgstr "Adalar, yarı saydam kartlar"
+
+#: ../contents/ui/config/ConfigViews.qml
 msgid "Flat"
 msgstr "Düz"
 
@@ -1848,7 +1852,7 @@ msgstr "Sıradakiler"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Moon"
-msgstr ""
+msgstr "Ay"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Up next shows"
@@ -3839,92 +3843,92 @@ msgstr[1] "%2, %1 etkinlik"
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "New moon"
-msgstr ""
+msgstr "Yeni ay"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waxing crescent"
-msgstr ""
+msgstr "Büyüyen hilal"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "First quarter"
-msgstr ""
+msgstr "İlk dördün"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waxing gibbous"
-msgstr ""
+msgstr "Büyüyen şişkin ay"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Full moon"
-msgstr ""
+msgstr "Dolunay"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waning gibbous"
-msgstr ""
+msgstr "Küçülen şişkin ay"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Last quarter"
-msgstr ""
+msgstr "Son dördün"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase"
 msgid "Waning crescent"
-msgstr ""
+msgstr "Küçülen hilal"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon"
 msgid "Up all day"
-msgstr ""
+msgstr "Gün boyu ufkun üstünde"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon"
 msgid "Down all day"
-msgstr ""
+msgstr "Gün boyu ufkun altında"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 and %2 = times"
 msgid "Rises %1, sets %2"
-msgstr ""
+msgstr "Doğuş %1, batış %2"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 and %2 = times"
 msgid "Sets %1, rises %2"
-msgstr ""
+msgstr "Batış %1, doğuş %2"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 = time"
 msgid "Rises %1"
-msgstr ""
+msgstr "Doğuş %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 = time"
 msgid "Sets %1"
-msgstr ""
+msgstr "Batış %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "%1 = date"
 msgid "Full moon %1"
-msgstr ""
+msgstr "Dolunay %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "%1 = date"
 msgid "New moon %1"
-msgstr ""
+msgstr "Yeni ay %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "moon phase %1 at time %2"
 msgid "%1 at %2"
-msgstr ""
+msgstr "%2 saatinde %1"
 
 #: ../contents/ui/MoonPanel.qml
 msgctxt "the moon, %1 = percent"
 msgid "%1% lit"
-msgstr ""
+msgstr "Yüzde %1 aydınlık"
 
 #: ../contents/ui/NewEventForm.qml
 msgid "Eg: 9am-5pm Work"
@@ -4778,6 +4782,26 @@ msgid "Unknown"
 msgstr "Bilinmiyor"
 
 #: ../contents/ui/WeatherPanel.qml
+msgctxt "%1 = time"
+msgid "Sunrise %1"
+msgstr "Gün doğumu %1"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "%1 = time"
+msgid "Sunset %1"
+msgstr "Gün batımı %1"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "the sun up all day"
+msgid "Midnight sun"
+msgstr "Gece yarısı güneşi"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "the sun down all day"
+msgid "Polar night"
+msgstr "Kutup gecesi"
+
+#: ../contents/ui/WeatherPanel.qml
 msgid "Set a location in Settings > Weather to see the forecast here."
 msgstr ""
 "Hava tahminini burada görmek için Ayarlar > Hava Durumu bölümünden bir konum "
@@ -4864,6 +4888,14 @@ msgstr "Bugün başka etkinlik yok"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Çalışma konumu: %1"
+
+#~ msgctxt "the sun"
+#~ msgid "Up all day (midnight sun)"
+#~ msgstr "Gün boyu ufkun üstünde (gece yarısı güneşi)"
+
+#~ msgctxt "the sun"
+#~ msgid "Down all day (polar night)"
+#~ msgstr "Gün boyu ufkun altında (kutup gecesi)"
 
 #~ msgid "Skipped %1 setting this version doesn't have: %2"
 #~ msgid_plural "Skipped %1 settings this version doesn't have: %2"

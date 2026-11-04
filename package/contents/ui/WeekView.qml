@@ -92,7 +92,7 @@ Item {
 	readonly property bool dayWantsMiniMonth: plasmoid.configuration.dayShowMiniMonth !== false
 	readonly property bool dayWantsUpNext: plasmoid.configuration.dayShowUpNext !== false
 	readonly property bool dayWantsWeather: plasmoid.configuration.dayShowWeather !== false
-	readonly property bool dayWantsMoon: plasmoid.configuration.dayShowMoon !== false
+	readonly property bool dayWantsMoon: plasmoid.configuration.dayShowMoon === true // Off by default
 	readonly property bool dayWantsTasks: plasmoid.configuration.dayShowTasks !== false
 	// Three all-day events or more: side by side, three in a row (Settings > Views).
 	readonly property bool allDayTiles: singleDay && plasmoid.configuration.dayAllDayTiles !== false
@@ -459,6 +459,9 @@ Item {
 		rebuild()
 	}
 	onWorkWeekChanged: Qt.callLater(rebuild) // As above: once columnDays follows
+	// Other columns (Day, Week, the work week, the Agenda's kept view): the events laid out for them,
+	// also while hidden (a Day view shown after the Agenda had a week's all-day bars, #22).
+	onColumnCountChanged: Qt.callLater(rebuild)
 	Component.onCompleted: {
 		rebuild()
 		Qt.callLater(scrollToWorkingHours) // Once the grid has its height
@@ -681,6 +684,7 @@ Item {
 		isToday: weekView.showingToday
 		current: weekView.showingToday ? weekView.weatherCurrent : null
 		today: weekView.dayWeather(weekView.weekStart)
+		day: weekView.weekStart
 		latitude: weekView.weatherPlace.latitude
 		longitude: weekView.weatherPlace.longitude
 	}
@@ -749,6 +753,7 @@ Item {
 		height: implicitHeight
 
 		MoonPanel {
+			active: weekView.moonBeside
 			day: weekView.weekStart
 			latitude: weekView.weatherPlace.latitude
 			longitude: weekView.weatherPlace.longitude
@@ -1298,7 +1303,7 @@ Item {
 						y: freeNote.y - pad
 						radius: appletConfig.cardRadius
 						// Opaque: the hour lines don't show through.
-						color: ColorUtil.setAlpha(appletConfig.cardColor, 1)
+						color: appletConfig.solidCardColor
 						border.width: 1
 						border.color: appletConfig.cardBorderColor
 					}

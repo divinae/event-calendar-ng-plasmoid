@@ -149,12 +149,15 @@ function nextPhase(from, target) {
 			// Between a and b: narrow it down.
 			var lo = a.valueOf()
 			var hi = b.valueOf()
+			var leftLo = left
 			while (hi - lo > 60000) {
 				var mid = (lo + hi) / 2
-				if (toGo(new Date(mid)) > toGo(new Date(lo))) {
+				var leftMid = toGo(new Date(mid))
+				if (leftMid > leftLo) {
 					hi = mid
 				} else {
 					lo = mid
+					leftLo = leftMid
 				}
 			}
 			return new Date(Math.round(hi / 60000) * 60000)
@@ -165,22 +168,25 @@ function nextPhase(from, target) {
 	return null
 }
 
-// When the moon rises and sets on day (local, from its start to the next) at latitude / longitude:
-// { rise, set } (Date or null: none that day), alwaysUp / alwaysDown when it neither rises nor sets.
-// SunCalc's way: the altitude by the hour, each two hours' curve solved for the horizon.
-function riseSet(day, lat, lon) {
+// When a body rises and sets on day (local, from its start to the next): { rise, set } (Date or
+// null: none that day), alwaysUp / alwaysDown when it neither rises nor sets. aboveHorizon(date):
+// how far it is above the horizon then (radians). SunCalc's way: by the hour, each two hours' curve
+// solved for the horizon.
+function horizonCrossings(day, aboveHorizon) {
 	var start = new Date(day.getFullYear(), day.getMonth(), day.getDate())
+	// The local day: 23 or 25 hours on a daylight saving change.
+	var end = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1)
+	var hours = Math.round((end - start) / 3600000)
 	function hoursLater(h) {
 		return new Date(start.valueOf() + h * 3600000)
 	}
-	var hc = 0.133 * rad // The moon's radius and a little refraction: its upper edge at the horizon
-	var h0 = moonAltitude(start, lat, lon) - hc
+	var h0 = aboveHorizon(start)
 	var rise = null
 	var set = null
 	var ye = 0
-	for (var i = 1; i <= 24; i += 2) {
-		var h1 = moonAltitude(hoursLater(i), lat, lon) - hc
-		var h2 = moonAltitude(hoursLater(i + 1), lat, lon) - hc
+	for (var i = 1; i <= hours; i += 2) {
+		var h1 = aboveHorizon(hoursLater(i))
+		var h2 = aboveHorizon(hoursLater(i + 1))
 		var a = (h0 + h2) / 2 - h1
 		var b = (h2 - h0) / 2
 		var xe = -b / (2 * a)
@@ -218,12 +224,36 @@ function riseSet(day, lat, lon) {
 		}
 		h0 = h2
 	}
+	// The last two hours' curve can reach past the day (an odd number of hours): not that day's.
+	if (rise && rise >= end) {
+		rise = null
+	}
+	if (set && set >= end) {
+		set = null
+	}
 	return {
 		rise: rise,
 		set: set,
 		alwaysUp: !rise && !set && ye > 0,
 		alwaysDown: !rise && !set && ye <= 0,
 	}
+}
+
+// When the moon rises and sets on day (local) at latitude / longitude: as horizonCrossings, its
+// upper edge on the horizon (its radius and a little refraction).
+function riseSet(day, lat, lon) {
+	var hc = 0.133 * rad
+	return horizonCrossings(day, function(date) { return moonAltitude(date, lat, lon) - hc })
+}
+
+// When the sun rises and sets on day (local) at latitude / longitude: as horizonCrossings, its
+// upper edge on the horizon (-0.833 degrees: refraction and its radius, as published times).
+// null without a place.
+function sunRiseSet(day, lat, lon) {
+	if (typeof lat !== 'number' || typeof lon !== 'number' || !isFinite(lat) || !isFinite(lon)) {
+		return null
+	}
+	return horizonCrossings(day, function(date) { return (sunAltitude(date, lat, lon) + 0.833) * rad })
 }
 
 // The moon on day (local): {
@@ -239,7 +269,9 @@ function dayInfo(day, lat, lon) {
 	var lit = illumination(noon)
 	var info = {
 		fraction: lit.fraction,
-		glyph: Math.round(lit.phase * 28) % 28,
+		// Within its named phase's glyphs (1-6, 8-13, 15-20, 22-27): the main phases' own (0, 7, 14,
+		// 21) only on their day, below.
+		glyph: Math.min(Math.floor(lit.phase * 4) * 7 + 6, Math.max(Math.floor(lit.phase * 4) * 7 + 1, Math.round(lit.phase * 28))),
 		phaseKey: lit.phase < 0.25 ? 'waxingCrescent' : lit.phase < 0.5 ? 'waxingGibbous'
 			: lit.phase < 0.75 ? 'waningGibbous' : 'waningCrescent',
 		mainAt: null,
