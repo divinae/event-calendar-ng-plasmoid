@@ -43,7 +43,12 @@ PlasmoidItem {
 		onMeetingAlertRequested: function(eventItem) { root.showMeetingAlert(eventItem) }
 	}
 	// Today's and tomorrow's events for Glance (the panel widget), over D-Bus
+	// Glance asks for the events when it starts (it may come up after the last send)
+	function publishToGlance() {
+		if (glancePublisher.hasData) glancePublisher.publish()
+	}
 	GlancePublisher {
+		id: glancePublisher
 		upcomingEvents: upcomingEvents
 		eventModel: eventModel
 		logic: logic
@@ -111,8 +116,41 @@ PlasmoidItem {
 	}
 	// The camera check (CameraCheckView.qml) needs Qt Multimedia (MultimediaProbe.qml). Its own
 	// window (CameraCheckWindow.qml), one at a time: opened again, it's brought up with the new
-	// meeting's Join (meetingLink from MeetingLink.find, or null).
-	readonly property bool cameraCheckAvailable: moduleAvailable("MultimediaProbe.qml")
+	// meeting's Join (meetingLink from MeetingLink.find, or null). Probed when the popup first
+	// opens or a little after start, not while the widget loads: importing Qt Multimedia can take
+	// long at login (its backend, the audio and video devices).
+	// Loaded asynchronously, so the probe doesn't hold up the popup or an alert either.
+	property bool cameraCheckAvailable: false
+	property var cameraProbe: null
+	function probeCameraCheck() {
+		if (cameraProbe) {
+			return
+		}
+		cameraProbeTimer.stop()
+		cameraProbe = Qt.createComponent(Qt.resolvedUrl("MultimediaProbe.qml"), Component.Asynchronous)
+		function settle() {
+			if (cameraProbe.status === Component.Loading) {
+				return
+			}
+			cameraCheckAvailable = cameraProbe.status === Component.Ready
+		}
+		if (cameraProbe.status === Component.Loading) {
+			cameraProbe.statusChanged.connect(settle)
+		} else {
+			settle()
+		}
+	}
+	onExpandedChanged: {
+		if (expanded) {
+			probeCameraCheck()
+		}
+	}
+	Timer {
+		id: cameraProbeTimer
+		interval: 30000
+		running: true
+		onTriggered: root.probeCameraCheck()
+	}
 	property var cameraCheckWindow: null
 	function openCameraCheck(meetingLink) {
 		if (!cameraCheckAvailable) {
@@ -145,6 +183,7 @@ PlasmoidItem {
 	}
 	function showMeetingAlert(eventItem) {
 		alertSnoozeTimer.stop()
+		probeCameraCheck() // Its camera check, once Qt Multimedia is known to be there
 		var layer = moduleAvailable("LayerShellProbe.qml")
 		var blur = moduleAvailable("KickerProbe.qml")
 		alertSetUrl = blur && layer ? "MeetingAlertSetBlurLayer.qml"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-04 10:49+0100\n"
+"POT-Creation-Date: 2026-11-05 11:21+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: yamato kobayashi <Kb_yamato@protonmail.com>\n"
 "Language-Team: \n"
@@ -44,6 +44,10 @@ msgstr "天気"
 #: ../contents/config/config.qml
 msgid "Time Zones"
 msgstr "タイムゾーン"
+
+#: ../contents/config/config.qml ../contents/ui/config/ConfigCalendars.qml ../contents/ui/config/ConfigTasks.qml
+msgid "General"
+msgstr "一般"
 
 #: ../contents/config/config.qml
 msgid "Advanced"
@@ -192,7 +196,7 @@ msgstr "祝日"
 msgid "Todo"
 msgstr "ToDo"
 
-#: ../contents/ui/calendars/PlasmaCalendarManager.qml ../contents/ui/config/ConfigClock.qml
+#: ../contents/ui/calendars/PlasmaCalendarManager.qml
 msgid "Other"
 msgstr "その他"
 
@@ -471,14 +475,6 @@ msgid "iCalendar (*.ics)"
 msgstr "iCalendar (*.ics)"
 
 #: ../contents/ui/config/CalendarsGeneral.qml
-msgid "Share events with Glance"
-msgstr "Glance と予定を共有"
-
-#: ../contents/ui/config/CalendarsGeneral.qml
-msgid "Today's and tomorrow's events, with meeting links, for the Glance panel widget. Only on this computer; no descriptions or guest addresses."
-msgstr "今日と明日の予定 (会議リンク付き) をパネルウィジェット Glance に。このコンピューター内のみ。説明やゲストのアドレスは含みません。"
-
-#: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Refresh every"
 msgstr "更新間隔"
 
@@ -596,6 +592,14 @@ msgstr "Google でサインイン…"
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Waiting for the browser sign-in…"
 msgstr "ブラウザーでのサインインを待っています…"
+
+#: ../contents/ui/config/CalendarsGoogle.qml
+msgid "Signing in lets the widget show your calendars and task lists, and change the events and tasks you edit in it. Your data goes only between this computer and Google; the sign-in is kept in the system keyring."
+msgstr "サインインすると、ウィジェットがカレンダーとタスクリストを表示し、ウィジェットで編集した予定やタスクを変更できます。データはこのコンピューターと Google の間だけでやり取りされ、サインイン情報はシステムのキーリングに保存されます。"
+
+#: ../contents/ui/config/CalendarsGoogle.qml
+msgid "Privacy policy"
+msgstr "プライバシーポリシー"
 
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Advanced sign-in options"
@@ -732,10 +736,6 @@ msgstr "%1 内のファイル"
 #: ../contents/ui/config/CalendarsICal.qml
 msgid ".ics files and links show here as calendars, read-only, offline too. Local files are read from %1. To add events to one of your calendars instead, import the file into a Google or CalDAV calendar (Calendars > General)."
 msgstr ".ics ファイルとリンクは、ここに読み取り専用のカレンダーとして表示されます (オフラインでも)。ローカルファイルは %1 から読み込まれます。代わりに自分のカレンダーに予定を追加するには、ファイルを Google または CalDAV カレンダーにインポートしてください (カレンダー > 全般)。"
-
-#: ../contents/ui/config/ConfigCalendars.qml ../contents/ui/config/ConfigTasks.qml
-msgid "General"
-msgstr "一般"
 
 #: ../contents/ui/config/ConfigCalendars.qml
 msgid "Google Calendar"
@@ -874,14 +874,6 @@ msgstr "会議名の下に、カレンダーの色で細いバーを表示しま
 msgid "Middle-click the clock to join the current or next meeting."
 msgstr "時計を中クリックすると、現在または次の会議に参加します。"
 
-#: ../contents/ui/config/ConfigClock.qml
-msgid "Show background"
-msgstr "背景を表示"
-
-#: ../contents/ui/config/ConfigClock.qml
-msgid "Desktop widget"
-msgstr "デスクトップウィジェット"
-
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Clicking an event opens"
 msgstr "イベントをクリックしたときに開くもの"
@@ -912,8 +904,12 @@ msgid " min"
 msgstr " 分"
 
 #: ../contents/ui/config/ConfigEvents.qml
-msgid "Use the reminder times set in Google Calendar"
-msgstr "Google Calendar で設定されたリマインダー時間を使用"
+msgid "Use the reminder times set in the calendar"
+msgstr "カレンダーで設定された通知時刻を使用"
+
+#: ../contents/ui/config/ConfigEvents.qml
+msgid "Google Calendar's, and the alarms of CalDAV and .ics events; off or without one: the time above"
+msgstr "Google カレンダーの通知と CalDAV・.ics の予定のアラーム。オフまたはない場合: 上の時間"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Keep until dismissed"
@@ -1128,6 +1124,108 @@ msgstr "ポップアップのカレンダーメニューで時計ボタンがオ
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Popups and sounds for each kind of notification can also be set in System Settings > Notifications > Event Calendar."
 msgstr "通知の種類ごとのポップアップとサウンドは、システム設定 > 通知 > イベントカレンダー でも設定できます。"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Desktop widget"
+msgstr "デスクトップウィジェット"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Show background"
+msgstr "背景を表示"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Glance"
+msgstr "Glance"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Share events with Glance"
+msgstr "Glance と予定を共有"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Today's and tomorrow's events, with meeting links, for the Glance panel widget. Only on this computer; no descriptions or guest addresses."
+msgstr "今日と明日の予定 (会議リンク付き) をパネルウィジェット Glance に。このコンピューター内のみ。説明やゲストのアドレスは含みません。"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Offline"
+msgstr "オフライン"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Keep events and tasks for offline start"
+msgstr "オフライン起動用にイベントとタスクを保持"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "The last loaded events and tasks (no descriptions or notes) are stored in ~/.cache/plasma-eventcalendar and shown until the first refresh. Off: nothing is stored, and the stored copy is deleted."
+msgstr "最後に読み込んだイベントとタスク（説明やメモを除く）は ~/.cache/plasma-eventcalendar に保存され、最初の更新まで表示されます。オフ: 何も保存されず、保存済みのコピーは削除されます。"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Settings Backup"
+msgstr "設定のバックアップ"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Export Settings…"
+msgstr "設定をエクスポート…"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "All settings of this widget to a file, without passwords and sign-ins"
+msgstr "このウィジェットのすべての設定をファイルへ（パスワードとサインインを除く）"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Import Settings…"
+msgstr "設定をインポート…"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "From an exported file; press Apply or OK to keep them"
+msgstr "エクスポートしたファイルから。保持するには「適用」または「OK」を押します"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Accounts come back with their calendars. On this computer they stay signed in; on another one, sign in again (passwords and sign-ins stay in the system keyring)."
+msgstr "アカウントはカレンダーと一緒に戻ります。このコンピューターではサインインしたままです。別のコンピューターでは再度サインインしてください（パスワードとサインインはシステムのキーリングに残ります）。"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Troubleshooting"
+msgstr "トラブルシューティング"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Debug logging and extra settings pages"
+msgstr "デバッグログと追加の設定ページ"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "The file couldn't be written: %1"
+msgstr "ファイルを書き込めませんでした: %1"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Exported to %1"
+msgstr "%1 にエクスポートしました"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "The file couldn't be read: %1"
+msgstr "ファイルを読み込めませんでした: %1"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "This isn't a settings file of Event Calendar."
+msgstr "これは Event Calendar の設定ファイルではありません。"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Imported %1 setting. Press Apply or OK to keep it."
+msgid_plural "Imported %1 settings. Press Apply or OK to keep them."
+msgstr[0] "%1 件の設定をインポートしました。保持するには「適用」または「OK」を押します。"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Not imported (not in this version, a password or sign-in, or a value of another kind): %2"
+msgid_plural "%1 not imported (not in this version, passwords or sign-ins, or values of another kind): %2"
+msgstr[0] "%1 件をインポートしませんでした (このバージョンにない、パスワードやサインイン、または別の種類の値): %2"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Export Settings"
+msgstr "設定をエクスポート"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Settings (*.json)"
+msgstr "設定 (*.json)"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Import Settings"
+msgstr "設定をインポート"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid "TickTick did not accept the API token. Check it and try again."
@@ -1456,6 +1554,14 @@ msgid "Week numbers"
 msgstr "週番号"
 
 #: ../contents/ui/config/ConfigViews.qml
+msgid "Show all events"
+msgstr "すべての予定を表示"
+
+#: ../contents/ui/config/ConfigViews.qml
+msgid "Month view: no \"+N\", each week as tall as its busiest day; the month scrolls when it doesn't fit."
+msgstr "月表示:「+N」なし、各週を最も予定の多い日に合わせた高さに。収まらないときは月がスクロールします。"
+
+#: ../contents/ui/config/ConfigViews.qml
 msgid "Clicking a day opens it in the Day view"
 msgstr "日をクリックすると日ビューで開く"
 
@@ -1591,88 +1697,6 @@ msgstr "会議リンクボタン"
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Multi-day events on every day"
 msgstr "複数日のイベントを毎日に表示"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Offline"
-msgstr "オフライン"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Keep events and tasks for offline start"
-msgstr "オフライン起動用にイベントとタスクを保持"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "The last loaded events and tasks (no descriptions or notes) are stored in ~/.cache/plasma-eventcalendar and shown until the first refresh. Off: nothing is stored, and the stored copy is deleted."
-msgstr "最後に読み込んだイベントとタスク（説明やメモを除く）は ~/.cache/plasma-eventcalendar に保存され、最初の更新まで表示されます。オフ: 何も保存されず、保存済みのコピーは削除されます。"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Troubleshooting"
-msgstr "トラブルシューティング"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Debug logging and extra settings pages"
-msgstr "デバッグログと追加の設定ページ"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Settings Backup"
-msgstr "設定のバックアップ"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Export Settings…"
-msgstr "設定をエクスポート…"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "All settings of this widget to a file, without passwords and sign-ins"
-msgstr "このウィジェットのすべての設定をファイルへ（パスワードとサインインを除く）"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Import Settings…"
-msgstr "設定をインポート…"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "From an exported file; press Apply or OK to keep them"
-msgstr "エクスポートしたファイルから。保持するには「適用」または「OK」を押します"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Accounts come back with their calendars. On this computer they stay signed in; on another one, sign in again (passwords and sign-ins stay in the system keyring)."
-msgstr "アカウントはカレンダーと一緒に戻ります。このコンピューターではサインインしたままです。別のコンピューターでは再度サインインしてください（パスワードとサインインはシステムのキーリングに残ります）。"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "The file couldn't be written: %1"
-msgstr "ファイルを書き込めませんでした: %1"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Exported to %1"
-msgstr "%1 にエクスポートしました"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "The file couldn't be read: %1"
-msgstr "ファイルを読み込めませんでした: %1"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "This isn't a settings file of Event Calendar."
-msgstr "これは Event Calendar の設定ファイルではありません。"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Imported %1 setting. Press Apply or OK to keep it."
-msgid_plural "Imported %1 settings. Press Apply or OK to keep them."
-msgstr[0] "%1 件の設定をインポートしました。保持するには「適用」または「OK」を押します。"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Not imported (not in this version, a password or sign-in, or a value of another kind): %2"
-msgid_plural "%1 not imported (not in this version, passwords or sign-ins, or values of another kind): %2"
-msgstr[0] "%1 件をインポートしませんでした (このバージョンにない、パスワードやサインイン、または別の種類の値): %2"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Export Settings"
-msgstr "設定をエクスポート"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Settings (*.json)"
-msgstr "設定 (*.json)"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Import Settings"
-msgstr "設定をインポート"
 
 #: ../contents/ui/config/ConfigWeather.qml
 msgctxt "an API the app id may use"
@@ -3961,8 +3985,9 @@ msgid "No date"
 msgstr "日付なし"
 
 #: ../contents/ui/TasksView.qml
-msgid "Completed"
-msgstr "完了済み"
+msgid "Completed (last day)"
+msgid_plural "Completed (last %1 days)"
+msgstr[0] "完了 (過去 %1 日間)"
 
 #: ../contents/ui/TaskUndoBar.qml
 msgctxt "a task was checked"
@@ -4330,6 +4355,15 @@ msgstr "今日はこれ以上予定がありません"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "勤務場所: %1"
+
+#~ msgid "Completed (last 30 days)"
+#~ msgstr "完了 (過去 30 日間)"
+
+#~ msgid "Completed"
+#~ msgstr "完了済み"
+
+#~ msgid "Use the reminder times set in Google Calendar"
+#~ msgstr "Google Calendar で設定されたリマインダー時間を使用"
 
 #~ msgid "Forecast in the day headers and, in the Day view, a weather panel."
 #~ msgstr "日の見出しに天気予報を、日ビューに天気パネルを表示します。"

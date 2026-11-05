@@ -52,6 +52,11 @@ ConfigModel {
 		source: "config/ConfigTimezones.qml"
 	}
 	ConfigCategory {
+		name: i18n("General")
+		icon: "configure" // Monochrome, as the others
+		source: "config/ConfigGeneral.qml"
+	}
+	ConfigCategory {
 		name: i18n("Advanced")
 		icon: "applications-development"
 		source: "lib/ConfigAdvanced.qml"

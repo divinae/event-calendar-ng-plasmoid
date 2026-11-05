@@ -138,7 +138,8 @@ function layoutTiles(events, columns, maxRows) {
 
 // Month grid with multi-day events as bars across the days, like Google Calendar.
 // dayTimes: ascending midnight timestamps of the visible days, weekLength days per row.
-// maxRows: event rows that fit in a day cell (bars and titles, including a "+N" row).
+// maxRows: event rows that fit in a day cell (bars and titles, including a "+N" row); Infinity: all
+// of them, no "+N" (the Month view's "Show all events").
 // Events covering more than one day become bars in lanes at the top of each week row;
 // the others are listed in their day cell below the lanes used on that day.
 // Returns {
@@ -236,4 +237,16 @@ function layoutMonth(items, dayTimes, weekLength, maxRows) {
 		dayEvents[e].sort(compareEvents)
 	}
 	return { bars: bars, dayEvents: dayEvents, reservedRows: reservedRows, hiddenSpanCount: hiddenSpanCount }
+}
+
+// The event rows each week of a layoutMonth (all rows shown) needs: its busiest day's bars and
+// events ("show all events": the week as tall as that).
+function weekRowCounts(layout, weekLength) {
+	var counts = []
+	for (var d = 0; d < layout.dayEvents.length; d++) {
+		var week = Math.floor(d / weekLength)
+		var rows = (layout.reservedRows[d] || 0) + layout.dayEvents[d].length
+		counts[week] = Math.max(counts[week] || 0, rows)
+	}
+	return counts
 }

@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-04 10:49+0100\n"
+"POT-Creation-Date: 2026-11-05 11:21+0100\n"
 "PO-Revision-Date: 2022-10-25 17:15+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -54,6 +54,11 @@ msgstr "날씨"
 #: ../contents/config/config.qml
 msgid "Time Zones"
 msgstr "시간대"
+
+#: ../contents/config/config.qml ../contents/ui/config/ConfigCalendars.qml
+#: ../contents/ui/config/ConfigTasks.qml
+msgid "General"
+msgstr "일반"
 
 #: ../contents/config/config.qml
 msgid "Advanced"
@@ -230,7 +235,6 @@ msgid "Todo"
 msgstr "할 일"
 
 #: ../contents/ui/calendars/PlasmaCalendarManager.qml
-#: ../contents/ui/config/ConfigClock.qml
 msgid "Other"
 msgstr "기타"
 
@@ -582,18 +586,6 @@ msgid "iCalendar (*.ics)"
 msgstr "iCalendar (*.ics)"
 
 #: ../contents/ui/config/CalendarsGeneral.qml
-msgid "Share events with Glance"
-msgstr "Glance와 일정 공유"
-
-#: ../contents/ui/config/CalendarsGeneral.qml
-msgid ""
-"Today's and tomorrow's events, with meeting links, for the Glance panel "
-"widget. Only on this computer; no descriptions or guest addresses."
-msgstr ""
-"오늘과 내일의 일정을 회의 링크와 함께 패널 위젯 Glance에 제공합니다. 이 컴퓨"
-"터에서만; 설명이나 게스트 주소는 포함하지 않습니다."
-
-#: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Refresh every"
 msgstr "새로고침 간격"
 
@@ -739,6 +731,20 @@ msgstr "Google로 로그인…"
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Waiting for the browser sign-in…"
 msgstr "브라우저 로그인 대기 중…"
+
+#: ../contents/ui/config/CalendarsGoogle.qml
+msgid ""
+"Signing in lets the widget show your calendars and task lists, and change "
+"the events and tasks you edit in it. Your data goes only between this "
+"computer and Google; the sign-in is kept in the system keyring."
+msgstr ""
+"로그인하면 위젯이 캘린더와 할 일 목록을 표시하고, 위젯에서 편집한 일정과 할 "
+"일을 변경할 수 있습니다. 데이터는 이 컴퓨터와 Google 사이에서만 오가며, 로그"
+"인 정보는 시스템 키링에 보관됩니다."
+
+#: ../contents/ui/config/CalendarsGoogle.qml
+msgid "Privacy policy"
+msgstr "개인정보 처리방침"
 
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Advanced sign-in options"
@@ -915,11 +921,6 @@ msgstr ""
 "Google 또는 CalDAV 달력으로 가져오십시오(달력 > 일반)."
 
 #: ../contents/ui/config/ConfigCalendars.qml
-#: ../contents/ui/config/ConfigTasks.qml
-msgid "General"
-msgstr "일반"
-
-#: ../contents/ui/config/ConfigCalendars.qml
 msgid "Google Calendar"
 msgstr "Google 캘린더"
 
@@ -1062,14 +1063,6 @@ msgstr "회의 이름 아래에 달력 색상으로 얇은 막대를 표시합�
 msgid "Middle-click the clock to join the current or next meeting."
 msgstr "시계를 가운데 단추로 클릭하면 현재 또는 다음 회의에 참가합니다."
 
-#: ../contents/ui/config/ConfigClock.qml
-msgid "Show background"
-msgstr "배경 표시"
-
-#: ../contents/ui/config/ConfigClock.qml
-msgid "Desktop widget"
-msgstr "바탕 화면 위젯"
-
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Clicking an event opens"
 msgstr "이벤트를 클릭하면 열기"
@@ -1100,8 +1093,15 @@ msgid " min"
 msgstr " 분"
 
 #: ../contents/ui/config/ConfigEvents.qml
-msgid "Use the reminder times set in Google Calendar"
-msgstr "Google 캘린더에 설정된 미리 알림 시간 사용"
+msgid "Use the reminder times set in the calendar"
+msgstr "캘린더에 설정된 알림 시간 사용"
+
+#: ../contents/ui/config/ConfigEvents.qml
+msgid ""
+"Google Calendar's, and the alarms of CalDAV and .ics events; off or without "
+"one: the time above"
+msgstr ""
+"Google 캘린더의 알림과 CalDAV 및 .ics 일정의 알람; 끄거나 없으면: 위의 시간"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Keep until dismissed"
@@ -1362,6 +1362,130 @@ msgid ""
 msgstr ""
 "알림 종류별 팝업과 소리는 시스템 설정 > 알림 > 이벤트 달력에서도 설정할 수 있"
 "습니다."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Desktop widget"
+msgstr "바탕 화면 위젯"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Show background"
+msgstr "배경 표시"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Glance"
+msgstr "Glance"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Share events with Glance"
+msgstr "Glance와 일정 공유"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid ""
+"Today's and tomorrow's events, with meeting links, for the Glance panel "
+"widget. Only on this computer; no descriptions or guest addresses."
+msgstr ""
+"오늘과 내일의 일정을 회의 링크와 함께 패널 위젯 Glance에 제공합니다. 이 컴퓨"
+"터에서만; 설명이나 게스트 주소는 포함하지 않습니다."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Offline"
+msgstr "오프라인"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Keep events and tasks for offline start"
+msgstr "오프라인 시작을 위해 일정과 작업 보관"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid ""
+"The last loaded events and tasks (no descriptions or notes) are stored in "
+"~/.cache/plasma-eventcalendar and shown until the first refresh. Off: "
+"nothing is stored, and the stored copy is deleted."
+msgstr ""
+"마지막으로 불러온 일정과 작업(설명과 메모 제외)은 ~/.cache/plasma-"
+"eventcalendar에 저장되어 첫 새로 고침까지 표시됩니다. 끔: 아무것도 저장되지 "
+"않으며 저장된 사본은 삭제됩니다."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Settings Backup"
+msgstr "설정 백업"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Export Settings…"
+msgstr "설정 내보내기…"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "All settings of this widget to a file, without passwords and sign-ins"
+msgstr "이 위젯의 모든 설정을 파일로 (비밀번호와 로그인 제외)"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Import Settings…"
+msgstr "설정 가져오기…"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "From an exported file; press Apply or OK to keep them"
+msgstr "내보낸 파일에서; 유지하려면 적용 또는 확인을 누르세요"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid ""
+"Accounts come back with their calendars. On this computer they stay signed "
+"in; on another one, sign in again (passwords and sign-ins stay in the system "
+"keyring)."
+msgstr ""
+"계정은 캘린더와 함께 돌아옵니다. 이 컴퓨터에서는 로그인 상태가 유지되고, 다"
+"른 컴퓨터에서는 다시 로그인하세요 (비밀번호와 로그인은 시스템 키링에 남습니"
+"다)."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Troubleshooting"
+msgstr "문제 해결"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Debug logging and extra settings pages"
+msgstr "디버그 로그 및 추가 설정 페이지"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "The file couldn't be written: %1"
+msgstr "파일을 쓸 수 없습니다: %1"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Exported to %1"
+msgstr "%1(으)로 내보냈습니다"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "The file couldn't be read: %1"
+msgstr "파일을 읽을 수 없습니다: %1"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "This isn't a settings file of Event Calendar."
+msgstr "Event Calendar 설정 파일이 아닙니다."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Imported %1 setting. Press Apply or OK to keep it."
+msgid_plural "Imported %1 settings. Press Apply or OK to keep them."
+msgstr[0] "설정 %1개를 가져왔습니다. 유지하려면 적용 또는 확인을 누르세요."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid ""
+"Not imported (not in this version, a password or sign-in, or a value of "
+"another kind): %2"
+msgid_plural ""
+"%1 not imported (not in this version, passwords or sign-ins, or values of "
+"another kind): %2"
+msgstr[0] ""
+"%1개를 가져오지 않았습니다 (이 버전에 없음, 비밀번호나 로그인, 또는 다른 종류"
+"의 값): %2"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Export Settings"
+msgstr "설정 내보내기"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Settings (*.json)"
+msgstr "설정 (*.json)"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Import Settings"
+msgstr "설정 가져오기"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid "TickTick did not accept the API token. Check it and try again."
@@ -1737,6 +1861,18 @@ msgid "Week numbers"
 msgstr "주 번호"
 
 #: ../contents/ui/config/ConfigViews.qml
+msgid "Show all events"
+msgstr "모든 일정 표시"
+
+#: ../contents/ui/config/ConfigViews.qml
+msgid ""
+"Month view: no \"+N\", each week as tall as its busiest day; the month "
+"scrolls when it doesn't fit."
+msgstr ""
+"월 보기: \"+N\" 없이 각 주를 가장 바쁜 날만큼 높게; 맞지 않으면 월이 스크롤됩"
+"니다."
+
+#: ../contents/ui/config/ConfigViews.qml
 msgid "Clicking a day opens it in the Day view"
 msgstr "날짜를 클릭하면 일 보기에서 열기"
 
@@ -1880,106 +2016,6 @@ msgstr "회의 링크 단추"
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Multi-day events on every day"
 msgstr "여러 날 이벤트를 매일 표시"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Offline"
-msgstr "오프라인"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Keep events and tasks for offline start"
-msgstr "오프라인 시작을 위해 일정과 작업 보관"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid ""
-"The last loaded events and tasks (no descriptions or notes) are stored in "
-"~/.cache/plasma-eventcalendar and shown until the first refresh. Off: "
-"nothing is stored, and the stored copy is deleted."
-msgstr ""
-"마지막으로 불러온 일정과 작업(설명과 메모 제외)은 ~/.cache/plasma-"
-"eventcalendar에 저장되어 첫 새로 고침까지 표시됩니다. 끔: 아무것도 저장되지 "
-"않으며 저장된 사본은 삭제됩니다."
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Troubleshooting"
-msgstr "문제 해결"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Debug logging and extra settings pages"
-msgstr "디버그 로그 및 추가 설정 페이지"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Settings Backup"
-msgstr "설정 백업"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Export Settings…"
-msgstr "설정 내보내기…"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "All settings of this widget to a file, without passwords and sign-ins"
-msgstr "이 위젯의 모든 설정을 파일로 (비밀번호와 로그인 제외)"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Import Settings…"
-msgstr "설정 가져오기…"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "From an exported file; press Apply or OK to keep them"
-msgstr "내보낸 파일에서; 유지하려면 적용 또는 확인을 누르세요"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid ""
-"Accounts come back with their calendars. On this computer they stay signed "
-"in; on another one, sign in again (passwords and sign-ins stay in the system "
-"keyring)."
-msgstr ""
-"계정은 캘린더와 함께 돌아옵니다. 이 컴퓨터에서는 로그인 상태가 유지되고, 다"
-"른 컴퓨터에서는 다시 로그인하세요 (비밀번호와 로그인은 시스템 키링에 남습니"
-"다)."
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "The file couldn't be written: %1"
-msgstr "파일을 쓸 수 없습니다: %1"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Exported to %1"
-msgstr "%1(으)로 내보냈습니다"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "The file couldn't be read: %1"
-msgstr "파일을 읽을 수 없습니다: %1"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "This isn't a settings file of Event Calendar."
-msgstr "Event Calendar 설정 파일이 아닙니다."
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Imported %1 setting. Press Apply or OK to keep it."
-msgid_plural "Imported %1 settings. Press Apply or OK to keep them."
-msgstr[0] "설정 %1개를 가져왔습니다. 유지하려면 적용 또는 확인을 누르세요."
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid ""
-"Not imported (not in this version, a password or sign-in, or a value of "
-"another kind): %2"
-msgid_plural ""
-"%1 not imported (not in this version, passwords or sign-ins, or values of "
-"another kind): %2"
-msgstr[0] ""
-"%1개를 가져오지 않았습니다 (이 버전에 없음, 비밀번호나 로그인, 또는 다른 종류"
-"의 값): %2"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Export Settings"
-msgstr "설정 내보내기"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Settings (*.json)"
-msgstr "설정 (*.json)"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Import Settings"
-msgstr "설정 가져오기"
 
 #: ../contents/ui/config/ConfigWeather.qml
 msgctxt "an API the app id may use"
@@ -4365,8 +4401,9 @@ msgid "No date"
 msgstr "날짜 없음"
 
 #: ../contents/ui/TasksView.qml
-msgid "Completed"
-msgstr "완료됨"
+msgid "Completed (last day)"
+msgid_plural "Completed (last %1 days)"
+msgstr[0] "완료됨 (최근 %1일)"
 
 #: ../contents/ui/TaskUndoBar.qml
 msgctxt "a task was checked"
@@ -4735,6 +4772,15 @@ msgstr "오늘은 더 이상 일정이 없습니다"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "근무 위치: %1"
+
+#~ msgid "Completed (last 30 days)"
+#~ msgstr "완료됨 (최근 30일)"
+
+#~ msgid "Completed"
+#~ msgstr "완료됨"
+
+#~ msgid "Use the reminder times set in Google Calendar"
+#~ msgstr "Google 캘린더에 설정된 미리 알림 시간 사용"
 
 #~ msgid "Forecast in the day headers and, in the Day view, a weather panel."
 #~ msgstr ""

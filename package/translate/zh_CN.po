@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-04 10:49+0100\n"
+"POT-Creation-Date: 2026-11-05 11:21+0100\n"
 "PO-Revision-Date: 2019-04-17 16:43+0800\n"
 "Last-Translator: Core小睿 <i@coreja.com>\n"
 "Language-Team: \n"
@@ -54,6 +54,11 @@ msgstr "天气"
 #: ../contents/config/config.qml
 msgid "Time Zones"
 msgstr "时区"
+
+#: ../contents/config/config.qml ../contents/ui/config/ConfigCalendars.qml
+#: ../contents/ui/config/ConfigTasks.qml
+msgid "General"
+msgstr "常规"
 
 #: ../contents/config/config.qml
 msgid "Advanced"
@@ -226,7 +231,6 @@ msgid "Todo"
 msgstr "待办事项"
 
 #: ../contents/ui/calendars/PlasmaCalendarManager.qml
-#: ../contents/ui/config/ConfigClock.qml
 msgid "Other"
 msgstr "其他"
 
@@ -568,18 +572,6 @@ msgid "iCalendar (*.ics)"
 msgstr "iCalendar (*.ics)"
 
 #: ../contents/ui/config/CalendarsGeneral.qml
-msgid "Share events with Glance"
-msgstr "与 Glance 共享事件"
-
-#: ../contents/ui/config/CalendarsGeneral.qml
-msgid ""
-"Today's and tomorrow's events, with meeting links, for the Glance panel "
-"widget. Only on this computer; no descriptions or guest addresses."
-msgstr ""
-"今天和明天的事件（含会议链接），供面板小部件 Glance 使用。仅限本机；不含描述"
-"或来宾地址。"
-
-#: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Refresh every"
 msgstr "刷新间隔"
 
@@ -721,6 +713,19 @@ msgstr "使用 Google 登录…"
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Waiting for the browser sign-in…"
 msgstr "正在等待浏览器登录…"
+
+#: ../contents/ui/config/CalendarsGoogle.qml
+msgid ""
+"Signing in lets the widget show your calendars and task lists, and change "
+"the events and tasks you edit in it. Your data goes only between this "
+"computer and Google; the sign-in is kept in the system keyring."
+msgstr ""
+"登录后，小部件可以显示您的日历和任务列表，并更改您在其中编辑的事件和任务。您"
+"的数据只在本机与 Google 之间传输；登录信息保存在系统密钥环中。"
+
+#: ../contents/ui/config/CalendarsGoogle.qml
+msgid "Privacy policy"
+msgstr "隐私政策"
 
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Advanced sign-in options"
@@ -892,11 +897,6 @@ msgstr ""
 "件添加到您的日历，请将文件导入 Google 或 CalDAV 日历（日历 > 常规）。"
 
 #: ../contents/ui/config/ConfigCalendars.qml
-#: ../contents/ui/config/ConfigTasks.qml
-msgid "General"
-msgstr "常规"
-
-#: ../contents/ui/config/ConfigCalendars.qml
 msgid "Google Calendar"
 msgstr "Google 日历"
 
@@ -1039,14 +1039,6 @@ msgstr "会议名称下方的细条，使用其日历的颜色。"
 msgid "Middle-click the clock to join the current or next meeting."
 msgstr "中键点击时钟可加入当前或下一个会议。"
 
-#: ../contents/ui/config/ConfigClock.qml
-msgid "Show background"
-msgstr "显示背景"
-
-#: ../contents/ui/config/ConfigClock.qml
-msgid "Desktop widget"
-msgstr "桌面小部件"
-
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Clicking an event opens"
 msgstr "点击事件时打开"
@@ -1077,8 +1069,15 @@ msgid " min"
 msgstr " 分钟"
 
 #: ../contents/ui/config/ConfigEvents.qml
-msgid "Use the reminder times set in Google Calendar"
-msgstr "使用 Google 日历中设置的提醒时间"
+msgid "Use the reminder times set in the calendar"
+msgstr "使用日历中设置的提醒时间"
+
+#: ../contents/ui/config/ConfigEvents.qml
+msgid ""
+"Google Calendar's, and the alarms of CalDAV and .ics events; off or without "
+"one: the time above"
+msgstr ""
+"Google 日历的提醒以及 CalDAV 和 .ics 事件的闹钟；关闭或没有时：使用上面的时间"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Keep until dismissed"
@@ -1331,6 +1330,126 @@ msgid ""
 "Popups and sounds for each kind of notification can also be set in System "
 "Settings > Notifications > Event Calendar."
 msgstr "各类通知的弹窗和声音也可以在 系统设置 > 通知 > 事件日历 中设置。"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Desktop widget"
+msgstr "桌面小部件"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Show background"
+msgstr "显示背景"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Glance"
+msgstr "Glance"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Share events with Glance"
+msgstr "与 Glance 共享事件"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid ""
+"Today's and tomorrow's events, with meeting links, for the Glance panel "
+"widget. Only on this computer; no descriptions or guest addresses."
+msgstr ""
+"今天和明天的事件（含会议链接），供面板小部件 Glance 使用。仅限本机；不含描述"
+"或来宾地址。"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Offline"
+msgstr "离线"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Keep events and tasks for offline start"
+msgstr "保留事件和任务以便离线启动"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid ""
+"The last loaded events and tasks (no descriptions or notes) are stored in "
+"~/.cache/plasma-eventcalendar and shown until the first refresh. Off: "
+"nothing is stored, and the stored copy is deleted."
+msgstr ""
+"最近加载的事件和任务（不含描述或备注）保存在 ~/.cache/plasma-eventcalendar "
+"中，并在首次刷新前显示。关闭：不保存任何内容，并删除已保存的副本。"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Settings Backup"
+msgstr "设置备份"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Export Settings…"
+msgstr "导出设置…"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "All settings of this widget to a file, without passwords and sign-ins"
+msgstr "将此小部件的所有设置导出到文件，不含密码和登录信息"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Import Settings…"
+msgstr "导入设置…"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "From an exported file; press Apply or OK to keep them"
+msgstr "从导出的文件导入；按“应用”或“确定”保留"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid ""
+"Accounts come back with their calendars. On this computer they stay signed "
+"in; on another one, sign in again (passwords and sign-ins stay in the system "
+"keyring)."
+msgstr ""
+"账户会连同其日历一起恢复。在这台电脑上保持登录；在其他电脑上请重新登录（密码"
+"和登录信息保存在系统密钥环中）。"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Troubleshooting"
+msgstr "故障排除"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Debug logging and extra settings pages"
+msgstr "调试日志和额外的设置页面"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "The file couldn't be written: %1"
+msgstr "无法写入文件：%1"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Exported to %1"
+msgstr "已导出到 %1"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "The file couldn't be read: %1"
+msgstr "无法读取文件：%1"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "This isn't a settings file of Event Calendar."
+msgstr "这不是 Event Calendar 的设置文件。"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Imported %1 setting. Press Apply or OK to keep it."
+msgid_plural "Imported %1 settings. Press Apply or OK to keep them."
+msgstr[0] "已导入 %1 项设置。按“应用”或“确定”保留。"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid ""
+"Not imported (not in this version, a password or sign-in, or a value of "
+"another kind): %2"
+msgid_plural ""
+"%1 not imported (not in this version, passwords or sign-ins, or values of "
+"another kind): %2"
+msgstr[0] "%1 项未导入（此版本中没有、密码或登录信息，或值的类型不同）：%2"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Export Settings"
+msgstr "导出设置"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Settings (*.json)"
+msgstr "设置 (*.json)"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Import Settings"
+msgstr "导入设置"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid "TickTick did not accept the API token. Check it and try again."
@@ -1692,6 +1811,17 @@ msgid "Week numbers"
 msgstr "周数"
 
 #: ../contents/ui/config/ConfigViews.qml
+msgid "Show all events"
+msgstr "显示所有事件"
+
+#: ../contents/ui/config/ConfigViews.qml
+msgid ""
+"Month view: no \"+N\", each week as tall as its busiest day; the month "
+"scrolls when it doesn't fit."
+msgstr ""
+"月视图：不显示“+N”，每周的高度与其最忙的一天相同；放不下时月视图可滚动。"
+
+#: ../contents/ui/config/ConfigViews.qml
 msgid "Clicking a day opens it in the Day view"
 msgstr "单击某天时在日视图中打开"
 
@@ -1833,102 +1963,6 @@ msgstr "会议链接按钮"
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Multi-day events on every day"
 msgstr "跨天事件在每一天都显示"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Offline"
-msgstr "离线"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Keep events and tasks for offline start"
-msgstr "保留事件和任务以便离线启动"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid ""
-"The last loaded events and tasks (no descriptions or notes) are stored in "
-"~/.cache/plasma-eventcalendar and shown until the first refresh. Off: "
-"nothing is stored, and the stored copy is deleted."
-msgstr ""
-"最近加载的事件和任务（不含描述或备注）保存在 ~/.cache/plasma-eventcalendar "
-"中，并在首次刷新前显示。关闭：不保存任何内容，并删除已保存的副本。"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Troubleshooting"
-msgstr "故障排除"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Debug logging and extra settings pages"
-msgstr "调试日志和额外的设置页面"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Settings Backup"
-msgstr "设置备份"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Export Settings…"
-msgstr "导出设置…"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "All settings of this widget to a file, without passwords and sign-ins"
-msgstr "将此小部件的所有设置导出到文件，不含密码和登录信息"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Import Settings…"
-msgstr "导入设置…"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "From an exported file; press Apply or OK to keep them"
-msgstr "从导出的文件导入；按“应用”或“确定”保留"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid ""
-"Accounts come back with their calendars. On this computer they stay signed "
-"in; on another one, sign in again (passwords and sign-ins stay in the system "
-"keyring)."
-msgstr ""
-"账户会连同其日历一起恢复。在这台电脑上保持登录；在其他电脑上请重新登录（密码"
-"和登录信息保存在系统密钥环中）。"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "The file couldn't be written: %1"
-msgstr "无法写入文件：%1"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Exported to %1"
-msgstr "已导出到 %1"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "The file couldn't be read: %1"
-msgstr "无法读取文件：%1"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "This isn't a settings file of Event Calendar."
-msgstr "这不是 Event Calendar 的设置文件。"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Imported %1 setting. Press Apply or OK to keep it."
-msgid_plural "Imported %1 settings. Press Apply or OK to keep them."
-msgstr[0] "已导入 %1 项设置。按“应用”或“确定”保留。"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid ""
-"Not imported (not in this version, a password or sign-in, or a value of "
-"another kind): %2"
-msgid_plural ""
-"%1 not imported (not in this version, passwords or sign-ins, or values of "
-"another kind): %2"
-msgstr[0] "%1 项未导入（此版本中没有、密码或登录信息，或值的类型不同）：%2"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Export Settings"
-msgstr "导出设置"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Settings (*.json)"
-msgstr "设置 (*.json)"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Import Settings"
-msgstr "导入设置"
 
 #: ../contents/ui/config/ConfigWeather.qml
 msgctxt "an API the app id may use"
@@ -4297,8 +4331,9 @@ msgid "No date"
 msgstr "无日期"
 
 #: ../contents/ui/TasksView.qml
-msgid "Completed"
-msgstr "已完成"
+msgid "Completed (last day)"
+msgid_plural "Completed (last %1 days)"
+msgstr[0] "已完成 (最近 %1 天)"
 
 #: ../contents/ui/TaskUndoBar.qml
 msgctxt "a task was checked"
@@ -4667,6 +4702,15 @@ msgstr "今天没有更多事件"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "工作地点：%1"
+
+#~ msgid "Completed (last 30 days)"
+#~ msgstr "已完成 (最近 30 天)"
+
+#~ msgid "Completed"
+#~ msgstr "已完成"
+
+#~ msgid "Use the reminder times set in Google Calendar"
+#~ msgstr "使用 Google 日历中设置的提醒时间"
 
 #~ msgid "Forecast in the day headers and, in the Day view, a weather panel."
 #~ msgstr "在日期标题中显示天气预报，并在日视图中显示天气面板。"

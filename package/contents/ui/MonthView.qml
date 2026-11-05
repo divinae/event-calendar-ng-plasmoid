@@ -39,6 +39,7 @@ PinchArea {
 	readonly property string title: currentTitle
 	function goToday() {
 		resetToToday()
+		startFollowingToday() // Also when the month stays the same (scrolled away from today)
 	}
 	function goPrevious() {
 		if (stack.currentItem) {
@@ -88,6 +89,63 @@ PinchArea {
 	}
 
 	property alias cellHeight: mainDaysCalendar.cellHeight
+	// Settings > Views > Month > Show all events: no "+N", each week as tall as its busiest day.
+	property bool showAllEvents: false
+	// The month's visible height (DaysCalendar.cellHeight): the stack is taller when it scrolls.
+	readonly property real gridViewportHeight: monthScroll.height
+	// "Show all events": the current week in the middle of the view (the month is taller than the
+	// view), kept there while the weeks settle (a cached fill, then the calendars as they come), as
+	// the Agenda follows its day (AgendaView.followDate), until one scrolls. Each time the month is
+	// shown or another month comes; another month without today starts at its top.
+	property bool followToday: true
+	function startFollowingToday() {
+		followToday = true
+		Qt.callLater(centerCurrentWeek)
+	}
+	// Cell index of a date in the shown month (-1: not shown).
+	function dayIndexOf(date) {
+		if (!daysModel || daysModel.count === 0) {
+			return -1
+		}
+		var index = WeekDrag.dayDelta(dayCellDate(0), date)
+		return index >= 0 && index < daysModel.count ? index : -1
+	}
+	// The top and height of a cell's week in the scrolled month: from the heading and the row tops,
+	// not the grid's y (it follows its height only at the next polish).
+	function weekSpan(index) {
+		var week = Math.floor(index / calendarBackend.days)
+		var top = mainDaysCalendar.headingRowHeight + mainDaysCalendar.gridLineY(week + (mainDaysCalendar.headerModel ? 1 : 0))
+		return { top: top, height: mainDaysCalendar.rowHeight(week) }
+	}
+	function clampedContentY(y) {
+		return Math.max(0, Math.min(Math.max(0, monthScroll.contentHeight - monthScroll.height), Math.round(y)))
+	}
+	function centerCurrentWeek() {
+		if (!followToday || !visible || !showAllEvents || mainDaysCalendar.weekRowCounts.length === 0) {
+			return
+		}
+		var index = dayIndexOf(root.today)
+		if (index >= 0) {
+			var span = weekSpan(index)
+			monthScroll.contentY = clampedContentY(span.top + span.height / 2 - monthScroll.height / 2)
+		}
+	}
+	// The selected day in view (keyboard): scrolled only as far as needed.
+	function ensureDateVisible(date) {
+		var index = dayIndexOf(date)
+		if (index < 0 || monthScroll.contentHeight <= monthScroll.height) {
+			return
+		}
+		if (!Shared.isSameDate(date, root.today)) {
+			followToday = false // Another day chosen: not pulled back to today's week
+		}
+		var span = weekSpan(index)
+		if (span.top < monthScroll.contentY) {
+			monthScroll.contentY = clampedContentY(span.top)
+		} else if (span.top + span.height > monthScroll.contentY + monthScroll.height) {
+			monthScroll.contentY = clampedContentY(span.top + span.height - monthScroll.height)
+		}
+	}
 
 	// Opt-in (the popup): with event titles, multi-day events as bars across the days instead of
 	// their title in every day. The owner fills spanBars and the reservedRows / hiddenSpanCount
@@ -104,7 +162,12 @@ PinchArea {
 	readonly property bool fitsTitles: eventTitles && roomForTitles
 	property bool showsTitles: false
 	onFitsTitlesChanged: if (visible) showsTitles = fitsTitles
-	onVisibleChanged: if (visible) showsTitles = fitsTitles
+	onVisibleChanged: {
+		if (visible) {
+			showsTitles = fitsTitles
+			startFollowingToday()
+		}
+	}
 	property bool spanBarsEnabled: false
 	readonly property bool spanBarsActive: spanBarsEnabled && mainDaysCalendar.eventBadgeType === 'eventTitles'
 	property var spanBars: []
@@ -235,6 +298,9 @@ PinchArea {
 	function setSelectedDate(d) {
 		currentDate = d
 		dateSelected(currentDate)
+		if (keyboardActive) {
+			Qt.callLater(ensureDateVisible, d) // After a new month's weeks
+		}
 	}
 
 	// Back to the month from the year / decade view (the month view left: the agenda shows its
@@ -359,8 +425,9 @@ PinchArea {
 			var dayData = daysModel.get(i)
 			dayTimes.push(new Date(dayData.yearNumber, dayData.monthNumber - 1, dayData.dayNumber).getTime())
 		}
+		var showAll = showAllEvents && spanBarsActive
 		var layout = spanBarsActive
-			? EventBuckets.layoutMonth(items, dayTimes, calendarBackend.days, eventRowCapacity)
+			? EventBuckets.layoutMonth(items, dayTimes, calendarBackend.days, showAll ? Infinity : eventRowCapacity)
 			: { bars: [], dayEvents: EventBuckets.bucketByDay(items, dayTimes), reservedRows: [], hiddenSpanCount: [] }
 		// The events as plain arrays (dayEvents): copying them into the cells' nested ListModels took
 		// most of the time of a fill.
@@ -382,6 +449,12 @@ PinchArea {
 		}
 		root.dayEvents = layout.dayEvents
 		spanBars = layout.bars
+		// Set only when changed: a new array re-lays the whole grid out (every refresh otherwise).
+		var weekRows = showAll ? EventBuckets.weekRowCounts(layout, calendarBackend.days) : []
+		if (JSON.stringify(weekRows) !== JSON.stringify(mainDaysCalendar.weekRowCounts)) {
+			mainDaysCalendar.weekRowCounts = weekRows
+			Qt.callLater(centerCurrentWeek) // The weeks' heights changed: today's week moved
+		}
 	}
 
 	function updateYearOverview() {
@@ -432,6 +505,9 @@ PinchArea {
 
 		onDisplayedDateChanged: {
 			updateMonthOverview()
+			// Another month: from its top, or its current week in the middle (centerCurrentWeek)
+			monthScroll.contentY = 0
+			root.startFollowingToday()
 		}
 
 		onYearChanged: {
@@ -501,106 +577,133 @@ PinchArea {
 		// Edge to edge: the popup's own padding is the margin (a card margin on top of it doubled it).
 		anchors.fill: parent
 
-		// Sized by the card (its content).
-		QQC2.StackView {
-			id: stack
-			// Paging (previous / next): the new month slides in from its side.
-			transform: Translate { id: pageShift }
-			SlideIn {
-				id: pageSlide
-				target: stack
-				shift: pageShift
+		// Sized by the card (its content). The stack in it: with "show all events" the month can be
+		// taller than the view (each week as tall as its busiest day), it scrolls then.
+		Flickable {
+			id: monthScroll
+			clip: true
+			contentWidth: width
+			contentHeight: stack.height
+			boundsBehavior: Flickable.StopAtBounds
+			onMovementStarted: root.followToday = false // Scrolled: stays where one put it
+			// Wheel and touchpad, the scroll bar; not flicked with the mouse (the days take clicks and drags).
+			interactive: Kirigami.Settings.hasTransientTouchInput
+			QQC2.ScrollBar.vertical: OverlayScrollBar {
+				onPressedChanged: if (pressed) root.followToday = false
+			}
+			Kirigami.WheelHandler {
+				target: monthScroll
+				filterMouseEvents: true
+				keyNavigationEnabled: false
+				onWheel: root.followToday = false
 			}
 
-			pushEnter: Transition {
-				NumberAnimation {
-					duration: appletConfig.longDuration
-					property: "opacity"
-					from: 0
-					to: 1
-				}
-				NumberAnimation {
-					duration: appletConfig.longDuration
-					property: "transformScale"
-					from: 1.5
-					to: 1
-				}
-			}
-			pushExit: Transition {
-				NumberAnimation {
-					duration: appletConfig.longDuration
-					property: "opacity"
-					from: 1
-					to: 0
-				}
-			}
-
-			popEnter: Transition {
-				NumberAnimation {
-					duration: appletConfig.longDuration
-					property: "opacity"
-					from: 0
-					to: 1
-				}
-			}
-			popExit: Transition {
-				id: popExit
-				NumberAnimation {
-					duration: appletConfig.longDuration
-					property: "opacity"
-					from: 1
-					to: 0
-				}
-				NumberAnimation {
-					duration: appletConfig.longDuration
-					property: "transformScale"
-					// so no matter how much you scaled, it would still fly towards you
-					to: popExit.ViewTransition.item.transformScale * 1.5
-				}
-			}
-
-			initialItem: DaysCalendar {
-				id: mainDaysCalendar
-				dayEvents: root.dayEvents
-				// The month's standalone name ("Listopad", not the "listopada" of a date) and the
-				// year; no day.
-				title: {
-					var shown = calendarBackend.displayedDate
-					var name = Qt.locale().standaloneMonthName(shown.getMonth(), Locale.LongFormat)
-					name = name.charAt(0).toLocaleUpperCase() + name.slice(1)
-					return name + " " + shown.getFullYear()
+			QQC2.StackView {
+				id: stack
+				width: monthScroll.width
+				// The month as tall as its weeks (with "show all events" taller than the view); the
+				// year overview pushed on it: the view's height.
+				height: Math.max(monthScroll.height, stack.depth === 1 ? mainDaysCalendar.fullHeight : 0)
+				// Back from the year overview: today's week in the middle again.
+				onDepthChanged: if (depth === 1) root.startFollowingToday()
+				// Paging (previous / next): the new month slides in from its side.
+				transform: Translate { id: pageShift }
+				SlideIn {
+					id: pageSlide
+					target: stack
+					shift: pageShift
 				}
 
-				columns: calendarBackend.days
-				rows: calendarBackend.weeks
-
-				showWeekNumbers: root.showWeekNumbers
-				spanBars: root.spanBarsActive ? root.spanBars : []
-				eventDragEnabled: root.eventDragEnabled
-				eventDrag: root.eventDragState
-				eventBadgeType: root.showsTitles ? 'eventTitles' : root.eventTitles ? 'dots' : plasmoid.configuration.monthEventBadgeType
-
-				headerModel: calendarBackend.days
-				gridModel: daysModel
-
-				dateMatchingPrecision: PlasmaCalendar.Calendar.MatchYearMonthAndDay
-
-				previousLabel: i18nd("libplasma5", "Previous Month")
-				nextLabel: i18nd("libplasma5", "Next Month")
-
-				onPrevious: calendarBackend.previousMonth()
-				onNext: calendarBackend.nextMonth()
-				onHeaderClicked: {
-					stack.push(yearOverview)
+				pushEnter: Transition {
+					NumberAnimation {
+						duration: appletConfig.longDuration
+						property: "opacity"
+						from: 0
+						to: 1
+					}
+					NumberAnimation {
+						duration: appletConfig.longDuration
+						property: "transformScale"
+						from: 1.5
+						to: 1
+					}
 				}
-				onActivated: function(index, date, item) {
-					root.date = date
-					var dt = new Date(date.yearNumber, date.monthNumber - 1, date.dayNumber)
-					root.setSelectedDate(dt)
-					root.dateClicked(dt)
+				pushExit: Transition {
+					NumberAnimation {
+						duration: appletConfig.longDuration
+						property: "opacity"
+						from: 1
+						to: 0
+					}
 				}
-				onDoubleClicked: function(index, date, item) {
-					root.dayDoubleClicked(date)
+
+				popEnter: Transition {
+					NumberAnimation {
+						duration: appletConfig.longDuration
+						property: "opacity"
+						from: 0
+						to: 1
+					}
+				}
+				popExit: Transition {
+					id: popExit
+					NumberAnimation {
+						duration: appletConfig.longDuration
+						property: "opacity"
+						from: 1
+						to: 0
+					}
+					NumberAnimation {
+						duration: appletConfig.longDuration
+						property: "transformScale"
+						// so no matter how much you scaled, it would still fly towards you
+						to: popExit.ViewTransition.item.transformScale * 1.5
+					}
+				}
+
+				initialItem: DaysCalendar {
+					id: mainDaysCalendar
+					dayEvents: root.dayEvents
+					// The month's standalone name ("Listopad", not the "listopada" of a date) and the
+					// year; no day.
+					title: {
+						var shown = calendarBackend.displayedDate
+						var name = Qt.locale().standaloneMonthName(shown.getMonth(), Locale.LongFormat)
+						name = name.charAt(0).toLocaleUpperCase() + name.slice(1)
+						return name + " " + shown.getFullYear()
+					}
+
+					columns: calendarBackend.days
+					rows: calendarBackend.weeks
+
+					showWeekNumbers: root.showWeekNumbers
+					spanBars: root.spanBarsActive ? root.spanBars : []
+					eventDragEnabled: root.eventDragEnabled
+					eventDrag: root.eventDragState
+					eventBadgeType: root.showsTitles ? 'eventTitles' : root.eventTitles ? 'dots' : plasmoid.configuration.monthEventBadgeType
+
+					headerModel: calendarBackend.days
+					gridModel: daysModel
+
+					dateMatchingPrecision: PlasmaCalendar.Calendar.MatchYearMonthAndDay
+
+					previousLabel: i18nd("libplasma5", "Previous Month")
+					nextLabel: i18nd("libplasma5", "Next Month")
+
+					onPrevious: calendarBackend.previousMonth()
+					onNext: calendarBackend.nextMonth()
+					onHeaderClicked: {
+						stack.push(yearOverview)
+					}
+					onActivated: function(index, date, item) {
+						root.date = date
+						var dt = new Date(date.yearNumber, date.monthNumber - 1, date.dayNumber)
+						root.setSelectedDate(dt)
+						root.dateClicked(dt)
+					}
+					onDoubleClicked: function(index, date, item) {
+						root.dayDoubleClicked(date)
+					}
 				}
 			}
 		}

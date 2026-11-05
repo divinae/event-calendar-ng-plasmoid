@@ -1,3 +1,38 @@
+## v1.22.0 - November 5 2026
+
+### Tasks
+* **New Google tasks no longer disappear** after a restart or the next refresh: since 1.5 the list was asked only for tasks done in the last 30 days, and Google then left out the open ones. Open and done tasks are now fetched apart.
+* **Completed tasks are those of the last 30 days** (Google and TickTick), as the Completed section now says.
+* **New tasks go to a list that's shown**: the list pickers offer only the task lists selected in settings (a task added to another list was made but never shown).
+* **The offline copy keeps a new, edited or deleted task** right away, not only after the next refresh; a calendar that keeps failing to refresh leaves it after 14 days.
+
+### Faster start
+* **Plasma no longer waits for the widget at login**: the KDE PIM calendars (Akonadi) and the calendar plugins load a few seconds after it, the camera check's Qt Multimedia when the popup first opens, and the network status in the background.
+* **New installs show the holidays without KDE PIM** (Settings > Calendars turns it on); existing setups keep their plugins.
+
+### Clock and new events (from ALikesToCode's fork)
+* **The seconds change with the system clock** (they could be up to a second late).
+* **New events start in your primary calendar**, not the first one you can write to (eg: a shared family calendar), and the picker reads "Calendar (account)".
+
+### Google sign-in
+* **What signing in allows**, and a link to the privacy policy, next to the Sign in button.
+* **Event Calendar NG's own website**: https://divinae.github.io/plasma-applet-eventcalendar/ (install, screenshots, privacy policy).
+
+## v1.21.0 - November 5 2026
+
+### Month view (thanks to frispete, #29)
+* **Show all events** (Settings > Views > Calendar, off by default): no "+N", each week as tall as its busiest day; the month scrolls when it doesn't fit, with today's week in the middle.
+
+### Reminders
+* **CalDAV and .ics events remind at their own alarms**, as set on the server or in the file (display and sound alarms), like Google Calendar's reminder times: Settings > Events > "Use the reminder times set in the calendar" (#14, asked by sbstn87). Off, or for events without one, the widget's reminder time.
+
+### Settings
+* **A General page** (at the end): the desktop widget's background, sharing with Glance, the offline start, the settings backup and troubleshooting, in one place (they were spread over Views, Clock and Calendars).
+
+### Glance
+* **Today's events reach Glance**: lists with events didn't get through (gdbus read the JSON as another value), and from the start (an empty list until a whole online round); sending never stalls.
+* "Share events with Glance" is in Settings > General. With it on: the current weather too, a click on an event there opens it here, and a meeting marked as ended ends there as well.
+
 ## v1.20.0 - November 4 2026
 
 ### Fixes (thanks to frispete)

@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-04 10:49+0100\n"
+"POT-Creation-Date: 2026-11-05 11:21+0100\n"
 "PO-Revision-Date: 2019-06-02 22:28+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -54,6 +54,11 @@ msgstr "Hava Durumu"
 #: ../contents/config/config.qml
 msgid "Time Zones"
 msgstr "Saat Dilimleri"
+
+#: ../contents/config/config.qml ../contents/ui/config/ConfigCalendars.qml
+#: ../contents/ui/config/ConfigTasks.qml
+msgid "General"
+msgstr "Genel"
 
 #: ../contents/config/config.qml
 msgid "Advanced"
@@ -233,7 +238,6 @@ msgid "Todo"
 msgstr "Yapılacaklar"
 
 #: ../contents/ui/calendars/PlasmaCalendarManager.qml
-#: ../contents/ui/config/ConfigClock.qml
 msgid "Other"
 msgstr "Diğer"
 
@@ -595,19 +599,6 @@ msgid "iCalendar (*.ics)"
 msgstr "iCalendar (*.ics)"
 
 #: ../contents/ui/config/CalendarsGeneral.qml
-msgid "Share events with Glance"
-msgstr "Etkinlikleri Glance ile paylaş"
-
-#: ../contents/ui/config/CalendarsGeneral.qml
-msgid ""
-"Today's and tomorrow's events, with meeting links, for the Glance panel "
-"widget. Only on this computer; no descriptions or guest addresses."
-msgstr ""
-"Bugünün ve yarının etkinlikleri, toplantı bağlantılarıyla, Glance panel "
-"programcığı için. Yalnızca bu bilgisayarda; açıklamalar veya konuk adresleri "
-"olmadan."
-
-#: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Refresh every"
 msgstr "Yenileme sıklığı"
 
@@ -754,6 +745,21 @@ msgstr "Google ile Oturum Aç…"
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Waiting for the browser sign-in…"
 msgstr "Tarayıcıda oturum açılması bekleniyor…"
+
+#: ../contents/ui/config/CalendarsGoogle.qml
+msgid ""
+"Signing in lets the widget show your calendars and task lists, and change "
+"the events and tasks you edit in it. Your data goes only between this "
+"computer and Google; the sign-in is kept in the system keyring."
+msgstr ""
+"Oturum açmak, programcığın takvimlerinizi ve görev listelerinizi "
+"göstermesini ve içinde düzenlediğiniz etkinlikleri ve görevleri "
+"değiştirmesini sağlar. Verileriniz yalnızca bu bilgisayar ile Google "
+"arasında gider; oturum bilgisi sistem anahtarlığında saklanır."
+
+#: ../contents/ui/config/CalendarsGoogle.qml
+msgid "Privacy policy"
+msgstr "Gizlilik politikası"
 
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Advanced sign-in options"
@@ -936,11 +942,6 @@ msgstr ""
 "CalDAV takvimine aktarın (Takvimler > Genel)."
 
 #: ../contents/ui/config/ConfigCalendars.qml
-#: ../contents/ui/config/ConfigTasks.qml
-msgid "General"
-msgstr "Genel"
-
-#: ../contents/ui/config/ConfigCalendars.qml
 msgid "Google Calendar"
 msgstr "Google Takvim"
 
@@ -1083,14 +1084,6 @@ msgstr "Toplantı adının altında, takviminin renginde ince bir çubuk."
 msgid "Middle-click the clock to join the current or next meeting."
 msgstr "Geçerli veya sonraki toplantıya katılmak için saate orta tıklayın."
 
-#: ../contents/ui/config/ConfigClock.qml
-msgid "Show background"
-msgstr "Arka planı göster"
-
-#: ../contents/ui/config/ConfigClock.qml
-msgid "Desktop widget"
-msgstr "Masaüstü araç takımı"
-
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Clicking an event opens"
 msgstr "Bir etkinliğe tıklayınca açılan"
@@ -1121,8 +1114,16 @@ msgid " min"
 msgstr " dk"
 
 #: ../contents/ui/config/ConfigEvents.qml
-msgid "Use the reminder times set in Google Calendar"
-msgstr "Google Takvim'de ayarlanan anımsatıcı sürelerini kullan"
+msgid "Use the reminder times set in the calendar"
+msgstr "Takvimde ayarlanan hatırlatma sürelerini kullan"
+
+#: ../contents/ui/config/ConfigEvents.qml
+msgid ""
+"Google Calendar's, and the alarms of CalDAV and .ics events; off or without "
+"one: the time above"
+msgstr ""
+"Google Takvim'inkiler ve CalDAV ile .ics etkinliklerinin alarmları; "
+"kapalıysa veya yoksa: yukarıdaki süre"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Keep until dismissed"
@@ -1389,6 +1390,136 @@ msgid ""
 msgstr ""
 "Her bildirim türü için açılır pencereler ve sesler Sistem Ayarları > "
 "Bildirimler > Event Calendar bölümünden de ayarlanabilir."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Desktop widget"
+msgstr "Masaüstü araç takımı"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Show background"
+msgstr "Arka planı göster"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Glance"
+msgstr "Glance"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Share events with Glance"
+msgstr "Etkinlikleri Glance ile paylaş"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid ""
+"Today's and tomorrow's events, with meeting links, for the Glance panel "
+"widget. Only on this computer; no descriptions or guest addresses."
+msgstr ""
+"Bugünün ve yarının etkinlikleri, toplantı bağlantılarıyla, Glance panel "
+"programcığı için. Yalnızca bu bilgisayarda; açıklamalar veya konuk adresleri "
+"olmadan."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Offline"
+msgstr "Çevrimdışı"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Keep events and tasks for offline start"
+msgstr "Çevrimdışı başlatma için etkinlikleri ve görevleri sakla"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid ""
+"The last loaded events and tasks (no descriptions or notes) are stored in "
+"~/.cache/plasma-eventcalendar and shown until the first refresh. Off: "
+"nothing is stored, and the stored copy is deleted."
+msgstr ""
+"Son yüklenen etkinlikler ve görevler (açıklamalar ve notlar hariç) ~/.cache/"
+"plasma-eventcalendar içinde saklanır ve ilk yenilemeye kadar gösterilir. "
+"Kapalı: hiçbir şey saklanmaz ve saklanan kopya silinir."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Settings Backup"
+msgstr "Ayar yedeği"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Export Settings…"
+msgstr "Ayarları dışa aktar…"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "All settings of this widget to a file, without passwords and sign-ins"
+msgstr ""
+"Bu programcığın tüm ayarları bir dosyaya, parolalar ve oturumlar olmadan"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Import Settings…"
+msgstr "Ayarları içe aktar…"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "From an exported file; press Apply or OK to keep them"
+msgstr "Dışa aktarılmış bir dosyadan; korumak için Uygula veya Tamam'a basın"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid ""
+"Accounts come back with their calendars. On this computer they stay signed "
+"in; on another one, sign in again (passwords and sign-ins stay in the system "
+"keyring)."
+msgstr ""
+"Hesaplar takvimleriyle geri gelir. Bu bilgisayarda oturumları açık kalır; "
+"başka bir bilgisayarda yeniden oturum açın (parolalar ve oturumlar sistem "
+"anahtarlığında kalır)."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Troubleshooting"
+msgstr "Sorun giderme"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Debug logging and extra settings pages"
+msgstr "Hata ayıklama günlüğü ve ek ayar sayfaları"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "The file couldn't be written: %1"
+msgstr "Dosya yazılamadı: %1"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Exported to %1"
+msgstr "%1 konumuna dışa aktarıldı"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "The file couldn't be read: %1"
+msgstr "Dosya okunamadı: %1"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "This isn't a settings file of Event Calendar."
+msgstr "Bu bir Event Calendar ayar dosyası değil."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Imported %1 setting. Press Apply or OK to keep it."
+msgid_plural "Imported %1 settings. Press Apply or OK to keep them."
+msgstr[0] "%1 ayar içe aktarıldı. Korumak için Uygula veya Tamam'a basın."
+msgstr[1] "%1 ayar içe aktarıldı. Korumak için Uygula veya Tamam'a basın."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid ""
+"Not imported (not in this version, a password or sign-in, or a value of "
+"another kind): %2"
+msgid_plural ""
+"%1 not imported (not in this version, passwords or sign-ins, or values of "
+"another kind): %2"
+msgstr[0] ""
+"İçe aktarılmadı (bu sürümde yok, bir parola veya oturum ya da başka türde "
+"bir değer): %2"
+msgstr[1] ""
+"%1 tanesi içe aktarılmadı (bu sürümde yok, parolalar veya oturumlar ya da "
+"başka türde değerler): %2"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Export Settings"
+msgstr "Ayarları dışa aktar"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Settings (*.json)"
+msgstr "Ayarlar (*.json)"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Import Settings"
+msgstr "Ayarları içe aktar"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid "TickTick did not accept the API token. Check it and try again."
@@ -1762,6 +1893,18 @@ msgid "Week numbers"
 msgstr "Hafta numaraları"
 
 #: ../contents/ui/config/ConfigViews.qml
+msgid "Show all events"
+msgstr "Tüm etkinlikleri göster"
+
+#: ../contents/ui/config/ConfigViews.qml
+msgid ""
+"Month view: no \"+N\", each week as tall as its busiest day; the month "
+"scrolls when it doesn't fit."
+msgstr ""
+"Ay görünümü: \"+N\" yok, her hafta en yoğun günü kadar yüksek; sığmadığında "
+"ay kaydırılır."
+
+#: ../contents/ui/config/ConfigViews.qml
 msgid "Clicking a day opens it in the Day view"
 msgstr "Bir güne tıklamak onu Gün görünümünde açar"
 
@@ -1910,111 +2053,6 @@ msgstr "Toplantı bağlantısı düğmesi"
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Multi-day events on every day"
 msgstr "Çok günlü etkinlikler her günde"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Offline"
-msgstr "Çevrimdışı"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Keep events and tasks for offline start"
-msgstr "Çevrimdışı başlatma için etkinlikleri ve görevleri sakla"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid ""
-"The last loaded events and tasks (no descriptions or notes) are stored in "
-"~/.cache/plasma-eventcalendar and shown until the first refresh. Off: "
-"nothing is stored, and the stored copy is deleted."
-msgstr ""
-"Son yüklenen etkinlikler ve görevler (açıklamalar ve notlar hariç) ~/.cache/"
-"plasma-eventcalendar içinde saklanır ve ilk yenilemeye kadar gösterilir. "
-"Kapalı: hiçbir şey saklanmaz ve saklanan kopya silinir."
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Troubleshooting"
-msgstr "Sorun giderme"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Debug logging and extra settings pages"
-msgstr "Hata ayıklama günlüğü ve ek ayar sayfaları"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Settings Backup"
-msgstr "Ayar yedeği"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Export Settings…"
-msgstr "Ayarları dışa aktar…"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "All settings of this widget to a file, without passwords and sign-ins"
-msgstr ""
-"Bu programcığın tüm ayarları bir dosyaya, parolalar ve oturumlar olmadan"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Import Settings…"
-msgstr "Ayarları içe aktar…"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "From an exported file; press Apply or OK to keep them"
-msgstr "Dışa aktarılmış bir dosyadan; korumak için Uygula veya Tamam'a basın"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid ""
-"Accounts come back with their calendars. On this computer they stay signed "
-"in; on another one, sign in again (passwords and sign-ins stay in the system "
-"keyring)."
-msgstr ""
-"Hesaplar takvimleriyle geri gelir. Bu bilgisayarda oturumları açık kalır; "
-"başka bir bilgisayarda yeniden oturum açın (parolalar ve oturumlar sistem "
-"anahtarlığında kalır)."
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "The file couldn't be written: %1"
-msgstr "Dosya yazılamadı: %1"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Exported to %1"
-msgstr "%1 konumuna dışa aktarıldı"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "The file couldn't be read: %1"
-msgstr "Dosya okunamadı: %1"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "This isn't a settings file of Event Calendar."
-msgstr "Bu bir Event Calendar ayar dosyası değil."
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Imported %1 setting. Press Apply or OK to keep it."
-msgid_plural "Imported %1 settings. Press Apply or OK to keep them."
-msgstr[0] "%1 ayar içe aktarıldı. Korumak için Uygula veya Tamam'a basın."
-msgstr[1] "%1 ayar içe aktarıldı. Korumak için Uygula veya Tamam'a basın."
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid ""
-"Not imported (not in this version, a password or sign-in, or a value of "
-"another kind): %2"
-msgid_plural ""
-"%1 not imported (not in this version, passwords or sign-ins, or values of "
-"another kind): %2"
-msgstr[0] ""
-"İçe aktarılmadı (bu sürümde yok, bir parola veya oturum ya da başka türde "
-"bir değer): %2"
-msgstr[1] ""
-"%1 tanesi içe aktarılmadı (bu sürümde yok, parolalar veya oturumlar ya da "
-"başka türde değerler): %2"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Export Settings"
-msgstr "Ayarları dışa aktar"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Settings (*.json)"
-msgstr "Ayarlar (*.json)"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Import Settings"
-msgstr "Ayarları içe aktar"
 
 #: ../contents/ui/config/ConfigWeather.qml
 msgctxt "an API the app id may use"
@@ -4433,8 +4471,10 @@ msgid "No date"
 msgstr "Tarih yok"
 
 #: ../contents/ui/TasksView.qml
-msgid "Completed"
-msgstr "Tamamlanan"
+msgid "Completed (last day)"
+msgid_plural "Completed (last %1 days)"
+msgstr[0] "Tamamlananlar (son gün)"
+msgstr[1] "Tamamlananlar (son %1 gün)"
 
 #: ../contents/ui/TaskUndoBar.qml
 msgctxt "a task was checked"
@@ -4815,6 +4855,15 @@ msgstr "Bugün başka etkinlik yok"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Çalışma konumu: %1"
+
+#~ msgid "Completed (last 30 days)"
+#~ msgstr "Tamamlananlar (son 30 gün)"
+
+#~ msgid "Completed"
+#~ msgstr "Tamamlanan"
+
+#~ msgid "Use the reminder times set in Google Calendar"
+#~ msgstr "Google Takvim'de ayarlanan anımsatıcı sürelerini kullan"
 
 #~ msgid "Forecast in the day headers and, in the Day view, a weather panel."
 #~ msgstr ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-04 10:49+0100\n"
+"POT-Creation-Date: 2026-11-05 11:21+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Mathias <EMAIL@ADDRESS>\n"
 "Language-Team: Swedish <LL@li.org>\n"
@@ -44,6 +44,10 @@ msgstr "Väder"
 #: ../contents/config/config.qml
 msgid "Time Zones"
 msgstr "Tidszoner"
+
+#: ../contents/config/config.qml ../contents/ui/config/ConfigCalendars.qml ../contents/ui/config/ConfigTasks.qml
+msgid "General"
+msgstr "Allmän"
 
 #: ../contents/config/config.qml
 msgid "Advanced"
@@ -193,7 +197,7 @@ msgstr "Helgdagar"
 msgid "Todo"
 msgstr "Att göra"
 
-#: ../contents/ui/calendars/PlasmaCalendarManager.qml ../contents/ui/config/ConfigClock.qml
+#: ../contents/ui/calendars/PlasmaCalendarManager.qml
 msgid "Other"
 msgstr "Övrigt"
 
@@ -476,14 +480,6 @@ msgid "iCalendar (*.ics)"
 msgstr "iCalendar (*.ics)"
 
 #: ../contents/ui/config/CalendarsGeneral.qml
-msgid "Share events with Glance"
-msgstr "Dela händelser med Glance"
-
-#: ../contents/ui/config/CalendarsGeneral.qml
-msgid "Today's and tomorrow's events, with meeting links, for the Glance panel widget. Only on this computer; no descriptions or guest addresses."
-msgstr "Dagens och morgondagens händelser, med möteslänkar, för panelwidgeten Glance. Bara på den här datorn; inga beskrivningar eller gästers adresser."
-
-#: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Refresh every"
 msgstr "Uppdatera var"
 
@@ -601,6 +597,14 @@ msgstr "Logga in med Google…"
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Waiting for the browser sign-in…"
 msgstr "Väntar på inloggning i webbläsaren…"
+
+#: ../contents/ui/config/CalendarsGoogle.qml
+msgid "Signing in lets the widget show your calendars and task lists, and change the events and tasks you edit in it. Your data goes only between this computer and Google; the sign-in is kept in the system keyring."
+msgstr "Inloggningen låter widgeten visa dina kalendrar och uppgiftslistor och ändra de händelser och uppgifter du redigerar i den. Dina data går bara mellan den här datorn och Google; inloggningen sparas i systemets nyckelring."
+
+#: ../contents/ui/config/CalendarsGoogle.qml
+msgid "Privacy policy"
+msgstr "Integritetspolicy"
 
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Advanced sign-in options"
@@ -737,10 +741,6 @@ msgstr "En fil i %1"
 #: ../contents/ui/config/CalendarsICal.qml
 msgid ".ics files and links show here as calendars, read-only, offline too. Local files are read from %1. To add events to one of your calendars instead, import the file into a Google or CalDAV calendar (Calendars > General)."
 msgstr ".ics-filer och -länkar visas här som kalendrar, skrivskyddade, även offline. Lokala filer läses från %1. För att i stället lägga till händelserna i en av dina kalendrar, importera filen till en Google- eller CalDAV-kalender (Kalendrar > Allmänt)."
-
-#: ../contents/ui/config/ConfigCalendars.qml ../contents/ui/config/ConfigTasks.qml
-msgid "General"
-msgstr "Allmän"
 
 #: ../contents/ui/config/ConfigCalendars.qml
 msgid "Google Calendar"
@@ -879,14 +879,6 @@ msgstr "En tunn stapel under mötets namn, i kalenderns färg."
 msgid "Middle-click the clock to join the current or next meeting."
 msgstr "Mittenklicka på klockan för att ansluta till pågående eller nästa möte."
 
-#: ../contents/ui/config/ConfigClock.qml
-msgid "Show background"
-msgstr "Visa bakgrund"
-
-#: ../contents/ui/config/ConfigClock.qml
-msgid "Desktop widget"
-msgstr "Skrivbordskomponent"
-
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Clicking an event opens"
 msgstr "Klick på en händelse öppnar"
@@ -917,8 +909,12 @@ msgid " min"
 msgstr " min"
 
 #: ../contents/ui/config/ConfigEvents.qml
-msgid "Use the reminder times set in Google Calendar"
-msgstr "Använd påminnelsetiderna som ställts in i Google Kalender"
+msgid "Use the reminder times set in the calendar"
+msgstr "Använd påminnelsetiderna som är angivna i kalendern"
+
+#: ../contents/ui/config/ConfigEvents.qml
+msgid "Google Calendar's, and the alarms of CalDAV and .ics events; off or without one: the time above"
+msgstr "Google Kalenders och larmen för CalDAV- och .ics-händelser; avstängt eller utan: tiden ovan"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Keep until dismissed"
@@ -1134,6 +1130,110 @@ msgstr "Påminnelser och händelser som börjar endast från kalendrarna med klo
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Popups and sounds for each kind of notification can also be set in System Settings > Notifications > Event Calendar."
 msgstr "Poppuppfönster och ljud för varje typ av underrättelse kan också ställas in i Systeminställningar > Underrättelser > Event Calendar."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Desktop widget"
+msgstr "Skrivbordskomponent"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Show background"
+msgstr "Visa bakgrund"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Glance"
+msgstr "Glance"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Share events with Glance"
+msgstr "Dela händelser med Glance"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Today's and tomorrow's events, with meeting links, for the Glance panel widget. Only on this computer; no descriptions or guest addresses."
+msgstr "Dagens och morgondagens händelser, med möteslänkar, för panelwidgeten Glance. Bara på den här datorn; inga beskrivningar eller gästers adresser."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Offline"
+msgstr "Offline"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Keep events and tasks for offline start"
+msgstr "Behåll händelser och uppgifter för start offline"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "The last loaded events and tasks (no descriptions or notes) are stored in ~/.cache/plasma-eventcalendar and shown until the first refresh. Off: nothing is stored, and the stored copy is deleted."
+msgstr "De senast inlästa händelserna och uppgifterna (utan beskrivningar eller anteckningar) sparas i ~/.cache/plasma-eventcalendar och visas till första uppdateringen. Av: inget sparas och den sparade kopian tas bort."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Settings Backup"
+msgstr "Säkerhetskopia av inställningar"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Export Settings…"
+msgstr "Exportera inställningar…"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "All settings of this widget to a file, without passwords and sign-ins"
+msgstr "Alla inställningar för denna widget till en fil, utan lösenord och inloggningar"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Import Settings…"
+msgstr "Importera inställningar…"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "From an exported file; press Apply or OK to keep them"
+msgstr "Från en exporterad fil; tryck Verkställ eller OK för att behålla dem"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Accounts come back with their calendars. On this computer they stay signed in; on another one, sign in again (passwords and sign-ins stay in the system keyring)."
+msgstr "Konton kommer tillbaka med sina kalendrar. På den här datorn förblir de inloggade; på en annan, logga in igen (lösenord och inloggningar stannar i systemets nyckelring)."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Troubleshooting"
+msgstr "Felsökning"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Debug logging and extra settings pages"
+msgstr "Felsökningsloggning och extra inställningssidor"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "The file couldn't be written: %1"
+msgstr "Filen kunde inte skrivas: %1"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Exported to %1"
+msgstr "Exporterat till %1"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "The file couldn't be read: %1"
+msgstr "Filen kunde inte läsas: %1"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "This isn't a settings file of Event Calendar."
+msgstr "Detta är inte en inställningsfil för Event Calendar."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Imported %1 setting. Press Apply or OK to keep it."
+msgid_plural "Imported %1 settings. Press Apply or OK to keep them."
+msgstr[0] "Importerade %1 inställning. Tryck Verkställ eller OK för att behålla den."
+msgstr[1] "Importerade %1 inställningar. Tryck Verkställ eller OK för att behålla dem."
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Not imported (not in this version, a password or sign-in, or a value of another kind): %2"
+msgid_plural "%1 not imported (not in this version, passwords or sign-ins, or values of another kind): %2"
+msgstr[0] "Inte importerad (finns inte i den här versionen, ett lösenord eller en inloggning, eller ett värde av annat slag): %2"
+msgstr[1] "%1 inte importerade (finns inte i den här versionen, lösenord eller inloggningar, eller värden av annat slag): %2"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Export Settings"
+msgstr "Exportera inställningar"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Settings (*.json)"
+msgstr "Inställningar (*.json)"
+
+#: ../contents/ui/config/ConfigGeneral.qml
+msgid "Import Settings"
+msgstr "Importera inställningar"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid "TickTick did not accept the API token. Check it and try again."
@@ -1462,6 +1562,14 @@ msgid "Week numbers"
 msgstr "Veckonummer"
 
 #: ../contents/ui/config/ConfigViews.qml
+msgid "Show all events"
+msgstr "Visa alla händelser"
+
+#: ../contents/ui/config/ConfigViews.qml
+msgid "Month view: no \"+N\", each week as tall as its busiest day; the month scrolls when it doesn't fit."
+msgstr "Månadsvy: inget \"+N\", varje vecka lika hög som dess mest fullbokade dag; månaden rullar när den inte får plats."
+
+#: ../contents/ui/config/ConfigViews.qml
 msgid "Clicking a day opens it in the Day view"
 msgstr "Klick på en dag öppnar den i dagvyn"
 
@@ -1598,90 +1706,6 @@ msgstr "Knapp för möteslänk"
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Multi-day events on every day"
 msgstr "Flerdagshändelser på varje dag"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Offline"
-msgstr "Offline"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Keep events and tasks for offline start"
-msgstr "Behåll händelser och uppgifter för start offline"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "The last loaded events and tasks (no descriptions or notes) are stored in ~/.cache/plasma-eventcalendar and shown until the first refresh. Off: nothing is stored, and the stored copy is deleted."
-msgstr "De senast inlästa händelserna och uppgifterna (utan beskrivningar eller anteckningar) sparas i ~/.cache/plasma-eventcalendar och visas till första uppdateringen. Av: inget sparas och den sparade kopian tas bort."
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Troubleshooting"
-msgstr "Felsökning"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Debug logging and extra settings pages"
-msgstr "Felsökningsloggning och extra inställningssidor"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Settings Backup"
-msgstr "Säkerhetskopia av inställningar"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Export Settings…"
-msgstr "Exportera inställningar…"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "All settings of this widget to a file, without passwords and sign-ins"
-msgstr "Alla inställningar för denna widget till en fil, utan lösenord och inloggningar"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Import Settings…"
-msgstr "Importera inställningar…"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "From an exported file; press Apply or OK to keep them"
-msgstr "Från en exporterad fil; tryck Verkställ eller OK för att behålla dem"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Accounts come back with their calendars. On this computer they stay signed in; on another one, sign in again (passwords and sign-ins stay in the system keyring)."
-msgstr "Konton kommer tillbaka med sina kalendrar. På den här datorn förblir de inloggade; på en annan, logga in igen (lösenord och inloggningar stannar i systemets nyckelring)."
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "The file couldn't be written: %1"
-msgstr "Filen kunde inte skrivas: %1"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Exported to %1"
-msgstr "Exporterat till %1"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "The file couldn't be read: %1"
-msgstr "Filen kunde inte läsas: %1"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "This isn't a settings file of Event Calendar."
-msgstr "Detta är inte en inställningsfil för Event Calendar."
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Imported %1 setting. Press Apply or OK to keep it."
-msgid_plural "Imported %1 settings. Press Apply or OK to keep them."
-msgstr[0] "Importerade %1 inställning. Tryck Verkställ eller OK för att behålla den."
-msgstr[1] "Importerade %1 inställningar. Tryck Verkställ eller OK för att behålla dem."
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Not imported (not in this version, a password or sign-in, or a value of another kind): %2"
-msgid_plural "%1 not imported (not in this version, passwords or sign-ins, or values of another kind): %2"
-msgstr[0] "Inte importerad (finns inte i den här versionen, ett lösenord eller en inloggning, eller ett värde av annat slag): %2"
-msgstr[1] "%1 inte importerade (finns inte i den här versionen, lösenord eller inloggningar, eller värden av annat slag): %2"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Export Settings"
-msgstr "Exportera inställningar"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Settings (*.json)"
-msgstr "Inställningar (*.json)"
-
-#: ../contents/ui/config/ConfigViews.qml
-msgid "Import Settings"
-msgstr "Importera inställningar"
 
 #: ../contents/ui/config/ConfigWeather.qml
 msgctxt "an API the app id may use"
@@ -4001,8 +4025,10 @@ msgid "No date"
 msgstr "Inget datum"
 
 #: ../contents/ui/TasksView.qml
-msgid "Completed"
-msgstr "Slutförda"
+msgid "Completed (last day)"
+msgid_plural "Completed (last %1 days)"
+msgstr[0] "Klara (senaste dagen)"
+msgstr[1] "Klara (senaste %1 dagarna)"
 
 #: ../contents/ui/TaskUndoBar.qml
 msgctxt "a task was checked"
@@ -4380,6 +4406,15 @@ msgstr "Inga fler händelser i dag"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Arbetsplats: %1"
+
+#~ msgid "Completed (last 30 days)"
+#~ msgstr "Klara (senaste 30 dagarna)"
+
+#~ msgid "Completed"
+#~ msgstr "Slutförda"
+
+#~ msgid "Use the reminder times set in Google Calendar"
+#~ msgstr "Använd påminnelsetiderna som ställts in i Google Kalender"
 
 #~ msgid "Forecast in the day headers and, in the Day view, a weather panel."
 #~ msgstr "Prognos i dagrubrikerna och en väderpanel i dagvyn."

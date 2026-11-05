@@ -77,20 +77,42 @@ Item {
 		font: Kirigami.Theme.smallFont
 	}
 	readonly property int compactHeaderHeight: Math.ceil(headerFontMetrics.height) + 4
-	// Take the calendar height, subtract the inner spacings and divide by number of rows (root.weeks + one row for day names)
+	// Take the calendar height, subtract the inner spacings and divide by number of rows (root.weeks + one row for day names).
+	// The visible height (MonthView.gridViewportHeight): the stack is taller when the month scrolls.
 	readonly property int cellHeight: compactHeader
-		? Math.floor((stack.height - headingRowHeight - compactHeaderHeight - calendarGrid.rows * root.borderWidth) / (calendarGrid.rows - 1))
-		: Math.floor((stack.height - headingRowHeight - calendarGrid.rows * root.borderWidth) / calendarGrid.rows)
+		? Math.floor((root.gridViewportHeight - headingRowHeight - compactHeaderHeight - calendarGrid.rows * root.borderWidth) / (calendarGrid.rows - 1))
+		: Math.floor((root.gridViewportHeight - headingRowHeight - calendarGrid.rows * root.borderWidth) / calendarGrid.rows)
 	// The popup can show the title and navigation in its own header instead.
 	readonly property int headingRowHeight: root.showHeader ? heading.height : 0
 	readonly property int headerHeight: !headerModel ? 0 : (compactHeader ? compactHeaderHeight : cellHeight)
-	// Y of the line above grid row i (row 0 is the header row when there is one).
-	function gridLineY(i) {
-		if (!headerModel || i === 0) {
-			return (cellHeight + root.borderWidth) * i
-		}
-		return headerHeight + root.borderWidth + (cellHeight + root.borderWidth) * (i - 1)
+	// "Show all events" (MonthView.showAllEvents): the event rows each week needs (its busiest day:
+	// its bars and its events); the week as tall as that, at least cellHeight. Empty: all cellHeight.
+	property var weekRowCounts: []
+	// The height of week row w (a day cell's).
+	function rowHeight(w) {
+		var rowsNeeded = weekRowCounts[w] || 0
+		// heightForRows is exact for eventTitleRowCapacity; EventTitlesBadge measures its own height
+		// (one row spacing less): that and a pixel to spare.
+		return rowsNeeded ? Math.max(cellHeight, heightForRows(rowsNeeded) + eventTitleRowSpacing + 1) : cellHeight
 	}
+	// Y of the line above each grid row (row 0 is the header row when there is one), and the grid's
+	// bottom: the rows as tall as they are, once for every use (lines, cells, bars, the cell at a point).
+	readonly property var rowTops: {
+		var tops = [0]
+		for (var i = 0; i < calendarGrid.rows; i++) {
+			var isHeader = !!headerModel && i === 0
+			var week = headerModel ? i - 1 : i
+			tops.push(tops[i] + (isHeader ? headerHeight : rowHeight(week)) + root.borderWidth)
+		}
+		return tops
+	}
+	onRowTopsChanged: canvas.requestPaint()
+	function gridLineY(i) {
+		return rowTops[i] || 0
+	}
+	// The whole month's height: its heading, the grid with the weeks as tall as they are (taller
+	// than the view with "show all events": then it scrolls).
+	readonly property real fullHeight: headingRowHeight + gridLineY(calendarGrid.rows) + root.borderWidth
 
 	// Event title rows in a day cell, same sizes as DayDelegate / EventTitlesBadge.
 	FontMetrics {
@@ -109,7 +131,14 @@ Item {
 	// the bottom. EventTitlesBadge uses the same insets.
 	readonly property int eventRowInset: 3
 	readonly property int eventRowBottomInset: 2
-	readonly property int eventTitleRowCapacity: Math.max(0, Math.floor((cellHeight - eventTitlesTopOffset - eventRowBottomInset) / (eventTitleRowHeight + eventTitleRowSpacing)))
+	// Event rows that fit in a height, and the height n rows need: one formula, both ways.
+	function rowsForHeight(height) {
+		return Math.max(0, Math.floor((height - eventTitlesTopOffset - eventRowBottomInset) / (eventTitleRowHeight + eventTitleRowSpacing)))
+	}
+	function heightForRows(n) {
+		return eventTitlesTopOffset + eventRowBottomInset + n * (eventTitleRowHeight + eventTitleRowSpacing)
+	}
+	readonly property int eventTitleRowCapacity: rowsForHeight(cellHeight)
 	// Multi-day events as bars across the days (EventBuckets.layoutMonth bars), in eventTitles mode.
 	property var spanBars: []
 
@@ -125,8 +154,11 @@ Item {
 	function cellIndexAt(x, y) {
 		var step = cellWidth + root.borderWidth
 		var column = Math.max(0, Math.min(columns - 1, Math.floor((x - calendarGrid.x) / step)))
-		var top = calendarGrid.y + (headerModel ? headerHeight + root.borderWidth : 0)
-		var row = Math.max(0, Math.min(rows - 1, Math.floor((y - top) / (cellHeight + root.borderWidth))))
+		var firstWeek = headerModel ? 1 : 0 // rowTops' index of the first week
+		var row = 0
+		while (row < rows - 1 && y >= calendarGrid.y + gridLineY(firstWeek + row + 1)) {
+			row++
+		}
 		return row * columns + column
 	}
 	function eventDragBegin(eventItem, point, copy) {
@@ -391,7 +423,7 @@ Item {
 			model: showWeekNumbers ? calendarBackend.weeksModel : []
 
 			PlasmaComponents3.Label {
-				height: daysCalendar.cellHeight
+				height: daysCalendar.rowHeight(index)
 				width: daysCalendar.cellWidth
 				horizontalAlignment: Text.AlignHCenter
 				verticalAlignment: Text.AlignVCenter
@@ -477,7 +509,7 @@ Item {
 			DayDelegate {
 				id: delegate
 				width: daysCalendar.cellWidth
-				height: daysCalendar.cellHeight
+				height: daysCalendar.rowHeight(Math.floor(index / daysCalendar.columns))
 				calendarView: daysCalendar
 
 				onClicked: daysCalendar.activated(index, model, delegate)
@@ -539,7 +571,7 @@ Item {
 			x: daysCalendar.cellX(modelData)
 			y: daysCalendar.cellY(modelData)
 			width: daysCalendar.cellWidth
-			height: daysCalendar.cellHeight
+			height: daysCalendar.rowHeight(Math.floor(modelData / daysCalendar.columns))
 			radius: 4
 			color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.18)
 			border.width: 1

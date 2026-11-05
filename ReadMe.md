@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/divinae/plasma-applet-eventcalendar/actions/workflows/ci.yml/badge.svg)](https://github.com/divinae/plasma-applet-eventcalendar/actions/workflows/ci.yml)
 [![KDE Store](https://img.shields.io/badge/KDE%20Store-Event%20Calendar%20NG-1d99f3?logo=kde&logoColor=white)](https://store.kde.org/p/2379570/)
+[![Website](https://img.shields.io/badge/Website-divinae.github.io-2ea44f?logo=githubpages&logoColor=white)](https://divinae.github.io/plasma-applet-eventcalendar/)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-ff5e5b?logo=ko-fi&logoColor=white)](https://ko-fi.com/divinae4535)
 
 **Your day, one click from the clock.** Calendar, agenda, tasks, meetings and weather in the
@@ -34,9 +35,12 @@ again.
 - 🔒 **Private by design.** Sign-in tokens stay in your system keyring; no tracking, no servers of
   ours in between.
 
-This is a maintained fork of [Event Calendar](https://github.com/Zren/plasma-applet-eventcalendar)
-by Chris Holland (Zren), via [ALikesToCode's Plasma 6 port](https://github.com/ALikesToCode/plasma-applet-eventcalendar).
-It keeps the same widget id, so it replaces an existing Event Calendar and keeps its settings.
+Not just another fork: Event Calendar NG is a complete redesign. It started from
+[Event Calendar](https://github.com/Zren/plasma-applet-eventcalendar) by Chris Holland (Zren), via
+[ALikesToCode's Plasma 6 port](https://github.com/ALikesToCode/plasma-applet-eventcalendar), and
+has since been rebuilt: a new look and new views (Week, Day, Agenda), tasks, meetings, CalDAV and
+KDE PIM, offline start, quick add in plain sentences and much more. It keeps the same widget id,
+so it replaces an existing Event Calendar and keeps its settings.
 
 <details>
 <summary><b>All features</b></summary>
@@ -148,9 +152,9 @@ Download the `.plasmoid` file from the [latest release](https://github.com/divin
 then:
 
 ```
-kpackagetool6 -t Plasma/Applet -i eventcalendar-ng-v1.20.0.plasmoid
+kpackagetool6 -t Plasma/Applet -i eventcalendar-ng-v1.22.0.plasmoid
 # or, to upgrade an installed Event Calendar:
-kpackagetool6 -t Plasma/Applet -u eventcalendar-ng-v1.20.0.plasmoid
+kpackagetool6 -t Plasma/Applet -u eventcalendar-ng-v1.22.0.plasmoid
 ```
 
 Restart Plasma (`systemctl --user restart plasma-plasmashell`) and add **Event Calendar NG** to a
