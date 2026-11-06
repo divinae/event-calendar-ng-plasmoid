@@ -39,7 +39,10 @@ QtObject {
 	// See NotificationManager.notify. answer(actionId) is called once by the manager's wrapper.
 	// closeAfterMs > 0: closed by us after that time (KNotification has no per-notification
 	// timeout); then it isn't kept in Plasma's history.
-	function send(props, actionList, persistent, answer, closeAfterMs) {
+	// closeAtMs > 0 (eg: the event's end): a notification still shown then is closed, sooner than
+	// closeAfterMs. Only one that stays shown: once Plasma's timeout moved it to the history, its
+	// "closed" came and KNotification can't close it any more.
+	function send(props, actionList, persistent, answer, closeAfterMs, closeAtMs) {
 		var n = notificationComponent.createObject(backend, {
 			componentName: props.componentName,
 			eventId: props.eventId,
@@ -66,8 +69,15 @@ QtObject {
 		// "closed" also comes when the popup times out into the history: keep the object (and its
 		// actions) a while longer, then free it.
 		var closeTimer = null
-		if (closeAfterMs > 0) {
-			closeTimer = closeTimerComponent.createObject(n, { interval: closeAfterMs })
+		var closeIn = closeAfterMs > 0 ? closeAfterMs : 0
+		if ((persistent || closeIn > 0) && closeAtMs > 0) {
+			var untilEnd = Math.min(closeAtMs - Date.now(), 2147483647) // A Timer's int
+			if (untilEnd > 0 && (closeIn === 0 || untilEnd < closeIn)) {
+				closeIn = untilEnd
+			}
+		}
+		if (closeIn > 0) {
+			closeTimer = closeTimerComponent.createObject(n, { interval: closeIn })
 			closeTimer.triggered.connect(function() { n.close() })
 		}
 		n.closed.connect(function() {

@@ -84,6 +84,12 @@ ConfigPage {
 					{ value: 'browser', text: i18n("Google Calendar in the browser") },
 				]
 			}
+			FormCard.FormDelegateSeparator {}
+			FormConfigSwitch {
+				text: i18n("Close notifications when the event ends")
+				description: i18n("A reminder or start notification still shown, also one kept until dismissed")
+				configKey: 'eventNotificationsCloseAtEnd'
+			}
 		}
 
 		//--- Reminder (the options only while it's on)

@@ -12,6 +12,8 @@ import "./NotificationState.js" as NotificationState
 //   configured in System Settings > Notifications > Event Calendar NG.
 // - expireTimeout: 0 = keep until dismissed; > 0 = closed after that many ms; else (-1) Plasma's
 //   popup timeout.
+// - closeAt: ms since the epoch (eg: the event's end), > 0: a notification still shown then is
+//   closed (one in Plasma's history can't be reached any more).
 // - urgency: 'low' | 'normal' | 'critical'.
 // - actions: ["id,Label", ...].
 // callback(actionId) once: an action id, 'default' (the notification was clicked) or 'closed'.
@@ -93,6 +95,6 @@ QtObject {
 			text: args.body || "",
 			iconName: args.appIcon || "view-calendar",
 			urgency: args.urgency,
-		}, actionList, args.expireTimeout === 0, answer, args.expireTimeout > 0 ? args.expireTimeout : 0)
+		}, actionList, args.expireTimeout === 0, answer, args.expireTimeout > 0 ? args.expireTimeout : 0, args.closeAt || 0)
 	}
 }

@@ -159,6 +159,9 @@ CalendarManager {
 			body: args.body,
 			soundFile: args.soundFile,
 			actions: actions,
+			// Settings > Events: closed when the event ends (reminders and the start notification).
+			closeAt: args.closeAtEnd && plasmoid.configuration.eventNotificationsCloseAtEnd
+				? new Date(eventItem.endDateTime).getTime() : 0,
 		}, function(actionId) {
 			if (actionId === 'default') {
 				upcomingEvents.showInWidget(eventItem) // Clicking the notification itself
@@ -206,6 +209,7 @@ CalendarManager {
 			body: eventNotificationBody(eventItem, meetingLink),
 			soundFile: plasmoid.configuration.eventReminderSfxEnabled ? plasmoid.configuration.eventReminderSfxPath : '',
 			event: 'reminder',
+			closeAtEnd: true,
 			snooze: true,
 		})
 	}
@@ -323,6 +327,7 @@ CalendarManager {
 			body: eventNotificationBody(eventItem, meetingLink),
 			soundFile: plasmoid.configuration.eventReminderSfxEnabled ? plasmoid.configuration.eventReminderSfxPath : '',
 			event: 'reminder',
+			closeAtEnd: true,
 			snooze: minutesLeft > upcomingEvents.snoozeMinutes,
 		})
 	}
@@ -337,6 +342,7 @@ CalendarManager {
 			body: eventNotificationBody(eventItem, meetingLink),
 			soundFile: plasmoid.configuration.eventStartingSfxEnabled ? plasmoid.configuration.eventStartingSfxPath : '',
 			event: 'eventStarting',
+			closeAtEnd: true,
 			snooze: false,
 		})
 	}
