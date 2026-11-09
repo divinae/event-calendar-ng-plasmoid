@@ -41,6 +41,24 @@ Item {
 	}
 	readonly property date currentTime: timeModel.currentTime
 	property date weekStart: startOfWeek(currentTime)
+	// Settings > Views > Follow the date at midnight: the view showing today goes on to the
+	// new day (week); one moved to another day stays. Off: it stays on the day shown (the binding
+	// above is let go, else it would follow until the first move).
+	property real followedDay: Shared.startOfDay(new Date()).getTime() // Not a binding
+	Connections {
+		target: timeModel
+		function onDateChanged() {
+			var before = weekView.startOfWeek(new Date(weekView.followedDay))
+			weekView.followedDay = Shared.startOfDay(timeModel.currentTime).getTime()
+			if (!plasmoid.configuration.followTodayAtMidnight || weekView.weekStart.getTime() !== before.getTime()) {
+				return
+			}
+			var start = weekView.startOfWeek(timeModel.currentTime)
+			if (start.getTime() !== weekView.weekStart.getTime()) {
+				weekView.weekStart = start // onWeekStartChanged: scrolled back, rebuilt, the month follows
+			}
+		}
+	}
 	// 7: week view. 1: today / day view (the same hour grid with one wide column).
 	property int dayCount: 7
 	readonly property bool singleDay: dayCount === 1
@@ -464,6 +482,7 @@ Item {
 	// also while hidden (a Day view shown after the Agenda had a week's all-day bars, #22).
 	onColumnCountChanged: Qt.callLater(rebuild)
 	Component.onCompleted: {
+		weekStart = startOfWeek(currentTime) // A value now, not the binding (see followedDay)
 		rebuild()
 		Qt.callLater(scrollToWorkingHours) // Once the grid has its height
 	}

@@ -609,6 +609,11 @@
 			<!-- Day view: three all-day events or more side by side, three in a row (the tooltip has the full text). -->
 			<default>false</default>
 		</entry>
+		<entry name="followTodayAtMidnight" type="bool">
+			<!-- At midnight, the views showing today (the selected day, the month, the Agenda, the
+			     Day / Week view) go on to the new day; one moved elsewhere stays. -->
+			<default>true</default>
+		</entry>
 		<entry name="weatherShowInViews" type="bool">
 			<default>true</default>
 		</entry>

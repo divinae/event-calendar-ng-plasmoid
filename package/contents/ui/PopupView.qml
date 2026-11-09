@@ -150,6 +150,40 @@ MouseArea {
 		agendaView.scrollToDate(selectedDate)
 	}
 
+	// Midnight (main.qml), Settings > Views > Follow the date at midnight: what showed the day that
+	// was today goes on to the new one, what was moved elsewhere stays: the selected day; the
+	// month (not scrolled away: another month then, or the new day's week centred); the Agenda
+	// (at today at its top, or still following it); the Day / Week view on its own (WeekView).
+	// Off: only the today marks move. Opening the popup still goes to today (setToday).
+	function followDate() {
+		var before = today
+		var now = timeModel.currentTime
+		function valid(d) { return !!d && !isNaN(d.getTime()) }
+		function sameDay(d) { return !valid(before) || !valid(d) || Shared.isSameDate(d, before) }
+		var wasSelected = sameDay(selectedDate)
+		var wasMonth = !valid(before) || !valid(monthViewDate)
+			|| (monthViewDate.getFullYear() === before.getFullYear() && monthViewDate.getMonth() === before.getMonth())
+		var monthFollowing = wasMonth && monthView.followToday // Scrolled: followToday off
+		var agendaFollowing = agendaView.followDate ? sameDay(agendaView.followDate) : sameDay(agendaView.topDate)
+		today = now
+		if (!plasmoid.configuration.followTodayAtMidnight) {
+			return
+		}
+		if (wasSelected) {
+			selectedDate = now
+		}
+		if (monthFollowing) {
+			if (monthViewDate.getMonth() !== now.getMonth() || monthViewDate.getFullYear() !== now.getFullYear()) {
+				monthViewDate = now // Another month: its own scroll from the start (onDisplayedDateChanged)
+			} else {
+				monthView.startFollowingToday() // The same month: today's week centred, no reset
+			}
+		}
+		if (agendaFollowing) {
+			agendaView.scrollToDate(now)
+		}
+	}
+
 	Component.onCompleted: {
 		refreshTaskLists()
 		deferredUpdateUI()

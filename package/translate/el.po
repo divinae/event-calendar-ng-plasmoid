@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-06 11:28+0100\n"
+"POT-Creation-Date: 2026-11-09 17:13+0100\n"
 "PO-Revision-Date: 2018-06-07 01:37+0300\n"
 "Last-Translator: Chris P <skylin@protonmail.com>\n"
 "Language-Team: Chris P <skylin@protonmail.com>\n"
@@ -1825,6 +1825,17 @@ msgstr "Ατζέντα"
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Open in the last used view"
 msgstr "Άνοιγμα στην τελευταία προβολή"
+
+#: ../contents/ui/config/ConfigViews.qml
+msgid "Follow the date at midnight"
+msgstr ""
+
+#: ../contents/ui/config/ConfigViews.qml
+msgid ""
+"At midnight, what shows today goes on to the new day: the selected day, the "
+"month, the Agenda, the Day and Week views. A view moved or scrolled "
+"elsewhere stays. Off: nothing moves."
+msgstr ""
 
 #: ../contents/ui/config/ConfigViews.qml ../contents/ui/PopupHeader.qml
 msgid "View switcher"
