@@ -1,3 +1,11 @@
+## v1.22.1 - November 6 2026
+
+### CalDAV
+* **CalDAV events load at login by themselves** (#14, sbstn87): when the keyring isn't up yet at the first fetch, the widget tries again a few times (every 15 s) instead of waiting for Refresh.
+
+### Links
+* The repository is now **divinae/event-calendar-ng-plasmoid**, with its website at https://divinae.github.io/event-calendar-ng-plasmoid/: the widget's links (privacy policy, sign-in helper, issues) point there.
+
 ## v1.22.0 - November 5 2026
 
 ### Tasks
@@ -16,7 +24,7 @@
 
 ### Google sign-in
 * **What signing in allows**, and a link to the privacy policy, next to the Sign in button.
-* **Event Calendar NG's own website**: https://divinae.github.io/plasma-applet-eventcalendar/ (install, screenshots, privacy policy).
+* **Event Calendar NG's own website**: https://divinae.github.io/event-calendar-ng-plasmoid/ (install, screenshots, privacy policy).
 
 ## v1.21.0 - November 5 2026
 
