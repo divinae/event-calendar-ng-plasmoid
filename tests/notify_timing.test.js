@@ -110,3 +110,36 @@ win = T.checkWindow(wall(2026, 9, 25, 8, 59), wall(2026, 9, 25, 9, 0), MAX)
 assert.deepStrictEqual(tkinds(T.taskDueFor(task({ due: '2026-10-25T00:00:00.000Z', reminders: [-540] }), win)), ['task:-540'], 'fall back: sent at 09:00')
 
 console.log('notify_timing: ok')
+
+// Late reminders: a reminder gone by unsent while the event is still ahead, once, with the time left.
+{
+	const event = ev(17, 25) // 15 min reminder: 17:10
+	const keyOf = m => 'c|e1|' + new Date(2026, 9, 19, 17, 25).getTime() + '|' + m
+	// The event came at 17:14 (a fetch after the reminder's minute): late, 11 min left.
+	let win = T.checkWindow(at(17, 13, 0), at(17, 14, 36), MAX)
+	assert.deepStrictEqual(kinds(T.dueFor(event, [15], win, at(17, 14, 36))), [], 'its window went by')
+	let late = T.lateReminder(event, [15], win, at(17, 14, 36), {})
+	assert.strictEqual(late.minutes, 11, 'minutes left, rounded up')
+	assert.strictEqual(late.key, keyOf(15))
+	assert.deepStrictEqual(Array.from(late.keys), [keyOf(15)])
+	assert.ok(!late.already)
+	// Sent already (kept over a restart): nothing late, the keys still given to mark.
+	late = T.lateReminder(event, [15], win, at(17, 14, 36), { [keyOf(15)]: at(17, 10) })
+	assert.ok(late.already, 'sent before')
+	// Two gone by (60 and 15): one late reminder, both marked; one of them sent: none.
+	late = T.lateReminder(event, [60, 15], win, at(17, 14, 36), {})
+	assert.deepStrictEqual(Array.from(late.keys), [keyOf(60), keyOf(15)], 'both marked')
+	assert.strictEqual(late.minutes, 11)
+	late = T.lateReminder(event, [60, 15], win, at(17, 14, 36), { [keyOf(60)]: at(16, 25) })
+	assert.ok(late.already, 'the 60 min one was sent: no late 15')
+	// Not yet due: none. A reminder in this window is dueFor's (sent first, then already here).
+	assert.strictEqual(T.lateReminder(event, [5], win, at(17, 14, 36), {}), null, '5 min one not due yet')
+	win = T.checkWindow(at(17, 9, 0), at(17, 10, 5), MAX)
+	assert.deepStrictEqual(kinds(T.dueFor(event, [15], win, at(17, 10, 5))), ['reminder:15'], 'on time')
+	late = T.lateReminder(event, [15], win, at(17, 10, 5), { [keyOf(15)]: at(17, 10, 5) })
+	assert.ok(late.already, 'sent on time: not again late')
+	// The event started: nothing late. No reminders or only at / after the start: none.
+	assert.strictEqual(T.lateReminder(event, [15], T.checkWindow(at(17, 24), at(17, 25, 30), MAX), at(17, 25, 30), {}), null, 'started')
+	assert.strictEqual(T.lateReminder(event, [], win, at(17, 14), {}), null, 'no reminders')
+	assert.strictEqual(T.lateReminder(event, [0, -5], win, at(17, 14), {}), null, 'none before the start')
+}
