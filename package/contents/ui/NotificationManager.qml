@@ -17,6 +17,7 @@ import "./NotificationState.js" as NotificationState
 // - urgency: 'low' | 'normal' | 'critical'.
 // - actions: ["id,Label", ...].
 // callback(actionId) once: an action id, 'default' (the notification was clicked) or 'closed'.
+// Returns a handle with setCloseAt(ms) (see KNotificationBackend.send), or null.
 QtObject {
 	id: notificationManager
 
@@ -75,7 +76,7 @@ QtObject {
 			soundPlayer.play(sound)
 		}
 		if (!backend) {
-			return
+			return null
 		}
 
 		var own = ownComponent || NotificationState.notifyrcInstalled
@@ -88,7 +89,7 @@ QtObject {
 			var id = parts.shift()
 			return { id: id, label: parts.join(',') }
 		})
-		backend.send({
+		return backend.send({
 			componentName: own ? "eventcalendar" : "plasma_workspace",
 			eventId: own ? (args.event || "reminder") : "notification",
 			title: title,

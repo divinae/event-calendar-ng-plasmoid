@@ -42,6 +42,9 @@ QtObject {
 	// closeAtMs > 0 (eg: the event's end): a notification still shown then is closed, sooner than
 	// closeAfterMs. Only one that stays shown: once Plasma's timeout moved it to the history, its
 	// "closed" came and KNotification can't close it any more.
+	// Returns a handle for one still shown (all no-ops once closed): setCloseAt(ms) moves closeAtMs
+	// (eg: the event's end changed; a time gone by closes it now), update(title, text) changes the
+	// shown popup (KNotification sends the change), close().
 	function send(props, actionList, persistent, answer, closeAfterMs, closeAtMs) {
 		var n = notificationComponent.createObject(backend, {
 			componentName: props.componentName,
@@ -69,18 +72,32 @@ QtObject {
 		// "closed" also comes when the popup times out into the history: keep the object (and its
 		// actions) a while longer, then free it.
 		var closeTimer = null
-		var closeIn = closeAfterMs > 0 ? closeAfterMs : 0
-		if ((persistent || closeIn > 0) && closeAtMs > 0) {
-			var untilEnd = Math.min(closeAtMs - Date.now(), 2147483647) // A Timer's int
-			if (untilEnd > 0 && (closeIn === 0 || untilEnd < closeIn)) {
-				closeIn = untilEnd
+		var isClosed = false
+		var keptShown = persistent || closeAfterMs > 0
+		var closeAfterAt = closeAfterMs > 0 ? Date.now() + closeAfterMs : 0
+		function scheduleClose(atMs, sending) {
+			if (closeTimer) {
+				closeTimer.destroy()
+				closeTimer = null
 			}
-		}
-		if (closeIn > 0) {
+			var at = closeAfterAt
+			// When sending, an end already gone by doesn't count (eg: a snoozed reminder).
+			if (keptShown && atMs > 0 && !(sending && atMs <= Date.now()) && (at === 0 || atMs < at)) {
+				at = atMs
+			}
+			if (at === 0) {
+				return
+			}
+			var closeIn = Math.min(at - Date.now(), 2147483647) // A Timer's int
+			if (closeIn <= 0) {
+				n.close()
+				return
+			}
 			closeTimer = closeTimerComponent.createObject(n, { interval: closeIn })
 			closeTimer.triggered.connect(function() { n.close() })
 		}
 		n.closed.connect(function() {
+			isClosed = true
 			if (closeTimer) {
 				closeTimer.stop()
 			}
@@ -89,5 +106,24 @@ QtObject {
 			cleanup.triggered.connect(function() { n.destroy() })
 		})
 		n.sendEvent()
+		scheduleClose(closeAtMs, true)
+		return {
+			setCloseAt: function(atMs) {
+				if (!isClosed) {
+					scheduleClose(atMs, false)
+				}
+			},
+			update: function(title, text) {
+				if (!isClosed) {
+					n.title = title
+					n.text = text
+				}
+			},
+			close: function() {
+				if (!isClosed) {
+					n.close()
+				}
+			},
+		}
 	}
 }

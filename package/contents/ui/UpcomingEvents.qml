@@ -149,7 +149,17 @@ CalendarManager {
 			actions.push('snooze,' + i18np("Snooze 1 minute", "Snooze %1 minutes", upcomingEvents.snoozeMinutes))
 		}
 
-		notificationManager.notify({
+		var closeAt = args.closeAtEnd && plasmoid.configuration.eventNotificationsCloseAtEnd
+			? new Date(eventItem.endDateTime).getTime() : 0
+		// Kept up to date while shown (updateShownEventNotifications), also for the actions.
+		var shown = {
+			eventItem: eventItem,
+			event: args.event,
+			closeAt: closeAt,
+			signature: notificationSignature(eventItem),
+			handle: null,
+		}
+		var handle = notificationManager.notify({
 			appName: i18n("Event Calendar NG"),
 			appIcon: "view-calendar-upcoming-events",
 			event: args.event,
@@ -160,9 +170,13 @@ CalendarManager {
 			soundFile: args.soundFile,
 			actions: actions,
 			// Settings > Events: closed when the event ends (reminders and the start notification).
-			closeAt: args.closeAtEnd && plasmoid.configuration.eventNotificationsCloseAtEnd
-				? new Date(eventItem.endDateTime).getTime() : 0,
+			closeAt: closeAt,
 		}, function(actionId) {
+			var index = upcomingEvents.shownEventNotifications.indexOf(shown)
+			if (index >= 0) {
+				upcomingEvents.shownEventNotifications.splice(index, 1)
+			}
+			var eventItem = shown.eventItem
 			if (actionId === 'default') {
 				upcomingEvents.showInWidget(eventItem) // Clicking the notification itself
 			} else if (actionId === 'join' && meetingLink) {
@@ -176,6 +190,79 @@ CalendarManager {
 				var at = new Date(timeModel.currentTime)
 				at.setMinutes(at.getMinutes() + upcomingEvents.snoozeMinutes)
 				upcomingEvents.snoozedReminders.push({ eventItem: eventItem, at: at })
+			}
+		})
+		if (handle && (args.event === 'reminder' || args.event === 'eventStarting')) {
+			shown.handle = handle
+			upcomingEvents.shownEventNotifications.push(shown)
+		}
+	}
+
+	// What a reminder or start notification shows of its event: a change of it updates the popup.
+	function notificationSignature(eventItem) {
+		return JSON.stringify([eventItem.summary, new Date(eventItem.startDateTime).getTime(),
+			new Date(eventItem.endDateTime).getTime(), eventItem.location || '', eventItem.description || ''])
+	}
+
+	// Reminder and start notifications still shown follow their event after each fetch: a changed
+	// title, time, place or description updates the popup (a reminder's "In 10 min" from now), a
+	// changed end moves the close time (Settings > Events), and a deleted event closes it.
+	property var shownEventNotifications: []
+	function updateShownEventNotifications() {
+		var items = [] // Every copy, also a duplicate left out of the notifications
+		for (var calendarId in eventsByCalendar) {
+			items = items.concat(Shared.toArray(eventsByCalendar[calendarId].items))
+		}
+		var now = timeModel.currentTime.getTime()
+		shownEventNotifications.slice().forEach(function(shown) {
+			var old = shown.eventItem
+			function startOf(eventItem) { return new Date(eventItem.startDateTime).getTime() }
+			function sameCalendar(eventItem) { return eventItem.calendarId === old.calendarId }
+			function only(list) { return list.length === 1 ? list[0] : null }
+			// The same event: same calendar and id, and for a repeating one (all with the same id) the
+			// occurrence with the same start, else the only one.
+			var matches = items.filter(function(eventItem) { return sameCalendar(eventItem) && eventItem.id === old.id })
+			var eventItem = only(matches.filter(function(eventItem) { return startOf(eventItem) === startOf(old) }))
+				|| only(matches)
+			var timeMadeId = old.id === old.calendarId + '_' + startOf(old) + '_' + new Date(old.endDateTime).getTime()
+			if (!eventItem && matches.length === 0 && timeMadeId) {
+				// Plasma's calendar plugins (Akonadi) tell no uid: there the id is made of the start and
+				// end (PlasmaCalendarManager), so a changed time is a new id. Then, if only one: same
+				// calendar and start, or same calendar, title and end (moved start).
+				var sameCal = items.filter(sameCalendar)
+				eventItem = only(sameCal.filter(function(eventItem) {
+					return startOf(eventItem) === startOf(old) && eventItem.summary === old.summary
+				})) || only(sameCal.filter(function(eventItem) { return startOf(eventItem) === startOf(old) }))
+					|| only(sameCal.filter(function(eventItem) {
+						return eventItem.summary === old.summary
+							&& new Date(eventItem.endDateTime).getTime() === new Date(old.endDateTime).getTime()
+					}))
+			}
+			if (!eventItem) {
+				// Gone: closed, but only when its calendar came with this fetch (not on a failed one).
+				if (eventsByCalendar[old.calendarId]) {
+					logger.log('notification: event gone, closed', old.startDateTime)
+					shown.handle.close()
+				}
+				return
+			}
+			shown.eventItem = eventItem
+			var signature = notificationSignature(eventItem)
+			if (signature === shown.signature) {
+				return
+			}
+			shown.signature = signature
+			var start = startOf(eventItem)
+			var minutesLeft = Math.round((start - now) / 60000)
+			var title = shown.event === 'reminder' && minutesLeft > 0
+				? i18nc("%1 = 15 minutes, %2 = event title", "In %1: %2", LocaleFuncs.durationShortFormat(minutesLeft * 60), eventItem.summary)
+				: eventItem.summary
+			logger.log('notification: event changed, updated', eventItem.startDateTime, eventItem.endDateTime)
+			shown.handle.update(title, eventNotificationBody(eventItem, MeetingLink.find(eventItem)))
+			var end = new Date(eventItem.endDateTime).getTime()
+			if (shown.closeAt > 0 && isFinite(end) && end !== shown.closeAt) {
+				shown.closeAt = end
+				shown.handle.setCloseAt(end)
 			}
 		})
 	}
@@ -900,6 +987,7 @@ CalendarManager {
 				upcomingEvents.eventsByCalendar = eventModel.eventsByCalendar
 				upcomingEvents.allDataFetched()
 				upcomingEvents.eventsSynced = true
+				upcomingEvents.updateShownEventNotifications()
 				upcomingEvents.checkInvitations()
 				upcomingEvents.checkDailyAgenda()
 				upcomingEvents.checkTaskSummary()
