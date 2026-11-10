@@ -18,7 +18,7 @@ Flow {
 		showTime: durationSelector.showTime
 		dateFirst: true
 
-		onDateTimeShifted: {
+		onDateTimeShifted: function(oldDateTime, deltaDateTime, newDateTime) {
 			endTimeSelector.dateTime = new Date(endTimeSelector.dateTime.valueOf() + deltaDateTime)
 		}
 	}
