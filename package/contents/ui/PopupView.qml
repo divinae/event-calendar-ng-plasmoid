@@ -259,6 +259,18 @@ MouseArea {
 		}
 		detailsEvent = originalEvent(eventItem)
 	}
+	// The open event's details, as they are now. A copy: a calendar updates its event object in
+	// place (Google, after a save), and the same object again changes nothing in the card.
+	function showCurrentDetails(eventItem) {
+		detailsEvent = Object.assign({}, eventItem)
+	}
+	function eventText(eventItem) {
+		try {
+			return JSON.stringify(eventItem)
+		} catch (e) {
+			return "" // Not comparable: left as shown
+		}
+	}
 	function closeEventDetails() {
 		detailsEvent = null
 		searchOverlay.focusCard() // Esc closes the search next
@@ -419,7 +431,7 @@ MouseArea {
 		target: popup.eventModel
 		function onEventUpdated(calendarId, eventId, data) {
 			if (popup.detailsEvent && popup.detailsEvent.id == eventId) {
-				popup.detailsEvent = popup.eventModel.getEvent(calendarId, eventId) || data
+				popup.showCurrentDetails(popup.eventModel.getEvent(calendarId, eventId) || data)
 			}
 		}
 		function onEventRemoved(calendarId, eventId, data) {
@@ -442,6 +454,14 @@ MouseArea {
 		function onFetchingData() { popup.refreshing = true }
 		function onAllDataFetched() {
 			popup.refreshing = false
+			// A save that refetches (eg: a repeating event) brings a new copy of the open event.
+			if (popup.detailsEvent && popup.detailsEvent.calendarId && popup.detailsEvent.id) {
+				var current = popup.eventModel.getEvent(popup.detailsEvent.calendarId, popup.detailsEvent.id)
+				// Only when changed: a new card state would end eg: a delete being confirmed.
+				if (current && popup.eventText(current) !== popup.eventText(popup.detailsEvent)) {
+					popup.showCurrentDetails(current)
+				}
+			}
 			popup.refreshTaskLists()
 		}
 		function onCalendarFetched(calendarId, data) { popup.refreshTaskLists() }
