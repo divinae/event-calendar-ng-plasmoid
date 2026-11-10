@@ -82,6 +82,7 @@ ColumnLayout {
 	property bool showHourly: true
 	property bool showNextDays: true
 	property bool loading: false // A forecast request is running
+	property var updatedAt: null // When the forecast came (ms)
 	property string errorText: "" // The last request failed
 	signal retryRequested()
 	readonly property bool hasData: !!current || !!today || hourly.length > 0
@@ -99,6 +100,18 @@ ColumnLayout {
 
 	function timeText(dt) {
 		return Shared.formatTime(new Date(dt * 1000), appletConfig.clock24h ? 'HH:mm' : 'h AP')
+	}
+	// "Updated 14:05", or with the date when not today.
+	function updatedText(ms) {
+		if (!ms) {
+			return ""
+		}
+		var at = new Date(ms)
+		var time = Shared.formatTime(at, appletConfig.clock24h ? 'HH:mm' : 'h:mm AP')
+		if (Shared.isSameDate(at, new Date())) {
+			return i18nc("weather forecast received at, %1 = time", "Updated %1", time)
+		}
+		return i18nc("weather forecast received at, %1 = date and time", "Updated %1", Shared.formatDate(at, Locale.ShortFormat) + ' ' + time)
 	}
 	function precipitationText(mm) {
 		return mm > 0 ? i18nc("precipitation in mm", "%1 mm", Math.round(mm * 10) / 10) : ""
@@ -838,16 +851,31 @@ ColumnLayout {
 		}
 	}
 
-	// The rain the chart's hours bring in all, under it on the right, in the rain's color
-	// (Settings > Weather > Forecast chart > Rain amounts).
-	PlasmaComponents3.Label {
+	// Under the chart: on the left when the forecast came (dimmed; with the date when not today),
+	// on the right the rain the chart's hours bring in all, in the rain's color (Settings > Weather >
+	// Forecast chart > Rain amounts).
+	RowLayout {
 		readonly property real rain: hourChart.visible ? ForecastChart.rainTotal(hourChart.points) : 0
-		visible: panel.chartRainAmounts && rain > 0
-		Layout.alignment: Qt.AlignRight
-		textFormat: Text.PlainText
-		text: visible ? i18nc("precipitation during the hours of the chart", "Rain: %1", panel.precipitationText(rain)) : ""
-		font: Kirigami.Theme.smallFont
-		color: Kirigami.Theme.linkColor
+		readonly property bool rainShown: panel.chartRainAmounts && rain > 0
+		visible: panel.showData && !panel.compact && (!!updatedLabel.text || rainShown)
+		Layout.fillWidth: true
+		spacing: Kirigami.Units.smallSpacing
+		PlasmaComponents3.Label {
+			id: updatedLabel
+			Layout.fillWidth: true
+			elide: Text.ElideRight
+			textFormat: Text.PlainText
+			text: panel.updatedText(panel.updatedAt)
+			font: Kirigami.Theme.smallFont
+			opacity: panel.dimOpacity
+		}
+		PlasmaComponents3.Label {
+			visible: parent.rainShown
+			textFormat: Text.PlainText
+			text: visible ? i18nc("precipitation during the hours of the chart", "Rain: %1", panel.precipitationText(parent.rain)) : ""
+			font: Kirigami.Theme.smallFont
+			color: Kirigami.Theme.linkColor
+		}
 	}
 
 	//--- Next days: day, icon, high / low. With the chart's larger icons, larger here too and the

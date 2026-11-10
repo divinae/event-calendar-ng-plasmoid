@@ -771,6 +771,7 @@ MouseArea {
 			weatherCurrent: logic.currentWeatherData
 			weatherIsSetup: WeatherApi.weatherIsSetup(plasmoid.configuration)
 			weatherLoading: logic.weatherLoading
+			weatherUpdatedAt: logic.weatherUpdatedAt
 			weatherError: logic.lastForecastErr ? String(logic.lastForecastErr) : ""
 			onWeatherRetryRequested: logic.updateWeather(true)
 			// Make sure the visible week's (or day's) month is fetched.
@@ -826,6 +827,7 @@ MouseArea {
 		weatherCurrent: logic.currentWeatherData
 		weatherIsSetup: WeatherApi.weatherIsSetup(plasmoid.configuration)
 		weatherLoading: logic.weatherLoading
+		weatherUpdatedAt: logic.weatherUpdatedAt
 		weatherError: logic.lastForecastErr ? String(logic.lastForecastErr) : ""
 		onWeatherRetryRequested: logic.updateWeather(true)
 	}

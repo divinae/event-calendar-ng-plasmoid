@@ -68,6 +68,7 @@ Item {
 	property bool weatherIsSetup: false
 	property bool weatherEnabled: true // Settings > Views > Weather (PopupView.weatherInViews)
 	property bool weatherLoading: false
+	property var weatherUpdatedAt: null // When the forecast came (ms)
 	property string weatherError: "" // The last forecast request failed
 	signal weatherRetryRequested()
 	readonly property bool showWeather: Object.keys(weatherByDay).length > 0 || weatherIsSetup
@@ -680,6 +681,7 @@ Item {
 	component DayWeatherPanel: WeatherPanel {
 		isSetup: weekView.weatherIsSetup
 		loading: weekView.weatherLoading
+		updatedAt: weekView.weatherUpdatedAt
 		errorText: weekView.weatherError
 		onRetryRequested: weekView.weatherRetryRequested()
 		isToday: weekView.showingToday
