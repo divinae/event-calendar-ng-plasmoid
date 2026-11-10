@@ -42,4 +42,7 @@ const nextYear = { start: { dateTime: 'x' }, startDateTime: new Date(2027, 0, 5,
 assert.strictEqual(L.formatWhen(nextYear, 'HH:mm', now), 'Tue 5 Jan 2027 · 09:00 – 10:00', 'another year')
 const overnight = { start: { dateTime: 'x' }, startDateTime: new Date(2026, 9, 23, 22), endDateTime: new Date(2026, 9, 24, 2) }
 assert.strictEqual(L.formatWhen(overnight, 'HH:mm', now), '23 Oct 22:00 – 24 Oct 02:00', 'timed over two days')
+// 24 hour clock: always with minutes (a notification showed "9:50 - 10").
+const span = { start: { dateTime: 'x' }, startDateTime: new Date(2026, 9, 19, 9, 50), endDateTime: new Date(2026, 9, 19, 10) }
+assert.strictEqual(L.formatEventDuration(span, { relativeDate: now, clock24h: true }), '09:50 - 10:00', '24h on the hour')
 console.log('locale_funcs ok')

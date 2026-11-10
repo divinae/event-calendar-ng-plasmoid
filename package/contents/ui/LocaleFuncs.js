@@ -4,11 +4,8 @@ function formatEventTime(dateTime, args) {
 	var clock24h = args && args.clock24h
 	var timeFormat
 	if (clock24h) {
-		if (dateTime.getMinutes() === 0) {
-			timeFormat = i18nc("event time on the hour (24 hour clock)", "h")
-		} else {
-			timeFormat = i18nc("event time (24 hour clock)", "h:mm")
-		}
+		// Always with minutes, as in the views (AppletConfig.timeFormat): 09:50 – 10:00, not 9:50 – 10.
+		timeFormat = "HH:mm"
 	} else { // 12h
 		if (dateTime.getMinutes() === 0) {
 			timeFormat = i18nc("event time on the hour (12 hour clock)", "h AP")

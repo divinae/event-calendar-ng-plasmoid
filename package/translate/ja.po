@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-06 11:28+0100\n"
+"POT-Creation-Date: 2026-11-10 09:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: yamato kobayashi <Kb_yamato@protonmail.com>\n"
 "Language-Team: \n"
@@ -3139,16 +3139,6 @@ msgid "Couldn't install the modules: %1"
 msgstr "モジュールをインストールできませんでした: %1"
 
 #: ../contents/ui/LocaleFuncs.js
-msgctxt "event time on the hour (24 hour clock)"
-msgid "h"
-msgstr "h時"
-
-#: ../contents/ui/LocaleFuncs.js
-msgctxt "event time (24 hour clock)"
-msgid "h:mm"
-msgstr "h:mm"
-
-#: ../contents/ui/LocaleFuncs.js
 msgctxt "event time on the hour (12 hour clock)"
 msgid "h AP"
 msgstr "AP h時"
@@ -4359,6 +4349,14 @@ msgstr "今日はこれ以上予定がありません"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "勤務場所: %1"
+
+#~ msgctxt "event time on the hour (24 hour clock)"
+#~ msgid "h"
+#~ msgstr "h時"
+
+#~ msgctxt "event time (24 hour clock)"
+#~ msgid "h:mm"
+#~ msgstr "h:mm"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "完了 (過去 30 日間)"

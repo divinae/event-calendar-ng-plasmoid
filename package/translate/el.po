@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-06 11:28+0100\n"
+"POT-Creation-Date: 2026-11-10 09:52+0100\n"
 "PO-Revision-Date: 2018-06-07 01:37+0300\n"
 "Last-Translator: Chris P <skylin@protonmail.com>\n"
 "Language-Team: Chris P <skylin@protonmail.com>\n"
@@ -3639,16 +3639,6 @@ msgid "Couldn't install the modules: %1"
 msgstr "Δεν ήταν δυνατή η εγκατάσταση των αρθρωμάτων: %1"
 
 #: ../contents/ui/LocaleFuncs.js
-msgctxt "event time on the hour (24 hour clock)"
-msgid "h"
-msgstr "h"
-
-#: ../contents/ui/LocaleFuncs.js
-msgctxt "event time (24 hour clock)"
-msgid "h:mm"
-msgstr "h:mm"
-
-#: ../contents/ui/LocaleFuncs.js
 msgctxt "event time on the hour (12 hour clock)"
 msgid "h AP"
 msgstr "h AP"
@@ -4910,6 +4900,14 @@ msgstr "Δεν υπάρχουν άλλα γεγονότα σήμερα"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Τοποθεσία εργασίας: %1"
+
+#~ msgctxt "event time on the hour (24 hour clock)"
+#~ msgid "h"
+#~ msgstr "h"
+
+#~ msgctxt "event time (24 hour clock)"
+#~ msgid "h:mm"
+#~ msgstr "h:mm"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Ολοκληρωμένες (τελευταίες 30 ημέρες)"
