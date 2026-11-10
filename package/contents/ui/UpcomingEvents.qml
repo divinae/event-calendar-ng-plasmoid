@@ -149,6 +149,14 @@ CalendarManager {
 			actions.push('snooze,' + i18np("Snooze 1 minute", "Snooze %1 minutes", upcomingEvents.snoozeMinutes))
 		}
 
+		// One of each kind per event: a new reminder or start notification (eg: the start again after
+		// the event was moved) replaces the one still shown.
+		upcomingEvents.shownEventNotifications.slice().forEach(function(old) {
+			if (old.event === args.event && old.eventItem.calendarId === eventItem.calendarId
+					&& old.eventItem.id == eventItem.id) {
+				old.handle.close()
+			}
+		})
 		var closeAt = args.closeAtEnd && plasmoid.configuration.eventNotificationsCloseAtEnd
 			? new Date(eventItem.endDateTime).getTime() : 0
 		// Kept up to date while shown (updateShownEventNotifications), also for the actions.
