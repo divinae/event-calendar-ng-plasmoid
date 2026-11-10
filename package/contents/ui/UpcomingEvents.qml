@@ -173,6 +173,7 @@ CalendarManager {
 			closeAt: closeAt,
 			// Then also kept when clicked (eg: to open the event and edit it), till its end.
 			resident: closeAt > 0,
+			logInfo: eventLogText(eventItem),
 		}, function(actionId) {
 			if (actionId === 'closed') {
 				var index = upcomingEvents.shownEventNotifications.indexOf(shown)
@@ -180,6 +181,9 @@ CalendarManager {
 					upcomingEvents.shownEventNotifications.splice(index, 1)
 				}
 				return
+			}
+			if (actionId === 'snooze') {
+				logger.debug('notification: snoozed for', upcomingEvents.snoozeMinutes, 'min', eventLogText(shown.eventItem))
 			}
 			if (shown.handle && (actionId === 'snooze' || actionId === 'declined')) {
 				shown.handle.close() // Kept by itself when resident: done with it
@@ -203,6 +207,97 @@ CalendarManager {
 		if (handle && (args.event === 'reminder' || args.event === 'eventStarting')) {
 			shown.handle = handle
 			upcomingEvents.shownEventNotifications.push(shown)
+		}
+	}
+
+	// For the log: the event's time, never its title.
+	function eventLogText(eventItem) {
+		if (!eventItem) {
+			return ''
+		}
+		var start = new Date(eventItem.startDateTime)
+		var end = new Date(eventItem.endDateTime)
+		if (isNaN(start.getTime())) {
+			return ''
+		}
+		var sameDay = !isNaN(end.getTime()) && start.toDateString() === end.toDateString()
+		return Qt.formatDateTime(start, 'yyyy-MM-dd hh:mm') + '–'
+			+ (isNaN(end.getTime()) ? '?' : Qt.formatDateTime(end, sameDay ? 'hh:mm' : 'yyyy-MM-dd hh:mm'))
+	}
+	// Names of what differs between two notificationSignature()s.
+	function changedFields(before, after) {
+		var names = ['title', 'start', 'end', 'place', 'description']
+		var a = [], b = []
+		try {
+			a = JSON.parse(before)
+			b = JSON.parse(after)
+		} catch (e) {}
+		return names.filter(function(name, i) { return JSON.stringify(a[i]) !== JSON.stringify(b[i]) })
+	}
+
+	// Calendar changes for the log (Settings > debugging): each fetch compared with the one before,
+	// and changes made in the widget. Keyed by calendar and id (Akonadi's id has the times in it, so
+	// there a moved event is removed + added).
+	property var loggedEvents: null
+	function logCalendarChanges() {
+		if (!logger.showDebug) {
+			loggedEvents = null
+			return
+		}
+		var current = {}
+		for (var calendarId in eventsByCalendar) {
+			Shared.toArray(eventsByCalendar[calendarId].items).forEach(function(eventItem) {
+				if (Tasks.isTask(eventItem)) {
+					return
+				}
+				current[calendarId + ' ' + eventItem.id] = { signature: notificationSignature(eventItem), text: eventLogText(eventItem) }
+			})
+		}
+		var before = loggedEvents
+		loggedEvents = current
+		if (!before) {
+			logger.debug('calendar: fetched,', Object.keys(current).length, 'events')
+			return
+		}
+		var counts = { added: 0, removed: 0, changed: 0 }
+		for (var key in current) {
+			var calendar = key.split(' ')[0]
+			if (!before[key]) {
+				counts.added++
+				logger.debug('calendar change: added', current[key].text, 'in', calendar)
+			} else if (before[key].signature !== current[key].signature) {
+				counts.changed++
+				logger.debug('calendar change:', changedFields(before[key].signature, current[key].signature).join(', '),
+					'changed', before[key].text, '→', current[key].text, 'in', calendar)
+			}
+		}
+		for (key in before) {
+			if (!current[key]) {
+				counts.removed++
+				logger.debug('calendar change: removed', before[key].text, 'in', key.split(' ')[0])
+			}
+		}
+		logger.debug('calendar: fetched,', Object.keys(current).length, 'events,', counts.added, 'added,',
+			counts.changed, 'changed,', counts.removed, 'removed')
+	}
+	function logWidgetChange(calendarId, eventId, data) {
+		if (!logger.showDebug) {
+			return
+		}
+		var key = calendarId + ' ' + eventId
+		var before = loggedEvents && loggedEvents[key]
+		if (!data) {
+			logger.debug('calendar change in the widget: removed', before ? before.text : '', 'in', calendarId)
+			if (loggedEvents) {
+				delete loggedEvents[key]
+			}
+			return
+		}
+		var entry = { signature: notificationSignature(data), text: eventLogText(data) }
+		logger.debug('calendar change in the widget:', before ? changedFields(before.signature, entry.signature).join(', ') + ' changed' : 'added',
+			before ? before.text + ' →' : '', entry.text, 'in', calendarId)
+		if (loggedEvents) {
+			loggedEvents[key] = entry
 		}
 	}
 
@@ -233,7 +328,7 @@ CalendarManager {
 					return
 				}
 				if (!single.data) {
-					logger.log('notification: event removed, closed', old.startDateTime)
+					logger.log('notification', shown.handle.logId, 'event removed in the widget, closed', eventLogText(old))
 					changedKinds[shown.event] = true
 					shown.handle.close()
 					return
@@ -266,7 +361,7 @@ CalendarManager {
 			if (!eventItem) {
 				// Gone: closed, but only when its calendar came with this fetch (not on a failed one).
 				if (eventsByCalendar[old.calendarId]) {
-					logger.log('notification: event gone, closed', old.startDateTime)
+					logger.log('notification', shown.handle.logId, 'event gone, closed', eventLogText(old))
 					changedKinds[shown.event] = true
 					shown.handle.close()
 				}
@@ -295,17 +390,19 @@ CalendarManager {
 		if (signature === shown.signature) {
 			return
 		}
+		var changed = changedFields(shown.signature, signature)
 		shown.signature = signature
 		var start = new Date(eventItem.startDateTime).getTime()
 		var minutesLeft = Math.round((start - now) / 60000)
 		var title = shown.event === 'reminder' && minutesLeft > 0
 			? i18nc("%1 = 15 minutes, %2 = event title", "In %1: %2", LocaleFuncs.durationShortFormat(minutesLeft * 60), eventItem.summary)
 			: eventItem.summary
-		logger.log('notification: event changed, updated', eventItem.startDateTime, eventItem.endDateTime)
+		logger.log('notification', shown.handle.logId, 'updated, event changed:', changed.join(', '), eventLogText(eventItem))
 		changedKinds[shown.event] = true
 		shown.handle.update(title, eventNotificationBody(eventItem, MeetingLink.find(eventItem)))
 		var end = new Date(eventItem.endDateTime).getTime()
 		if (shown.closeAt > 0 && isFinite(end) && end !== shown.closeAt) {
+			logger.debug('notification', shown.handle.logId, 'close time moved to', Qt.formatDateTime(new Date(end), 'yyyy-MM-dd hh:mm'))
 			shown.closeAt = end
 			shown.handle.setCloseAt(end)
 		}
@@ -485,6 +582,7 @@ CalendarManager {
 			var snoozed = snoozedReminders[i]
 			if (snoozed.at <= now) {
 				if (snoozed.eventItem.startDateTime > now) {
+					logger.debug('notification: snooze over', eventLogText(snoozed.eventItem))
 					sendSnoozedReminderNotification(snoozed.eventItem)
 				}
 				// Else: the event already started, the "starting" notification covers it.
@@ -1068,9 +1166,11 @@ CalendarManager {
 		target: eventModel
 		// Changed in the widget (edited, deleted): its notifications follow right away.
 		function onEventUpdated(calendarId, eventId, data) {
+			upcomingEvents.logWidgetChange(calendarId, eventId, data)
 			upcomingEvents.updateShownEventNotifications({ calendarId: calendarId, eventId: eventId, data: data })
 		}
 		function onEventRemoved(calendarId, eventId, data) {
+			upcomingEvents.logWidgetChange(calendarId, eventId, null)
 			upcomingEvents.updateShownEventNotifications({ calendarId: calendarId, eventId: eventId, data: null })
 		}
 		function onAllDataFetched() {
@@ -1084,6 +1184,7 @@ CalendarManager {
 				upcomingEvents.eventsByCalendar = eventModel.eventsByCalendar
 				upcomingEvents.allDataFetched()
 				upcomingEvents.eventsSynced = true
+				upcomingEvents.logCalendarChanges()
 				upcomingEvents.updateShownEventNotifications()
 				upcomingEvents.checkInvitations()
 				upcomingEvents.checkDailyAgenda()
