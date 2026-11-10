@@ -206,7 +206,8 @@ CalendarManager {
 
 	// Reminder and start notifications still shown follow their event after each fetch: a changed
 	// title, time, place or description updates the popup (a reminder's "In 10 min" from now), a
-	// changed end moves the close time (Settings > Events), and a deleted event closes it.
+	// changed end moves the close time (Settings > Events), and a deleted event closes it. Either
+	// rings once per fetch, with the start or the reminder sound (as configured).
 	property var shownEventNotifications: []
 	function updateShownEventNotifications() {
 		var items = [] // Every copy, also a duplicate left out of the notifications
@@ -214,6 +215,7 @@ CalendarManager {
 			items = items.concat(Shared.toArray(eventsByCalendar[calendarId].items))
 		}
 		var now = timeModel.currentTime.getTime()
+		var changedKinds = {}
 		shownEventNotifications.slice().forEach(function(shown) {
 			var old = shown.eventItem
 			function startOf(eventItem) { return new Date(eventItem.startDateTime).getTime() }
@@ -242,6 +244,7 @@ CalendarManager {
 				// Gone: closed, but only when its calendar came with this fetch (not on a failed one).
 				if (eventsByCalendar[old.calendarId]) {
 					logger.log('notification: event gone, closed', old.startDateTime)
+					changedKinds[shown.event] = true
 					shown.handle.close()
 				}
 				return
@@ -258,6 +261,7 @@ CalendarManager {
 				? i18nc("%1 = 15 minutes, %2 = event title", "In %1: %2", LocaleFuncs.durationShortFormat(minutesLeft * 60), eventItem.summary)
 				: eventItem.summary
 			logger.log('notification: event changed, updated', eventItem.startDateTime, eventItem.endDateTime)
+			changedKinds[shown.event] = true
 			shown.handle.update(title, eventNotificationBody(eventItem, MeetingLink.find(eventItem)))
 			var end = new Date(eventItem.endDateTime).getTime()
 			if (shown.closeAt > 0 && isFinite(end) && end !== shown.closeAt) {
@@ -265,6 +269,15 @@ CalendarManager {
 				shown.handle.setCloseAt(end)
 			}
 		})
+		var sound = ''
+		if (changedKinds.eventStarting && plasmoid.configuration.eventStartingSfxEnabled) {
+			sound = plasmoid.configuration.eventStartingSfxPath
+		} else if (changedKinds.reminder && plasmoid.configuration.eventReminderSfxEnabled) {
+			sound = plasmoid.configuration.eventReminderSfxPath
+		}
+		if (sound) {
+			notificationManager.soundPlayer.play(sound)
+		}
 	}
 
 	// Open the popup with the event's details (the popup is created on first expand).
