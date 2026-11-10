@@ -208,18 +208,12 @@ ColumnLayout {
 		}
 	}
 
-	// "Weather" as the card's title (like the Day view's "Tasks" beside it), the location on the
-	// right with a pin, a small spinner while refreshing.
+	// No title (the weather speaks for itself): the location on the right with a pin, a small
+	// spinner while refreshing.
 	RowLayout {
 		visible: panel.showData && !panel.compact
 		Layout.fillWidth: true
 		spacing: Kirigami.Units.smallSpacing
-		PlasmaComponents3.Label {
-			text: i18n("Weather")
-			textFormat: Text.PlainText
-			font.weight: Font.Bold
-			font.pointSize: appletConfig.fontPoints(Kirigami.Theme.defaultFont) * 1.25
-		}
 		Item {
 			Layout.fillWidth: true
 		}
