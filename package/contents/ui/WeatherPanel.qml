@@ -851,9 +851,9 @@ ColumnLayout {
 		}
 	}
 
-	// Under the chart: on the left when the forecast came (dimmed; with the date when not today),
-	// on the right the rain the chart's hours bring in all, in the rain's color (Settings > Weather >
-	// Forecast chart > Rain amounts).
+	// Under the chart: on the left the rain the chart's hours bring in all, in the rain's color
+	// (Settings > Weather > Forecast chart > Rain amounts), on the right when the forecast came
+	// (dimmed; with the date when not today).
 	RowLayout {
 		readonly property real rain: hourChart.visible ? ForecastChart.rainTotal(hourChart.points) : 0
 		readonly property bool rainShown: panel.chartRainAmounts && rain > 0
@@ -861,20 +861,21 @@ ColumnLayout {
 		Layout.fillWidth: true
 		spacing: Kirigami.Units.smallSpacing
 		PlasmaComponents3.Label {
-			id: updatedLabel
-			Layout.fillWidth: true
-			elide: Text.ElideRight
-			textFormat: Text.PlainText
-			text: panel.updatedText(panel.updatedAt)
-			font: Kirigami.Theme.smallFont
-			opacity: panel.dimOpacity
-		}
-		PlasmaComponents3.Label {
 			visible: parent.rainShown
 			textFormat: Text.PlainText
 			text: visible ? i18nc("precipitation during the hours of the chart", "Rain: %1", panel.precipitationText(parent.rain)) : ""
 			font: Kirigami.Theme.smallFont
 			color: Kirigami.Theme.linkColor
+		}
+		PlasmaComponents3.Label {
+			id: updatedLabel
+			Layout.fillWidth: true
+			horizontalAlignment: Text.AlignRight
+			elide: Text.ElideLeft
+			textFormat: Text.PlainText
+			text: panel.updatedText(panel.updatedAt)
+			font: Kirigami.Theme.smallFont
+			opacity: panel.dimOpacity
 		}
 	}
 
