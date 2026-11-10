@@ -57,6 +57,9 @@ QtObject {
 			// expired notification stays in the history.
 			flags: persistent || closeAfterMs > 0 ? Notification.Persistent : Notification.CloseOnTimeout,
 		})
+		if (props.resident) {
+			n.setHint("resident", true) // Plasma: not closed by a click or an action
+		}
 
 		var actions = []
 		for (var i = 0; i < actionList.length; i++) {

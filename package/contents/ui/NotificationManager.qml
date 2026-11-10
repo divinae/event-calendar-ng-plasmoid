@@ -14,6 +14,8 @@ import "./NotificationState.js" as NotificationState
 //   popup timeout.
 // - closeAt: ms since the epoch (eg: the event's end), > 0: a notification still shown then is
 //   closed (one in Plasma's history can't be reached any more).
+// - resident: true = Plasma keeps it shown when clicked or an action is chosen (closed by us or
+//   dismissed); then 'closed' also comes after an action.
 // - urgency: 'low' | 'normal' | 'critical'.
 // - actions: ["id,Label", ...].
 // callback(actionId) once: an action id, 'default' (the notification was clicked) or 'closed'.
@@ -61,11 +63,14 @@ QtObject {
 	function notify(args, callback) {
 		logger.debug('NotificationManager.notify', args.event) // No event titles in logs
 		var answered = false
+		var closed = false
 		function answer(actionId) {
-			if (answered) {
+			// Once, or (resident) any actions, then 'closed' once.
+			if (closed || answered) {
 				return
 			}
-			answered = true
+			answered = !args.resident
+			closed = actionId === 'closed'
 			if (typeof callback === 'function') {
 				callback(actionId)
 			}
@@ -96,6 +101,7 @@ QtObject {
 			text: args.body || "",
 			iconName: args.appIcon || "view-calendar",
 			urgency: args.urgency,
+			resident: !!args.resident,
 		}, actionList, args.expireTimeout === 0, answer, args.expireTimeout > 0 ? args.expireTimeout : 0, args.closeAt || 0)
 	}
 }
