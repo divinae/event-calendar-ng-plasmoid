@@ -284,6 +284,11 @@ CalendarManager {
 			notificationManager.soundPlayer.play(sound)
 		}
 	}
+	function hasShownNotification(eventItem) {
+		return shownEventNotifications.some(function(shown) {
+			return shown.eventItem.calendarId === eventItem.calendarId && shown.eventItem.id == eventItem.id
+		})
+	}
 	function applyEventChange(shown, eventItem, now, changedKinds) {
 		shown.eventItem = eventItem
 		var signature = notificationSignature(eventItem)
@@ -692,7 +697,10 @@ CalendarManager {
 				var late = NotifyTiming.lateReminder(eventItem, reminderMinutesFor(eventItem), win, now, sent)
 				if (late) {
 					late.keys.forEach(function(key) { sent[key] = sent[key] || now })
-					if (!late.already && !seedingLate && plasmoid.configuration.eventReminderNotificationEnabled) {
+					// Moved while its notification is still shown: that one shows the new time instead.
+					if (!late.already && !seedingLate && hasShownNotification(eventItem)) {
+						logger.log('notification: late reminder skipped, one still shown', eventItem.startDateTime)
+					} else if (!late.already && !seedingLate && plasmoid.configuration.eventReminderNotificationEnabled) {
 						logger.log('notification: late reminder,', late.minutes, 'min left', eventItem.startDateTime)
 						sendEventReminderNotification(eventItem, late.minutes)
 					}
