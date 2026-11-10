@@ -255,7 +255,9 @@ CalendarManager {
 	// added, edited or removed in KOrganizer): read it again, ours only (no Google requests).
 	Connections {
 		target: plasmaCalendarManager.eventPluginsManager
-		function onDataReady() { pluginDataTimer.restart() }
+		// Not the data our own reading asks for (getEventsForDuration moves the grid month by month,
+		// and each move sends the data at once): that would read again and again.
+		function onDataReady() { if (!plasmaCalendarManager.readingRange) pluginDataTimer.restart() }
 		function onEventModified() { pluginDataTimer.restart() }
 		function onEventRemoved() { pluginDataTimer.restart() }
 		function onPluginsChanged() { pluginDataTimer.restart() }
@@ -409,23 +411,33 @@ CalendarManager {
 		return items
 	}
 
+	// Plasma's DaysModel holds the events of one 6-week grid, the one around displayedDate (its
+	// plugins load that range, synchronously). So the range is read month by month, each with its
+	// own grid, and the grid then goes back to today's month: the plugins send their changes
+	// (eventModified ...) only for the range loaded last, and today's events are the ones the
+	// notifications need. Before (one grid around the range's middle) the days outside it came
+	// empty: a scrolled Agenda or another month shown lost today's Akonadi events.
+	property bool readingRange: false
 	function getEventsForDuration(dateMin, dateMax) {
-		var numDays = 0
-		for (var day = new Date(dateMin); day < dateMax; day.setDate(day.getDate() + 1)) {
-			numDays += 1
+		readingRange = true
+		try {
+			return readEventsForDuration(dateMin, dateMax)
+		} finally {
+			readingRange = false
 		}
-		// CalendarBackend needs the actual month we're looking at. We can't arbitrarily grab events for random days.
-		var middleDay = new Date(dateMin)
-		middleDay.setDate(middleDay.getDate() + Math.floor(numDays/2))
-		calendarBackend.displayedDate = middleDay
-
+	}
+	function readEventsForDuration(dateMin, dateMax) {
 		var items = []
-		
 		// 2018-05-24T00:00:00.000Z
 		var dateMinUtcStr = Shared.localeDateString(dateMin) + 'T00:00:00.000Z'
-		var dateMinUtc = new Date(dateMinUtcStr)
-
-		for (var day = new Date(dateMinUtc); day < dateMax; day.setDate(day.getDate() + 1)) {
+		var day = new Date(dateMinUtcStr)
+		var month = -1
+		for (; day < dateMax; day.setDate(day.getDate() + 1)) {
+			var monthKey = day.getFullYear() * 12 + day.getMonth()
+			if (monthKey !== month) {
+				month = monthKey
+				calendarBackend.displayedDate = new Date(day.getFullYear(), day.getMonth(), 15)
+			}
 			var dayEvents = calendarBackend.daysModel.eventsForDate(day)
 			if (dayEvents.length) {
 				logger.debugJSON('PlasmaCalendar.dayEvents', {
@@ -435,6 +447,8 @@ CalendarManager {
 			}
 			items = items.concat(parseEventsForDate(day, dayEvents))
 		}
+		var today = timeModel.currentTime
+		calendarBackend.displayedDate = new Date(today.getFullYear(), today.getMonth(), 15)
 
 		// Plasma may return the same parsed item more than once for multi-day/plugin events.
 		items = PlasmaCalendarEventState.dedupeParsedEvents(items)
