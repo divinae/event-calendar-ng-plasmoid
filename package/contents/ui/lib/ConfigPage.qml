@@ -222,6 +222,8 @@ KCM.SimpleKCM {
 	property var cfg_eventReminderTimeoutDefault
 	property var cfg_eventReminderSnoozeMinutes
 	property var cfg_eventReminderSnoozeMinutesDefault
+	property var cfg_eventNotificationsCloseAtEnd
+	property var cfg_eventNotificationsCloseAtEndDefault
 	property var cfg_eventStartingPersistent
 	property var cfg_eventStartingPersistentDefault
 	property var cfg_eventStartingCritical

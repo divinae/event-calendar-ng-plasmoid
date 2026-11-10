@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-06 11:28+0100\n"
+"POT-Creation-Date: 2026-11-09 16:52+0100\n"
 "PO-Revision-Date: 2022-04-05 13:49+0200\n"
 "Last-Translator: Heimen Stoffels <vistausss@fastmail.com>\n"
 "Language-Team: Dutch <>\n"
@@ -1111,6 +1111,15 @@ msgstr "Afspraakdetails in de widget"
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Google Calendar in the browser"
 msgstr "Google Agenda in de webbrowser"
+
+#: ../contents/ui/config/ConfigEvents.qml
+msgid "Close notifications when the event ends"
+msgstr ""
+
+#: ../contents/ui/config/ConfigEvents.qml
+msgid ""
+"A reminder or start notification still shown, also one kept until dismissed"
+msgstr ""
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Reminder Before an Event"
