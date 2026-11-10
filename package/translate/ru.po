@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-06 11:28+0100\n"
+"POT-Creation-Date: 2026-11-10 12:08+0100\n"
 "PO-Revision-Date: 2020-01-05 22:01+0300\n"
 "Last-Translator: aliger14 <aliger14@mail.ru>\n"
 "Language-Team: ru\n"
@@ -870,10 +870,6 @@ msgstr "Не удалось автоматически открыть брауз
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Copy Link"
 msgstr "Копировать ссылку"
-
-#: ../contents/ui/config/CalendarsGoogle.qml
-msgid "Helper page (optional): <a href=\"%1\">%1</a>"
-msgstr "Вспомогательная страница (необязательно): <a href=\"%1\">%1</a>"
 
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid ""
@@ -4925,6 +4921,9 @@ msgstr "Сегодня событий больше нет"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Место работы: %1"
+
+#~ msgid "Helper page (optional): <a href=\"%1\">%1</a>"
+#~ msgstr "Вспомогательная страница (необязательно): <a href=\"%1\">%1</a>"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Выполненные (последние 30 дней)"

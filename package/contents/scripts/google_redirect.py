@@ -29,8 +29,6 @@ try:
 except OSError:
     pass
 
-# The hosted helper page (redirect mode "hosted") posts the code back from this origin.
-HELPER_ORIGIN = "https://divinae.github.io"
 LISTEN_TIMEOUT = 5 * 60  # seconds: give up if the browser never comes back
 
 listen_port = expected_state = None
@@ -122,13 +120,6 @@ class OAuthRedirectHandler(BaseHTTPRequestHandler):
     def _send_headers(self, status, content_type):
         self.send_response(status)
         self.send_header("Content-type", content_type)
-        # Only the hosted helper page may post the code from a browser (no "*": any web page
-        # could otherwise send its own code and sign the widget into another account).
-        if self.headers.get("Origin") == HELPER_ORIGIN:
-            self.send_header("Access-Control-Allow-Origin", HELPER_ORIGIN)
-            self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type")
-            self.send_header("Access-Control-Allow-Private-Network", "true")
         self.end_headers()
 
     def _reject(self, reason):
@@ -174,7 +165,7 @@ class OAuthRedirectHandler(BaseHTTPRequestHandler):
                 return params["state"][0]
         return text
 
-    def _handle_code(self, code, received_state, html_response):
+    def _handle_code(self, code, received_state):
         logging.info("Handling code (code=%s)", mask_value(code))
         if not code:
             self._send_headers(400, "text/plain")
@@ -195,23 +186,15 @@ class OAuthRedirectHandler(BaseHTTPRequestHandler):
         }, sort_keys=True))
         sys.stdout.flush()
         self._set_exit_code(0)
-        if html_response:
-            page = render_success_page(code)
-            self._send_headers(200, "text/html")
-            if page:
-                self.wfile.write(page.encode("utf-8"))
-            else:
-                self.wfile.write(
-                    b"OAuth redirect handled successfully. You can close this tab now."
-                )
+        page = render_success_page(code)
+        self._send_headers(200, "text/html")
+        if page:
+            self.wfile.write(page.encode("utf-8"))
         else:
-            self._send_headers(200, "text/plain")
-            self.wfile.write(b"OK")
+            self.wfile.write(
+                b"OAuth redirect handled successfully. You can close this tab now."
+            )
         self._shutdown()
-
-    def do_OPTIONS(self):
-        logging.info("OPTIONS %s from %s", self.path, self.client_address)
-        self._send_headers(204, "text/plain")
 
     def do_GET(self):
         logging.info("GET %s from %s", urlparse(self.path).path, self.client_address)
@@ -231,31 +214,7 @@ class OAuthRedirectHandler(BaseHTTPRequestHandler):
             return
         code = params.get("code", [""])[0]
         state = params.get("state", [""])[0]
-        self._handle_code(self._extract_code(code), self._extract_state(state), html_response=True)
-
-    def do_POST(self):
-        logging.info("POST %s from %s", self.path, self.client_address)
-        origin = self.headers.get("Origin")
-        if origin and origin != HELPER_ORIGIN:
-            self._reject("origin {}".format(origin))
-            return
-        content_length = int(self.headers.get("Content-Length", 0))
-        raw_body = self.rfile.read(content_length).decode("utf-8") if content_length else ""
-        content_type = self.headers.get("Content-Type", "")
-        code = ""
-        state = ""
-        if "application/json" in content_type:
-            try:
-                payload = json.loads(raw_body) if raw_body else {}
-                code = payload.get("code", "")
-                state = payload.get("state", "")
-            except json.JSONDecodeError:
-                code = ""
-        else:
-            params = parse_qs(raw_body)
-            code = params.get("code", [""])[0]
-            state = params.get("state", [""])[0]
-        self._handle_code(self._extract_code(code), self._extract_state(state), html_response=False)
+        self._handle_code(self._extract_code(code), self._extract_state(state))
 
 
 if __name__ == "__main__":

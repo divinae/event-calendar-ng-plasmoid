@@ -250,7 +250,6 @@ ConfigSection {
 	GoogleLoginManager {
 		id: googleLoginManager
 		configBridge: page.configBridge
-		redirectMode: "local"
 
 		onError: function(err) {
 			messageWidget.err(err)
@@ -583,11 +582,6 @@ ConfigSection {
 									}
 								}
 							}
-						}
-						LinkText {
-							Layout.fillWidth: true
-							text: i18n("Helper page (optional): <a href=\"%1\">%1</a>", googleLoginManager.hostedRedirectUri)
-							wrapMode: Text.Wrap
 						}
 						Label {
 							Layout.fillWidth: true
