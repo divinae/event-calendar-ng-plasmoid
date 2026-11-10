@@ -49,7 +49,7 @@ CalendarManager {
 	// Disturb or full-screen alert; still shown in the views. One occurrence: calendar, id, start.
 	readonly property var mutedKeys: plasmoid.configuration.mutedEventKeys || []
 	function muteKey(eventItem) {
-		return String(eventItem.calendarId || '') + '|' + String(eventItem.id || '') + '|' + new Date(eventItem.startDateTime).getTime()
+		return String(eventItem.calendarId || '') + '|' + NotifyTiming.eventId(eventItem) + '|' + new Date(eventItem.startDateTime).getTime()
 	}
 	function isMuted(eventItem) {
 		return !!eventItem && mutedKeys.indexOf(muteKey(eventItem)) >= 0
@@ -498,7 +498,7 @@ CalendarManager {
 	//--- At a meeting's start, independent of the notifications: open its link (auto-join).
 	// Keys without the calendar, so a meeting in two calendars is joined once.
 	function meetingKey(eventItem) {
-		return String(eventItem.id || eventItem.summary || '') + '|' + new Date(eventItem.startDateTime).getTime()
+		return NotifyTiming.eventId(eventItem) + '|' + new Date(eventItem.startDateTime).getTime()
 	}
 	// A full-screen alert for this meeting (main.qml shows it on every screen).
 	signal meetingAlertRequested(var eventItem)
@@ -888,7 +888,7 @@ CalendarManager {
 	// key -> { until: its planned end (ms), at: when it was marked (ms): its real end, for Glance }
 	property var endedEvents: ({})
 	function endedKey(eventItem) {
-		return String(eventItem.calendarId || '') + '|' + String(eventItem.id || eventItem.summary || '') + '|' + new Date(eventItem.startDateTime).getTime()
+		return String(eventItem.calendarId || '') + '|' + NotifyTiming.eventId(eventItem) + '|' + new Date(eventItem.startDateTime).getTime()
 	}
 	function isMarkedEnded(eventItem) {
 		return !!endedEvents[endedKey(eventItem)]

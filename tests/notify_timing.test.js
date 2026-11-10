@@ -143,3 +143,16 @@ console.log('notify_timing: ok')
 	assert.strictEqual(T.lateReminder(event, [], win, at(17, 14), {}), null, 'no reminders')
 	assert.strictEqual(T.lateReminder(event, [0, -5], win, at(17, 14), {}), null, 'none before the start')
 }
+
+//--- eventId: Akonadi's id (calendar_start_end) without the end, so a new end keeps the keys.
+{
+	const start = new Date(2026, 10, 10, 9, 50), end = new Date(2026, 10, 10, 10, 0)
+	const akonadi = { calendarId: 'plasma_Events', summary: 'Testing', startDateTime: start, endDateTime: end,
+		id: 'plasma_Events_' + start.getTime() + '_' + end.getTime() }
+	const longer = Object.assign({}, akonadi, { endDateTime: new Date(2026, 10, 10, 10, 30),
+		id: 'plasma_Events_' + start.getTime() + '_' + new Date(2026, 10, 10, 10, 30).getTime() })
+	assert.strictEqual(T.eventId(akonadi), T.eventId(longer), 'Akonadi: end changed, same id')
+	assert.strictEqual(T.eventId(akonadi), 'plasma_Events_' + start.getTime() + '_Testing')
+	const google = { calendarId: 'a@b', id: 'abc_123', summary: 'x', startDateTime: start, endDateTime: end }
+	assert.strictEqual(T.eventId(google), 'abc_123', 'others: their own id')
+}

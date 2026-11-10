@@ -7,6 +7,19 @@
 
 var MINUTE = 60000
 
+// An event's id for keys that must outlive a change of its end (sent notifications, muted,
+// meetings): its own id, but for Plasma's calendar plugins (Akonadi), which tell no uid, the id is
+// made of the start and end (PlasmaCalendarManager), so there the title stands in for the end.
+function eventId(eventItem) {
+	var id = String(eventItem.id || eventItem.summary || '')
+	var start = new Date(eventItem.startDateTime).getTime()
+	var end = new Date(eventItem.endDateTime).getTime()
+	if (id === String(eventItem.calendarId || '') + '_' + start + '_' + end) {
+		return String(eventItem.calendarId || '') + '_' + start + '_' + String(eventItem.summary || '')
+	}
+	return id
+}
+
 function floorMinute(ms) {
 	return Math.floor(ms / MINUTE) * MINUTE
 }
@@ -40,7 +53,7 @@ function dueFor(eventItem, reminderMinutes, win, nowMs) {
 	if (!isFinite(start)) {
 		return due
 	}
-	var id = String(eventItem.calendarId || '') + '|' + String(eventItem.id || eventItem.summary || '') + '|' + start
+	var id = String(eventItem.calendarId || '') + '|' + eventId(eventItem) + '|' + start
 	if (inWindow(start, win)) {
 		due.push({ kind: 'start', minutes: 0, key: id + '|start' })
 	}
@@ -68,7 +81,7 @@ function lateReminder(eventItem, reminderMinutes, win, nowMs, sent) {
 	if (!isFinite(start) || start <= nowMs) {
 		return null
 	}
-	var id = String(eventItem.calendarId || '') + '|' + String(eventItem.id || eventItem.summary || '') + '|' + start
+	var id = String(eventItem.calendarId || '') + '|' + eventId(eventItem) + '|' + start
 	var keys = []
 	var anySent = false
 	var list = reminderMinutes || []
