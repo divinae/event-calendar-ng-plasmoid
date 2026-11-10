@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-10 18:25+0100\n"
+"POT-Creation-Date: 2026-11-10 18:30+0100\n"
 "PO-Revision-Date: 2017-06-10 HO:MI+ZONE\n"
 "Last-Translator: Kepa Badiola <badiol@yahoo.es>\n"
 "Language-Team: Spanish <LL@li.org>\n"
@@ -1937,8 +1937,8 @@ msgid "Rain amounts"
 msgstr "Cantidades de lluvia"
 
 #: ../contents/ui/config/ConfigWeather.qml
-msgid "The total above the chart, the amounts at the heaviest hours"
-msgstr "El total sobre el gráfico, las cantidades en las horas más lluviosas"
+msgid "The total under the chart, the amounts at the heaviest hours"
+msgstr "El total bajo el gráfico, las cantidades en las horas más lluviosas"
 
 #: ../contents/ui/config/GoogleLoginManager.qml
 msgid "Not signed in to this Google account. Sign in again."
@@ -4354,24 +4354,9 @@ msgid "No forecast for this day."
 msgstr "No hay previsión para este día."
 
 #: ../contents/ui/WeatherPanel.qml
-msgid "Next hour"
-msgid_plural "Next %1 hours"
-msgstr[0] "Próxima hora"
-msgstr[1] "Próximas %1 horas"
-
-#: ../contents/ui/WeatherPanel.qml
-msgctxt "weather by hour of the shown day"
-msgid "During the day"
-msgstr "Durante el día"
-
-#: ../contents/ui/WeatherPanel.qml
 msgctxt "precipitation during the hours of the chart"
 msgid "Rain: %1"
 msgstr "Lluvia: %1"
-
-#: ../contents/ui/WeatherPanel.qml
-msgid "Next days"
-msgstr "Próximos días"
 
 #: ../contents/ui/WeekView.qml
 msgctxt "%1 = day and time, %2 = event title"
@@ -4411,6 +4396,21 @@ msgstr "No hay más eventos hoy"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Lugar de trabajo: %1"
+
+#~ msgid "The total above the chart, the amounts at the heaviest hours"
+#~ msgstr "El total sobre el gráfico, las cantidades en las horas más lluviosas"
+
+#~ msgid "Next hour"
+#~ msgid_plural "Next %1 hours"
+#~ msgstr[0] "Próxima hora"
+#~ msgstr[1] "Próximas %1 horas"
+
+#~ msgctxt "weather by hour of the shown day"
+#~ msgid "During the day"
+#~ msgstr "Durante el día"
+
+#~ msgid "Next days"
+#~ msgstr "Próximos días"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Completadas (últimos 30 días)"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-10 18:25+0100\n"
+"POT-Creation-Date: 2026-11-10 18:30+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: yamato kobayashi <Kb_yamato@protonmail.com>\n"
 "Language-Team: \n"
@@ -1927,8 +1927,8 @@ msgid "Rain amounts"
 msgstr "降水量"
 
 #: ../contents/ui/config/ConfigWeather.qml
-msgid "The total above the chart, the amounts at the heaviest hours"
-msgstr "グラフの上に合計、雨の多い時間に量を表示"
+msgid "The total under the chart, the amounts at the heaviest hours"
+msgstr "グラフの下に合計、雨の多い時間に量を表示"
 
 #: ../contents/ui/config/GoogleLoginManager.qml
 msgid "Not signed in to this Google account. Sign in again."
@@ -4304,23 +4304,9 @@ msgid "No forecast for this day."
 msgstr "この日の天気予報はありません。"
 
 #: ../contents/ui/WeatherPanel.qml
-msgid "Next hour"
-msgid_plural "Next %1 hours"
-msgstr[0] "今後 %1 時間"
-
-#: ../contents/ui/WeatherPanel.qml
-msgctxt "weather by hour of the shown day"
-msgid "During the day"
-msgstr "日中"
-
-#: ../contents/ui/WeatherPanel.qml
 msgctxt "precipitation during the hours of the chart"
 msgid "Rain: %1"
 msgstr "降水量: %1"
-
-#: ../contents/ui/WeatherPanel.qml
-msgid "Next days"
-msgstr "今後数日"
 
 #: ../contents/ui/WeekView.qml
 msgctxt "%1 = day and time, %2 = event title"
@@ -4359,6 +4345,20 @@ msgstr "今日はこれ以上予定がありません"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "勤務場所: %1"
+
+#~ msgid "The total above the chart, the amounts at the heaviest hours"
+#~ msgstr "グラフの上に合計、雨の多い時間に量を表示"
+
+#~ msgid "Next hour"
+#~ msgid_plural "Next %1 hours"
+#~ msgstr[0] "今後 %1 時間"
+
+#~ msgctxt "weather by hour of the shown day"
+#~ msgid "During the day"
+#~ msgstr "日中"
+
+#~ msgid "Next days"
+#~ msgstr "今後数日"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "完了 (過去 30 日間)"

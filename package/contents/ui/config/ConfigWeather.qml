@@ -313,7 +313,7 @@ ConfigPage {
 			FormCard.FormDelegateSeparator {}
 			FormConfigSwitch {
 				text: i18n("Rain amounts")
-				description: i18n("The total above the chart, the amounts at the heaviest hours")
+				description: i18n("The total under the chart, the amounts at the heaviest hours")
 				configKey: 'weatherChartRainAmounts'
 			}
 		}

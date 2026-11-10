@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-10 18:25+0100\n"
+"POT-Creation-Date: 2026-11-10 18:30+0100\n"
 "PO-Revision-Date: 2017-10-31 20:08+0200\n"
 "Last-Translator: Serhii Golovko <cappelikan@gmail.com>\n"
 "Language-Team: \n"
@@ -2335,8 +2335,8 @@ msgid "Rain amounts"
 msgstr "Кількість опадів"
 
 #: ../contents/ui/config/ConfigWeather.qml
-msgid "The total above the chart, the amounts at the heaviest hours"
-msgstr "Сума над графіком, кількість у найдощовіші години"
+msgid "The total under the chart, the amounts at the heaviest hours"
+msgstr "Сума під графіком, кількість у найдощовіші години"
 
 #: ../contents/ui/config/GoogleLoginManager.qml
 msgid "Not signed in to this Google account. Sign in again."
@@ -4859,25 +4859,9 @@ msgid "No forecast for this day."
 msgstr "Немає прогнозу на цей день."
 
 #: ../contents/ui/WeatherPanel.qml
-msgid "Next hour"
-msgid_plural "Next %1 hours"
-msgstr[0] "Наступна %1 година"
-msgstr[1] "Наступні %1 години"
-msgstr[2] "Наступні %1 годин"
-
-#: ../contents/ui/WeatherPanel.qml
-msgctxt "weather by hour of the shown day"
-msgid "During the day"
-msgstr "Протягом дня"
-
-#: ../contents/ui/WeatherPanel.qml
 msgctxt "precipitation during the hours of the chart"
 msgid "Rain: %1"
 msgstr "Дощ: %1"
-
-#: ../contents/ui/WeatherPanel.qml
-msgid "Next days"
-msgstr "Наступні дні"
 
 #: ../contents/ui/WeekView.qml
 msgctxt "%1 = day and time, %2 = event title"
@@ -4919,6 +4903,22 @@ msgstr "Сьогодні подій більше немає"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Місце роботи: %1"
+
+#~ msgid "The total above the chart, the amounts at the heaviest hours"
+#~ msgstr "Сума над графіком, кількість у найдощовіші години"
+
+#~ msgid "Next hour"
+#~ msgid_plural "Next %1 hours"
+#~ msgstr[0] "Наступна %1 година"
+#~ msgstr[1] "Наступні %1 години"
+#~ msgstr[2] "Наступні %1 годин"
+
+#~ msgctxt "weather by hour of the shown day"
+#~ msgid "During the day"
+#~ msgstr "Протягом дня"
+
+#~ msgid "Next days"
+#~ msgstr "Наступні дні"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Виконані (останні 30 днів)"

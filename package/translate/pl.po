@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-10 18:25+0100\n"
+"POT-Creation-Date: 2026-11-10 18:30+0100\n"
 "PO-Revision-Date: 2018-09-03 HO:MI+ZONE\n"
 "Last-Translator: Jakub Starzyk <jstarzyk98@gmail.com>\n"
 "Language-Team: Jakub Starzyk <jstarzyk98@gmail.com>\n"
@@ -1944,8 +1944,8 @@ msgid "Rain amounts"
 msgstr "Ilość opadów"
 
 #: ../contents/ui/config/ConfigWeather.qml
-msgid "The total above the chart, the amounts at the heaviest hours"
-msgstr "Suma nad wykresem, ilości przy godzinach z największymi opadami"
+msgid "The total under the chart, the amounts at the heaviest hours"
+msgstr "Suma pod wykresem, ilości przy godzinach z największymi opadami"
 
 #: ../contents/ui/config/GoogleLoginManager.qml
 msgid "Not signed in to this Google account. Sign in again."
@@ -4401,25 +4401,9 @@ msgid "No forecast for this day."
 msgstr "Brak prognozy na ten dzień."
 
 #: ../contents/ui/WeatherPanel.qml
-msgid "Next hour"
-msgid_plural "Next %1 hours"
-msgstr[0] "Następna godzina"
-msgstr[1] "Następne %1 godziny"
-msgstr[2] "Następne %1 godzin"
-
-#: ../contents/ui/WeatherPanel.qml
-msgctxt "weather by hour of the shown day"
-msgid "During the day"
-msgstr "W ciągu dnia"
-
-#: ../contents/ui/WeatherPanel.qml
 msgctxt "precipitation during the hours of the chart"
 msgid "Rain: %1"
 msgstr "Opady: %1"
-
-#: ../contents/ui/WeatherPanel.qml
-msgid "Next days"
-msgstr "Kolejne dni"
 
 #: ../contents/ui/WeekView.qml
 msgctxt "%1 = day and time, %2 = event title"
@@ -4460,6 +4444,22 @@ msgstr "Dziś nie ma już wydarzeń"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Miejsce pracy: %1"
+
+#~ msgid "The total above the chart, the amounts at the heaviest hours"
+#~ msgstr "Suma nad wykresem, ilości przy godzinach z największymi opadami"
+
+#~ msgid "Next hour"
+#~ msgid_plural "Next %1 hours"
+#~ msgstr[0] "Następna godzina"
+#~ msgstr[1] "Następne %1 godziny"
+#~ msgstr[2] "Następne %1 godzin"
+
+#~ msgctxt "weather by hour of the shown day"
+#~ msgid "During the day"
+#~ msgstr "W ciągu dnia"
+
+#~ msgid "Next days"
+#~ msgstr "Kolejne dni"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Ukończone (ostatnie 30 dni)"
