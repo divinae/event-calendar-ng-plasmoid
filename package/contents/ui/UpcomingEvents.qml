@@ -478,14 +478,26 @@ CalendarManager {
 		})
 	}
 
+	// The loaded copy of an event (same calendar and key id, NotifyTiming.eventId), or null.
+	function currentEventItem(eventItem) {
+		var id = NotifyTiming.eventId(eventItem)
+		var matches = Shared.toArray((eventsByCalendar[eventItem.calendarId] || {}).items).filter(function(other) {
+			return NotifyTiming.eventId(other) === id
+		})
+		var start = new Date(eventItem.startDateTime).getTime()
+		return matches.filter(function(other) { return new Date(other.startDateTime).getTime() === start })[0]
+			|| (matches.length === 1 ? matches[0] : null)
+	}
 	function checkSnoozedReminders() {
 		var now = timeModel.currentTime
 		var remaining = []
 		for (var i = 0; i < snoozedReminders.length; i++) {
 			var snoozed = snoozedReminders[i]
 			if (snoozed.at <= now) {
-				if (snoozed.eventItem.startDateTime > now) {
-					sendSnoozedReminderNotification(snoozed.eventItem)
+				// The event as it is now: changed meanwhile, or deleted or muted (then nothing).
+				var current = currentEventItem(snoozed.eventItem)
+				if (current && shouldNotify(current) && current.startDateTime > now) {
+					sendSnoozedReminderNotification(current)
 				}
 				// Else: the event already started, the "starting" notification covers it.
 			} else {
