@@ -91,7 +91,24 @@ Item {
 		repeat: true
 		triggeredOnStart: true
 		interval: plasmoid.configuration.eventsPollInterval * 60000
-		onTriggered: logic.update()
+		onTriggered: {
+			logic.backToToday()
+			logic.update()
+		}
+	}
+
+	// The reminders, the clock's next event and the tooltip take their events from a fetch that
+	// covers today (UpcomingEvents). The popup closed on another month: back to today's before
+	// the poll's fetch, as opening it would do anyway, so they don't wait for the popup to open.
+	function backToToday() {
+		var month = agendaModel.currentMonth
+		var now = timeModel.currentTime
+		if (root.expanded || !popup || !month
+				|| (month.getFullYear() === now.getFullYear() && month.getMonth() === now.getMonth())) {
+			return
+		}
+		logger.debug('poll: the popup closed on another month, back to today')
+		popup.updateToday()
 	}
 
 	function update() {
