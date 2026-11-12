@@ -196,8 +196,11 @@ CalendarManager {
 			if (actionId === 'snooze') {
 				logger.debug('notification: snoozed for', upcomingEvents.snoozeMinutes, 'min', eventLogText(shown.eventItem))
 			}
-			if (shown.handle && (actionId === 'snooze' || actionId === 'declined')) {
-				shown.handle.close() // Kept by itself when resident: done with it
+			// Kept by itself when resident (closed at the event's end): done with it after an answer,
+			// eg: after Join it would cover the meeting till its end. A click on the notification
+			// itself only opens the event (eg: to edit it), so it stays.
+			if (shown.handle && ['snooze', 'declined', 'join', 'accepted', 'tentative'].indexOf(actionId) >= 0) {
+				shown.handle.close()
 			}
 			var eventItem = shown.eventItem
 			if (actionId === 'default') {
