@@ -165,6 +165,9 @@ CalendarManager {
 			event: args.event,
 			closeAt: closeAt,
 			signature: notificationSignature(eventItem),
+			// Sent from the cached events shown before the first fetch (EventCacheUtil.js: no
+			// descriptions): the first fetch's update of it is no change to ring for.
+			fromCache: !upcomingEvents.eventsSynced,
 			handle: null,
 		}
 		var handle = notificationManager.notify({
@@ -341,8 +344,12 @@ CalendarManager {
 					shown.handle.close()
 					return
 				}
-				applyEventChange(shown, single.data, now, changedKinds)
+				applyEventChange(shown, single.data, now, changedKinds, false)
 				return
+			}
+			var fromCache = shown.fromCache
+			if (eventsByCalendar[old.calendarId]) {
+				shown.fromCache = false // Its calendar came with this fetch (not a failed one)
 			}
 			function startOf(eventItem) { return new Date(eventItem.startDateTime).getTime() }
 			function sameCalendar(eventItem) { return eventItem.calendarId === old.calendarId }
@@ -375,7 +382,7 @@ CalendarManager {
 				}
 				return
 			}
-			applyEventChange(shown, eventItem, now, changedKinds)
+			applyEventChange(shown, eventItem, now, changedKinds, fromCache)
 		})
 		var sound = ''
 		if (changedKinds.eventStarting && plasmoid.configuration.eventStartingSfxEnabled) {
@@ -392,7 +399,9 @@ CalendarManager {
 			return shown.eventItem.calendarId === eventItem.calendarId && shown.eventItem.id == eventItem.id
 		})
 	}
-	function applyEventChange(shown, eventItem, now, changedKinds) {
+	// fromCache: the first fetch after a notification sent from the cached events: no sound, and
+	// only the description (not in the cache) new is no change at all.
+	function applyEventChange(shown, eventItem, now, changedKinds, fromCache) {
 		shown.eventItem = eventItem
 		var signature = notificationSignature(eventItem)
 		if (signature === shown.signature) {
@@ -400,13 +409,18 @@ CalendarManager {
 		}
 		var changed = changedFields(shown.signature, signature)
 		shown.signature = signature
+		if (fromCache && changed.length === 1 && changed[0] === 'description') {
+			return
+		}
 		var start = new Date(eventItem.startDateTime).getTime()
 		var minutesLeft = Math.round((start - now) / 60000)
 		var title = shown.event === 'reminder' && minutesLeft > 0
 			? i18nc("%1 = 15 minutes, %2 = event title", "In %1: %2", LocaleFuncs.durationShortFormat(minutesLeft * 60), eventItem.summary)
 			: eventItem.summary
 		logger.log('notification', shown.handle.logId, 'updated, event changed:', changed.join(', '), eventLogText(eventItem))
-		changedKinds[shown.event] = true
+		if (!fromCache) {
+			changedKinds[shown.event] = true
+		}
 		shown.handle.update(title, eventNotificationBody(eventItem, MeetingLink.find(eventItem)))
 		var end = new Date(eventItem.endDateTime).getTime()
 		if (shown.closeAt > 0 && isFinite(end) && end !== shown.closeAt) {
