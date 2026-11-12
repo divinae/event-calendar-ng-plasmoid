@@ -115,7 +115,7 @@ local `prNN` branches are checked-out contributor PRs.
 
 ## Related
 
-- `../glance-plasmoid`: Event Calendar pushes today's/tomorrow's events and weather to Glance over
+- `../../glance-plasmoid` (this checkout is `eventcalendar-plasmoid/main/`, see `wt`): Event Calendar pushes today's/tomorrow's events and weather to Glance over
   D-Bus (`com.dv.glance` `/Calendar`, via `gdbus`) from `ui/GlancePublisher.qml`/`.js`; the receiving
   side is `glance-plasmoid/plugin/calendarbus.{h,cpp}`. Off by default (`glanceShareEvents`). Change
   the payload on both sides together.
