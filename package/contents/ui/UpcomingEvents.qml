@@ -1183,7 +1183,20 @@ CalendarManager {
 		}
 	}
 
+	// The close at the event's end is a timer, and Qt's timers don't count the time asleep: after
+	// suspend it would come that much later. The minute check closes the ones whose end went by
+	// (setCloseAt with a time gone by closes now; only those kept shown, as the timer does).
+	function closeEndedNotifications() {
+		var now = timeModel.currentTime.getTime()
+		shownEventNotifications.slice().forEach(function(shown) {
+			if (shown.closeAt > 0 && shown.closeAt <= now) {
+				shown.handle.setCloseAt(shown.closeAt)
+			}
+		})
+	}
+
 	function tick() {
+		closeEndedNotifications()
 		checkForEventsStarting()
 		checkMeetingCommandEnds()
 		checkDailyAgenda()
