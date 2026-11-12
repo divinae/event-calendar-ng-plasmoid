@@ -328,6 +328,8 @@ KCM.SimpleKCM {
 	property var cfg_dayShowTasksDefault
 	property var cfg_dayAllDayTiles
 	property var cfg_dayAllDayTilesDefault
+	property var cfg_followTodayAtMidnight
+	property var cfg_followTodayAtMidnightDefault
 	property var cfg_glanceShareEvents
 	property var cfg_glanceShareEventsDefault
 	// END AUTO CFG PROPS

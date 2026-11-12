@@ -1461,6 +1461,14 @@ msgstr "予定"
 msgid "Open in the last used view"
 msgstr "最後に使ったビューで開く"
 
+#: ../contents/ui/config/ConfigViews.qml
+msgid "Follow the date at midnight"
+msgstr ""
+
+#: ../contents/ui/config/ConfigViews.qml
+msgid "At midnight, what shows today goes on to the new day: the selected day, the month, the Agenda, the Day and Week views. A view moved or scrolled elsewhere stays. Off: nothing moves."
+msgstr ""
+
 #: ../contents/ui/config/ConfigViews.qml ../contents/ui/PopupHeader.qml
 msgid "View switcher"
 msgstr "ビューの切り替え"

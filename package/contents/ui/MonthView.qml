@@ -498,10 +498,7 @@ PinchArea {
 			})
 		}
 
-		onTodayChanged: {
-			logger.debug('onTodayChanged', displayedDate, today)
-			displayedDate = today
-		}
+		// The month isn't moved here: opening the popup (setToday) and midnight (followDate) do.
 
 		onDisplayedDateChanged: {
 			updateMonthOverview()

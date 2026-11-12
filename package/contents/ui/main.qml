@@ -393,7 +393,7 @@ PlasmoidItem {
 		Connections {
 			target: timeModel
 			function onDateChanged() {
-				popup.updateToday()
+				popup.followDate()
 				logger.debug('root.onDateChanged', timeModel.currentTime, popup.today)
 			}
 		}

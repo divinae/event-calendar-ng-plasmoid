@@ -39,6 +39,12 @@ ConfigPage {
 				configKey: 'popupOpenLastView'
 			}
 			FormCard.FormDelegateSeparator {}
+			FormConfigSwitch {
+				text: i18n("Follow the date at midnight")
+				description: i18n("At midnight, what shows today goes on to the new day: the selected day, the month, the Agenda, the Day and Week views. A view moved or scrolled elsewhere stays. Off: nothing moves.")
+				configKey: 'followTodayAtMidnight'
+			}
+			FormCard.FormDelegateSeparator {}
 			FormConfigCombo {
 				text: i18n("View switcher")
 				configKey: 'viewSwitcher'
