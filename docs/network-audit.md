@@ -1,7 +1,7 @@
 # Event Calendar NG: network audit
 
-Scope: the widget's source under `package/` (QML, JavaScript, Python helper scripts), branch
-`local-test`, 2026-11-10. Method: a source review of every URL, web request (`XMLHttpRequest` /
+Scope: the widget's source under `package/` (QML, JavaScript, Python helper scripts),
+2026-11-10. Method: a source review of every URL, web request (`XMLHttpRequest` /
 `Requests.js`), Python network code (`urllib`, `http.server`, `socket`) and external command. No
 live traffic capture.
 
