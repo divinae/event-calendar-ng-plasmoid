@@ -70,7 +70,7 @@ ConfigSection {
 				label: i18n("Refresh every")
 				configKey: 'eventsPollInterval'
 				suffix: i18nc("Polling interval in minutes", " min")
-				from: 5
+				from: 1
 				to: 90
 			}
 			FormCard.FormDelegateSeparator {}
