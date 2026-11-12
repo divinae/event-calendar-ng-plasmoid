@@ -92,7 +92,7 @@ Item {
 
 	property bool ready: false
 	property int lastMinute: -1
-	property int lastDate: -1
+	property string lastDate: ""
 	function tick() {
 		if (!ready) {
 			ready = true
@@ -101,7 +101,9 @@ Item {
 		var currentMinute = currentTime.getMinutes()
 		if (currentMinute !== lastMinute) {
 			minuteChanged()
-			var currentDate = currentTime.getDate()
+			// The whole date, not the day of the month: a resume after exactly a month (or more)
+			// would otherwise miss the new day.
+			var currentDate = currentTime.toDateString()
 			if (currentDate !== lastDate) {
 				dateChanged()
 				lastDate = currentDate
