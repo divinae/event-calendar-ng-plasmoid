@@ -19,7 +19,8 @@ import "./NotificationState.js" as NotificationState
 // - urgency: 'low' | 'normal' | 'critical'.
 // - logInfo: shown in the log with it (Settings > debugging), never a title.
 // - actions: ["id,Label", ...].
-// callback(actionId) once: an action id, 'default' (the notification was clicked) or 'closed'.
+// callback(actionId): an action id or 'default' (the notification was clicked), once (resident: each
+// time), then 'closed' once.
 // Returns a handle with setCloseAt(ms) (see KNotificationBackend.send), or null.
 QtObject {
 	id: notificationManager
@@ -70,8 +71,9 @@ QtObject {
 		var answered = false
 		var closed = false
 		function answer(actionId, closedBy) {
-			// Once, or (resident) any actions, then 'closed' once.
-			if (closed || answered) {
+			// Once, or (resident) any actions; 'closed' always once, also after an action, so whoever
+			// keeps the notification (eg: UpcomingEvents' shown list) learns it's gone.
+			if (closed || (answered && actionId !== 'closed')) {
 				return
 			}
 			answered = !args.resident
