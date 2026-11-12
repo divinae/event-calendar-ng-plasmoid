@@ -325,8 +325,9 @@ CalendarManager {
 	// away after a change made in the widget (single: { calendarId, eventId, data } of an updated
 	// event, data null when removed): a changed title, time, place or description updates the popup
 	// (a reminder's "In 10 min" from now), a changed end moves the close time (Settings > Events),
-	// and a deleted event closes it. Either rings once, with the start or the reminder sound (as
-	// configured).
+	// and a deleted event closes it. A change from a fetch rings once, with the start or the
+	// reminder sound (as configured); one made in the widget (the user's own) and a close because
+	// the event is gone don't.
 	property var shownEventNotifications: []
 	function updateShownEventNotifications(single) {
 		var items = [] // Every copy, also a duplicate left out of the notifications
@@ -343,11 +344,10 @@ CalendarManager {
 				}
 				if (!single.data) {
 					logger.log('notification', shown.handle.logId, 'event removed in the widget, closed', eventLogText(old))
-					changedKinds[shown.event] = true
 					shown.handle.close()
 					return
 				}
-				applyEventChange(shown, single.data, now, changedKinds, false)
+				applyEventChange(shown, single.data, now, {}, false) // No sound: {} instead of changedKinds
 				return
 			}
 			var fromCache = shown.fromCache
@@ -380,7 +380,6 @@ CalendarManager {
 				// Gone: closed, but only when its calendar came with this fetch (not on a failed one).
 				if (eventsByCalendar[old.calendarId]) {
 					logger.log('notification', shown.handle.logId, 'event gone, closed', eventLogText(old))
-					changedKinds[shown.event] = true
 					shown.handle.close()
 				}
 				return
