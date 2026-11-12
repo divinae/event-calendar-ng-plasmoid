@@ -149,7 +149,25 @@ CalendarManager {
 			actions.push('snooze,' + i18np("Snooze 1 minute", "Snooze %1 minutes", upcomingEvents.snoozeMinutes))
 		}
 
-		notificationManager.notify({
+		// One of each kind per event: a new reminder or start notification (eg: the start again after
+		// the event was moved) replaces the one still shown.
+		upcomingEvents.shownEventNotifications.slice().forEach(function(old) {
+			if (old.event === args.event && old.eventItem.calendarId === eventItem.calendarId
+					&& old.eventItem.id == eventItem.id) {
+				old.handle.close()
+			}
+		})
+		var closeAt = args.closeAtEnd && plasmoid.configuration.eventNotificationsCloseAtEnd
+			? new Date(eventItem.endDateTime).getTime() : 0
+		// Kept up to date while shown (updateShownEventNotifications), also for the actions.
+		var shown = {
+			eventItem: eventItem,
+			event: args.event,
+			closeAt: closeAt,
+			signature: notificationSignature(eventItem),
+			handle: null,
+		}
+		var handle = notificationManager.notify({
 			appName: i18n("Event Calendar NG"),
 			appIcon: "view-calendar-upcoming-events",
 			event: args.event,
@@ -159,7 +177,22 @@ CalendarManager {
 			body: args.body,
 			soundFile: args.soundFile,
 			actions: actions,
+			// Settings > Events: closed when the event ends (reminders and the start notification).
+			closeAt: closeAt,
+			// Then also kept when clicked (eg: to open the event and edit it), till its end.
+			resident: closeAt > 0,
 		}, function(actionId) {
+			if (actionId === 'closed') {
+				var index = upcomingEvents.shownEventNotifications.indexOf(shown)
+				if (index >= 0) {
+					upcomingEvents.shownEventNotifications.splice(index, 1)
+				}
+				return
+			}
+			if (shown.handle && (actionId === 'snooze' || actionId === 'declined')) {
+				shown.handle.close() // Kept by itself when resident: done with it
+			}
+			var eventItem = shown.eventItem
 			if (actionId === 'default') {
 				upcomingEvents.showInWidget(eventItem) // Clicking the notification itself
 			} else if (actionId === 'join' && meetingLink) {
@@ -175,6 +208,110 @@ CalendarManager {
 				upcomingEvents.snoozedReminders.push({ eventItem: eventItem, at: at })
 			}
 		})
+		if (handle && (args.event === 'reminder' || args.event === 'eventStarting')) {
+			shown.handle = handle
+			upcomingEvents.shownEventNotifications.push(shown)
+		}
+	}
+
+	// What a reminder or start notification shows of its event: a change of it updates the popup.
+	function notificationSignature(eventItem) {
+		return JSON.stringify([eventItem.summary, new Date(eventItem.startDateTime).getTime(),
+			new Date(eventItem.endDateTime).getTime(), eventItem.location || '', eventItem.description || ''])
+	}
+
+	// Reminder and start notifications still shown follow their event after each fetch, and right
+	// away after a change made in the widget (single: { calendarId, eventId, data } of an updated
+	// event, data null when removed): a changed title, time, place or description updates the popup
+	// (a reminder's "In 10 min" from now), a changed end moves the close time (Settings > Events),
+	// and a deleted event closes it. Either rings once, with the start or the reminder sound (as
+	// configured).
+	property var shownEventNotifications: []
+	function updateShownEventNotifications(single) {
+		var items = [] // Every copy, also a duplicate left out of the notifications
+		for (var calendarId in eventsByCalendar) {
+			items = items.concat(Shared.toArray(eventsByCalendar[calendarId].items))
+		}
+		var now = timeModel.currentTime.getTime()
+		var changedKinds = {}
+		shownEventNotifications.slice().forEach(function(shown) {
+			var old = shown.eventItem
+			if (single) {
+				if (old.calendarId !== single.calendarId || old.id != single.eventId) {
+					return
+				}
+				if (!single.data) {
+					logger.log('notification: event removed, closed', old.startDateTime)
+					changedKinds[shown.event] = true
+					shown.handle.close()
+					return
+				}
+				applyEventChange(shown, single.data, now, changedKinds)
+				return
+			}
+			function startOf(eventItem) { return new Date(eventItem.startDateTime).getTime() }
+			function sameCalendar(eventItem) { return eventItem.calendarId === old.calendarId }
+			function only(list) { return list.length === 1 ? list[0] : null }
+			// The same event: same calendar and id, and for a repeating one (all with the same id) the
+			// occurrence with the same start, else the only one.
+			var matches = items.filter(function(eventItem) { return sameCalendar(eventItem) && eventItem.id === old.id })
+			var eventItem = only(matches.filter(function(eventItem) { return startOf(eventItem) === startOf(old) }))
+				|| only(matches)
+			var timeMadeId = old.id === old.calendarId + '_' + startOf(old) + '_' + new Date(old.endDateTime).getTime()
+			if (!eventItem && matches.length === 0 && timeMadeId) {
+				// Plasma's calendar plugins (Akonadi) tell no uid: there the id is made of the start and
+				// end (PlasmaCalendarManager), so a changed time is a new id. Then, if only one: same
+				// calendar and start, or same calendar, title and end (moved start).
+				var sameCal = items.filter(sameCalendar)
+				eventItem = only(sameCal.filter(function(eventItem) {
+					return startOf(eventItem) === startOf(old) && eventItem.summary === old.summary
+				})) || only(sameCal.filter(function(eventItem) { return startOf(eventItem) === startOf(old) }))
+					|| only(sameCal.filter(function(eventItem) {
+						return eventItem.summary === old.summary
+							&& new Date(eventItem.endDateTime).getTime() === new Date(old.endDateTime).getTime()
+					}))
+			}
+			if (!eventItem) {
+				// Gone: closed, but only when its calendar came with this fetch (not on a failed one).
+				if (eventsByCalendar[old.calendarId]) {
+					logger.log('notification: event gone, closed', old.startDateTime)
+					changedKinds[shown.event] = true
+					shown.handle.close()
+				}
+				return
+			}
+			applyEventChange(shown, eventItem, now, changedKinds)
+		})
+		var sound = ''
+		if (changedKinds.eventStarting && plasmoid.configuration.eventStartingSfxEnabled) {
+			sound = plasmoid.configuration.eventStartingSfxPath
+		} else if (changedKinds.reminder && plasmoid.configuration.eventReminderSfxEnabled) {
+			sound = plasmoid.configuration.eventReminderSfxPath
+		}
+		if (sound) {
+			notificationManager.soundPlayer.play(sound)
+		}
+	}
+	function applyEventChange(shown, eventItem, now, changedKinds) {
+		shown.eventItem = eventItem
+		var signature = notificationSignature(eventItem)
+		if (signature === shown.signature) {
+			return
+		}
+		shown.signature = signature
+		var start = new Date(eventItem.startDateTime).getTime()
+		var minutesLeft = Math.round((start - now) / 60000)
+		var title = shown.event === 'reminder' && minutesLeft > 0
+			? i18nc("%1 = 15 minutes, %2 = event title", "In %1: %2", LocaleFuncs.durationShortFormat(minutesLeft * 60), eventItem.summary)
+			: eventItem.summary
+		logger.log('notification: event changed, updated', eventItem.startDateTime, eventItem.endDateTime)
+		changedKinds[shown.event] = true
+		shown.handle.update(title, eventNotificationBody(eventItem, MeetingLink.find(eventItem)))
+		var end = new Date(eventItem.endDateTime).getTime()
+		if (shown.closeAt > 0 && isFinite(end) && end !== shown.closeAt) {
+			shown.closeAt = end
+			shown.handle.setCloseAt(end)
+		}
 	}
 
 	// Open the popup with the event's details (the popup is created on first expand).
@@ -206,6 +343,7 @@ CalendarManager {
 			body: eventNotificationBody(eventItem, meetingLink),
 			soundFile: plasmoid.configuration.eventReminderSfxEnabled ? plasmoid.configuration.eventReminderSfxPath : '',
 			event: 'reminder',
+			closeAtEnd: true,
 			snooze: true,
 		})
 	}
@@ -323,6 +461,7 @@ CalendarManager {
 			body: eventNotificationBody(eventItem, meetingLink),
 			soundFile: plasmoid.configuration.eventReminderSfxEnabled ? plasmoid.configuration.eventReminderSfxPath : '',
 			event: 'reminder',
+			closeAtEnd: true,
 			snooze: minutesLeft > upcomingEvents.snoozeMinutes,
 		})
 	}
@@ -337,6 +476,7 @@ CalendarManager {
 			body: eventNotificationBody(eventItem, meetingLink),
 			soundFile: plasmoid.configuration.eventStartingSfxEnabled ? plasmoid.configuration.eventStartingSfxPath : '',
 			event: 'eventStarting',
+			closeAtEnd: true,
 			snooze: false,
 		})
 	}
@@ -883,6 +1023,13 @@ CalendarManager {
 
 	Connections {
 		target: eventModel
+		// Changed in the widget (edited, deleted): its notifications follow right away.
+		function onEventUpdated(calendarId, eventId, data) {
+			upcomingEvents.updateShownEventNotifications({ calendarId: calendarId, eventId: eventId, data: data })
+		}
+		function onEventRemoved(calendarId, eventId, data) {
+			upcomingEvents.updateShownEventNotifications({ calendarId: calendarId, eventId: eventId, data: null })
+		}
 		function onAllDataFetched() {
 			logger.debug('upcomingEvents eventModel.onAllDataFetched', eventModel.dateMin, timeModel.currentTime, eventModel.dateMax)
 			// if data is from current month
@@ -894,6 +1041,7 @@ CalendarManager {
 				upcomingEvents.eventsByCalendar = eventModel.eventsByCalendar
 				upcomingEvents.allDataFetched()
 				upcomingEvents.eventsSynced = true
+				upcomingEvents.updateShownEventNotifications()
 				upcomingEvents.checkInvitations()
 				upcomingEvents.checkDailyAgenda()
 				upcomingEvents.checkTaskSummary()

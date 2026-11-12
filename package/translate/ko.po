@@ -1080,6 +1080,15 @@ msgid "Google Calendar in the browser"
 msgstr "브라우저의 Google 캘린더"
 
 #: ../contents/ui/config/ConfigEvents.qml
+msgid "Close notifications when the event ends"
+msgstr ""
+
+#: ../contents/ui/config/ConfigEvents.qml
+msgid ""
+"A reminder or start notification still shown, also one kept until dismissed"
+msgstr ""
+
+#: ../contents/ui/config/ConfigEvents.qml
 msgid "Reminder Before an Event"
 msgstr "이벤트 전 미리 알림"
 

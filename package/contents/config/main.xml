@@ -427,6 +427,10 @@
 			<!-- 0 = no Snooze button. -->
 			<default>5</default>
 		</entry>
+		<entry name="eventNotificationsCloseAtEnd" type="bool">
+			<!-- A reminder or start notification still shown is closed when its event ends. -->
+			<default>true</default>
+		</entry>
 		<entry name="eventStartingPersistent" type="bool">
 			<default>true</default>
 		</entry>

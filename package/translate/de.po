@@ -1124,6 +1124,17 @@ msgid "Google Calendar in the browser"
 msgstr "Google Kalender im Browser"
 
 #: ../contents/ui/config/ConfigEvents.qml
+msgid "Close notifications when the event ends"
+msgstr "Benachrichtigungen schließen, wenn der Termin endet"
+
+#: ../contents/ui/config/ConfigEvents.qml
+msgid ""
+"A reminder or start notification still shown, also one kept until dismissed"
+msgstr ""
+"Eine noch angezeigte Erinnerung oder Beginn-Benachrichtigung, auch eine, die "
+"bis zum Schließen bleibt"
+
+#: ../contents/ui/config/ConfigEvents.qml
 msgid "Reminder Before an Event"
 msgstr "Erinnerung vor einem Termin"
 

@@ -12,9 +12,14 @@ import "./NotificationState.js" as NotificationState
 //   configured in System Settings > Notifications > Event Calendar NG.
 // - expireTimeout: 0 = keep until dismissed; > 0 = closed after that many ms; else (-1) Plasma's
 //   popup timeout.
+// - closeAt: ms since the epoch (eg: the event's end), > 0: a notification still shown then is
+//   closed (one in Plasma's history can't be reached any more).
+// - resident: true = Plasma keeps it shown when clicked or an action is chosen (closed by us or
+//   dismissed); then 'closed' also comes after an action.
 // - urgency: 'low' | 'normal' | 'critical'.
 // - actions: ["id,Label", ...].
 // callback(actionId) once: an action id, 'default' (the notification was clicked) or 'closed'.
+// Returns a handle with setCloseAt(ms) (see KNotificationBackend.send), or null.
 QtObject {
 	id: notificationManager
 
@@ -58,11 +63,14 @@ QtObject {
 	function notify(args, callback) {
 		logger.debug('NotificationManager.notify', args.event) // No event titles in logs
 		var answered = false
+		var closed = false
 		function answer(actionId) {
-			if (answered) {
+			// Once, or (resident) any actions, then 'closed' once.
+			if (closed || answered) {
 				return
 			}
-			answered = true
+			answered = !args.resident
+			closed = actionId === 'closed'
 			if (typeof callback === 'function') {
 				callback(actionId)
 			}
@@ -73,7 +81,7 @@ QtObject {
 			soundPlayer.play(sound)
 		}
 		if (!backend) {
-			return
+			return null
 		}
 
 		var own = ownComponent || NotificationState.notifyrcInstalled
@@ -86,13 +94,14 @@ QtObject {
 			var id = parts.shift()
 			return { id: id, label: parts.join(',') }
 		})
-		backend.send({
+		return backend.send({
 			componentName: own ? "eventcalendar" : "plasma_workspace",
 			eventId: own ? (args.event || "reminder") : "notification",
 			title: title,
 			text: args.body || "",
 			iconName: args.appIcon || "view-calendar",
 			urgency: args.urgency,
-		}, actionList, args.expireTimeout === 0, answer, args.expireTimeout > 0 ? args.expireTimeout : 0)
+			resident: !!args.resident,
+		}, actionList, args.expireTimeout === 0, answer, args.expireTimeout > 0 ? args.expireTimeout : 0, args.closeAt || 0)
 	}
 }
