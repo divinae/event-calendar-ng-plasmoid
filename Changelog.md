@@ -1,3 +1,38 @@
+## v1.23.0 - November 12 2026
+
+All thanks to frispete (#30–#43).
+
+### Notifications
+* **Closed when the event ends** (Settings > Events, on by default): a reminder or start notification still shown, also one kept until dismissed, goes away at the event's end, also when the computer slept meanwhile (#30). Join, Yes, Maybe, No and Snooze close it at once; a click opens the event and leaves it.
+* **Shown notifications follow their event**: a changed title, time, place or description updates the popup and rings once, and a deleted event closes it (#30). Changes made in the widget itself don't ring.
+* **A reminder that went by unsent comes late**, with the time left ("In 6 min: …"): an event created or moved closer than its reminder, a restart, or the computer asleep. Once per event, also over restarts (#31).
+* **A start notification that went by unsent comes late** for an event still running (not for all-day ones, nor more than 12 hours after the start) (#33).
+* **KDE PIM (Akonadi) events keep their reminder state when their end changes**: no second reminder, no unmuting, no second meeting alert (#32).
+* **Snooze brings the event as it is then**, and nothing when it was deleted or muted meanwhile (#32).
+* **Today's reminders no longer wait for the popup** when it was closed on another month (#41).
+* **The log follows each notification** from sent to closed, and each fetch's calendar changes (Settings > General > debugging; times only, never titles) (#34).
+
+### Views
+* **Follow the date at midnight** (Settings > Views, on by default): what showed today goes on to the new day; a month, Agenda or Day view moved elsewhere stays (#36).
+* **Event details show the event as edited** right after saving (#37).
+* **Event times on a 24 hour clock always have minutes**: 09:50 – 10:00, not 9:50 – 10 (#38).
+* **The Day view's weather card**: the section titles are gone, the rain total sits under the chart, and the card's bottom says when the forecast came ("Updated 14:05") (#43).
+
+### Calendars
+* **KDE PIM (Akonadi) events across the whole range**: the Agenda's later months and today's events are no longer missing after paging to another month (#35).
+* **Refresh every 1 minute** at the least, not 5 (#39). Google Calendar, Google Tasks and TickTick are still asked every 5 minutes at most (their request quota); CalDAV, .ics files and KDE PIM follow the set interval.
+
+### Google sign-in
+* **The unused hosted sign-in helper is gone**: the sign-in only redirects to the widget on your computer, which no longer accepts requests from the website. A network audit of every connection the widget makes is in `docs/network-audit.md` (#42).
+
+### Fixes
+* **No QML warnings at start** from the date and time selectors and the last-view setting (#40).
+* **A new day is noticed after a long sleep** too (a resume on the same day of another month was missed).
+* **The weather's "Updated" time** is when the forecast came, not when it was shown again from memory.
+
+### Known limits
+* KDE PIM events muted before this update are unmuted once: their mute keys changed (#32). Mutes are per occurrence, so it affects only the ones already muted.
+
 ## v1.22.1 - November 6 2026
 
 ### CalDAV

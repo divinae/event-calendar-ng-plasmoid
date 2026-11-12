@@ -28,7 +28,7 @@ version, the changelog and the file for each release.
 
 **Version**
 
-    1.22.1
+    1.23.0
 
 **License**
 
@@ -88,6 +88,18 @@ Requires Plasma 6 and python3; secret-tool or KWallet for sign-ins. CalDAV and .
 Bugs and ideas: https://github.com/divinae/event-calendar-ng-plasmoid/issues
 
 Support: https://ko-fi.com/divinae4535
+```
+
+**Changelog (1.23.0)**
+
+```
+- Notifications close when the event ends, and follow its changes while shown
+- A reminder or start notification that went by unsent (restart, sleep, a late change) comes late, once
+- Views follow the date at midnight, unless moved elsewhere
+- KDE PIM events across the whole Agenda; their reminders survive a changed end
+- Event times on a 24 hour clock always with minutes; refresh every minute possible
+- Weather card: rain total under the chart, update time at its bottom
+- Thanks to frispete for all of this release
 ```
 
 **Changelog (1.22.1)**
@@ -215,8 +227,8 @@ Support: https://ko-fi.com/divinae4535
 
 ## Files
 
-- **Product file:** `eventcalendar-ng-v1.22.1.plasmoid` from the
-  [v1.22.1 release](https://github.com/divinae/event-calendar-ng-plasmoid/releases/tag/v1.22.1),
+- **Product file:** `eventcalendar-ng-v1.23.0.plasmoid` from the
+  [v1.23.0 release](https://github.com/divinae/event-calendar-ng-plasmoid/releases/tag/v1.23.0),
   or `./build`.
 - **Screenshots** (`docs/screenshots/`, mock data; the store takes at most 5), in this order:
   1. `month.png` (the cover)
