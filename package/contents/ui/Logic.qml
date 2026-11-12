@@ -108,7 +108,9 @@ Item {
 	function backToToday() {
 		var month = agendaModel.currentMonth
 		var now = timeModel.currentTime
-		if (root.expanded || !popup || !month
+		// A desktop widget (its full view always shown) stays on the month one paged to, whether
+		// or not libplasma reports it as expanded.
+		if (root.expanded || root.isDesktopContainment || !popup || !month
 				|| (month.getFullYear() === now.getFullYear() && month.getMonth() === now.getMonth())) {
 			return
 		}
