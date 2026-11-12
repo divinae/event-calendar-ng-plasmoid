@@ -151,6 +151,43 @@ Item {
 		checkIfDone()
 	}
 
+	// A poll (Logic's pollTimer) sooner than this many minutes after the last fetch of the same
+	// range takes the loaded events again, without a request. Set by Google and TickTick: their
+	// APIs limit requests (Google's quota is shared by every user of the built-in client), while
+	// the other sources (CalDAV, .ics, Plasma's plugins) may be polled every minute.
+	property int minPollMinutes: 0
+	property real fetchedAt: 0 // When the loaded events were fetched, 0: unknown or a failed round
+	property bool replaying: false
+	onFetchingData: {
+		if (!replaying) {
+			fetchedAt = 0
+		}
+	}
+	onAllDataFetched: {
+		if (!replaying) {
+			// A calendar that failed shows an earlier round's data: the next poll fetches again.
+			fetchedAt = restoredInRound ? 0 : Date.now()
+		}
+	}
+	function fetchedRecently(min, max) {
+		return minPollMinutes > 0 && fetchedAt > 0
+			&& Date.now() - fetchedAt < minPollMinutes * 60000
+			&& calendarManager.dateMin.getTime() === min.getTime()
+			&& calendarManager.dateMax.getTime() === max.getTime()
+	}
+	// The loaded events as a fetch round would give them (EventModel counts the round and takes
+	// each calendar from calendarFetched).
+	function replayLoaded() {
+		logger.debug(calendarManager, 'replayLoaded: fetched', Math.round((Date.now() - fetchedAt) / 1000), 's ago')
+		replaying = true
+		fetchingData()
+		for (var calendarId in calendarManager.eventsByCalendar) {
+			calendarFetched(calendarId, calendarManager.eventsByCalendar[calendarId])
+		}
+		allDataFetched()
+		replaying = false
+	}
+
 	// Implementation
 	signal fetchAllCalendars()
 	// Parsing must mutate data in place, so it's done with function calls.

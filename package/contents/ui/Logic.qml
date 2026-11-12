@@ -94,9 +94,13 @@ Item {
 		interval: plasmoid.configuration.eventsPollInterval * 60000
 		onTriggered: {
 			logic.backToToday()
-			logic.update()
+			logic.update(true)
 		}
 	}
+	// A month fetched this long ago is still shown from memory without a fetch (updateEvents).
+	// Google and TickTick are polled every 5 minutes at most (CalendarManager.minPollMinutes),
+	// so with a shorter interval month paging doesn't refetch them every minute.
+	readonly property real monthFreshMs: Math.max(5, plasmoid.configuration.eventsPollInterval) * 60000
 
 	// The reminders, the clock's next event and the tooltip take their events from a fetch that
 	// covers today (UpcomingEvents). The popup closed on another month: back to today's before
@@ -112,9 +116,10 @@ Item {
 		popup.updateToday()
 	}
 
-	function update() {
+	// poll: from pollTimer (see EventModel.pollRound).
+	function update(poll) {
 		logger.debug('update')
-		logic.updateData()
+		logic.updateData(poll)
 	}
 	// Refresh (header, widget menu). Plasma's calendar plugins aren't loaded anew (see
 	// PlasmaCalendarManager): the fetch reads their data again.
@@ -122,9 +127,9 @@ Item {
 		logic.update()
 	}
 
-	function updateData() {
+	function updateData(poll) {
 		logger.debug('updateData')
-		logic.updateEvents()
+		logic.updateEvents(false, poll)
 		logic.updateWeather()
 	}
 
@@ -132,8 +137,12 @@ Item {
 	// navigation: the shown month changed (PopupView), and only that: the month may come from
 	// memory. Any other caller (poll, Refresh, Retry, settings, a refetch after a change) fetches.
 	property bool fetchNeeded: false
-	function updateEvents(navigation) {
+	// The pending fetch is only the poll's: Google and TickTick may answer from memory. Any other
+	// caller waiting with it makes it a full fetch.
+	property bool pollFetch: false
+	function updateEvents(navigation, poll) {
 		if (!navigation) {
+			pollFetch = !!poll && (pollFetch || !fetchNeeded)
 			fetchNeeded = true
 		}
 		// A month in memory: shown right away (paging slides it in already filled); a fetch it may
@@ -148,7 +157,7 @@ Item {
 				agendaModel.visibleDateMax = range.max
 				eventModel.showRange(entry)
 				var center = month.getFullYear() + '-' + month.getMonth()
-				if (entry.center === center && Date.now() - entry.at < plasmoid.configuration.eventsPollInterval * 60000) {
+				if (entry.center === center && Date.now() - entry.at < monthFreshMs) {
 					updateEventsTimer.stop()
 					return
 				}
@@ -180,7 +189,9 @@ Item {
 		agendaModel.visibleDateMax = range.max
 		var center = month.getFullYear() + '-' + month.getMonth()
 		var force = fetchNeeded
+		var poll = pollFetch
 		fetchNeeded = false
+		pollFetch = false
 		if (force) {
 			eventModel.forgetRanges() // Other months may have changed too
 		}
@@ -189,7 +200,7 @@ Item {
 			if (eventModel.shownRange !== entry) { // Not again when updateEvents showed it already
 				eventModel.showRange(entry)
 			}
-			if (entry.center === center && Date.now() - entry.at < plasmoid.configuration.eventsPollInterval * 60000) {
+			if (entry.center === center && Date.now() - entry.at < monthFreshMs) {
 				return
 			}
 		}
@@ -198,7 +209,9 @@ Item {
 		eventModel.fetchCenter = center
 		// The Agenda's months added by scrolling (loadMoreAgenda) stay loaded on a refresh.
 		var agendaEnd = new Date(month.getFullYear(), month.getMonth() + 1 + agendaModel.extraMonths, 7)
+		eventModel.pollRound = poll
 		eventModel.fetchAll(before.min, new Date(Math.max(range.max.getTime(), after.max.getTime(), agendaEnd.getTime())))
+		eventModel.pollRound = false
 	}
 
 	// The Agenda scrolled to its end: one more month below, from what's loaded (a fetch covers the

@@ -16,6 +16,7 @@ CalendarManager {
 	id: googleCalendarManager
 
 	calendarManagerId: "GoogleCalendar"
+	minPollMinutes: 5 // Polled every 5 minutes at most, see CalendarManager
 
 	property var session
 	property var accountsStore

@@ -459,6 +459,7 @@ CalendarManager {
 			manager.eventsByCalendar = own
 			manager.dateMin = new Date(entry.min)
 			manager.dateMax = new Date(entry.max)
+			manager.fetchedAt = entry.at // As old as the round it comes from (fetchedRecently)
 		})
 		mergeEvents()
 		cachedRangeShown()
@@ -474,10 +475,17 @@ CalendarManager {
 		eventModel.clearingData = true
 		for (var i = 0; i < calendarManagerList.length; i++) {
 			var calendarManager = calendarManagerList[i]
-			calendarManager.fetchAll(dateMin, dateMax)
+			if (pollRound && calendarManager.fetchedRecently(dateMin, dateMax)) {
+				calendarManager.replayLoaded() // Google, TickTick: not more often than minPollMinutes
+			} else {
+				calendarManager.fetchAll(dateMin, dateMax)
+			}
 		}
 		eventModel.clearingData = false
 	}
+	// The running fetchAll comes from the poll (Logic.deferredUpdateEvents), not from Refresh,
+	// a change or the settings, which always fetch.
+	property bool pollRound: false
 
 	onAllDataFetched: {
 		partialMerge.stop()
