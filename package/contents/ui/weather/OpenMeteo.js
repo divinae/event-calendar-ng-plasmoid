@@ -99,7 +99,7 @@ function fetchForecast(config, callback) {
 
 //--- Provider API (see WeatherApi.js for the item formats)
 function updateDailyWeather(config, callback) {
-	fetchForecast(config, function(err, data, xhr) {
+	fetchForecast(config, function(err, data, xhr, receivedAt) {
 		if (err) {
 			return callback(err, data, xhr)
 		}
@@ -123,12 +123,12 @@ function updateDailyWeather(config, callback) {
 				notes: precipitation > 0 ? 'Precipitation: ' + precipitation + ' ' + precipitationUnit : '',
 			})
 		}
-		callback(null, { list: list, current: currentData(data, units) }, xhr)
+		callback(null, { list: list, current: currentData(data, units) }, xhr, receivedAt)
 	})
 }
 
 function updateHourlyWeather(config, callback) {
-	fetchForecast(config, function(err, data, xhr) {
+	fetchForecast(config, function(err, data, xhr, receivedAt) {
 		if (err) {
 			return callback(err, data, xhr)
 		}
@@ -153,7 +153,7 @@ function updateHourlyWeather(config, callback) {
 				precipitation: hourly.precipitation[i] || 0,
 			})
 		}
-		callback(null, { list: list, current: currentData(data, units) }, xhr)
+		callback(null, { list: list, current: currentData(data, units) }, xhr, receivedAt)
 	})
 }
 

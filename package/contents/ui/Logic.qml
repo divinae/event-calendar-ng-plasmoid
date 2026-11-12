@@ -377,7 +377,7 @@ Item {
 		logger.debug('updateDailyWeather', lastForecastAt, Date.now())
 		logic.weatherRequests++
 		setWeatherLanguage()
-		WeatherApi.updateDailyWeather(plasmoid.configuration, function(err, data, xhr) {
+		WeatherApi.updateDailyWeather(plasmoid.configuration, function(err, data, xhr, receivedAt) {
 			logic.weatherRequests = Math.max(0, logic.weatherRequests - 1)
 			if (err) return handleWeatherError('updateDailyWeather', err, data, xhr)
 			logger.debugJSON('updateDailyWeather.responseSummary', {
@@ -385,7 +385,9 @@ Item {
 			})
 
 			logic.lastForecastAt = Date.now()
-			logic.weatherUpdatedAt = logic.lastForecastAt
+			// When the forecast came, not when RequestCache answered from memory (Weather Canada,
+			// not cached, gives no time: now).
+			logic.weatherUpdatedAt = receivedAt || logic.lastForecastAt
 			logic.lastForecastErr = null
 			logic.weatherNetworkFailed = false
 			logic.weatherArrived()
@@ -402,7 +404,7 @@ Item {
 		logger.debug('updateHourlyWeather', lastForecastAt, Date.now())
 		logic.weatherRequests++
 		setWeatherLanguage()
-		WeatherApi.updateHourlyWeather(plasmoid.configuration, function(err, data, xhr) {
+		WeatherApi.updateHourlyWeather(plasmoid.configuration, function(err, data, xhr, receivedAt) {
 			logic.weatherRequests = Math.max(0, logic.weatherRequests - 1)
 			if (err) return handleWeatherError('updateHourlyWeather', err, data, xhr)
 			logger.debugJSON('updateHourlyWeather.responseSummary', {
@@ -410,7 +412,9 @@ Item {
 			})
 
 			logic.lastForecastAt = Date.now()
-			logic.weatherUpdatedAt = logic.lastForecastAt
+			// When the forecast came, not when RequestCache answered from memory (Weather Canada,
+			// not cached, gives no time: now).
+			logic.weatherUpdatedAt = receivedAt || logic.lastForecastAt
 			logic.lastForecastErr = null
 			logic.weatherNetworkFailed = false
 			logic.weatherArrived()

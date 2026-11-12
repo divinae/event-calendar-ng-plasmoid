@@ -35,6 +35,9 @@ assert.deepStrictEqual([a[0].data, b[0].data], [{ n: 1 }, { n: 1 }])
 clock += 9 * 60 * 1000
 assert.deepStrictEqual(get('u1')[0], { err: null, data: { n: 1 }, xhr: null }, 'cached within 10 minutes')
 assert.strictEqual(sent.length, 1)
+let receivedAt = null
+RequestCache.getJSON({ service: 'Test', url: 'u1', dailyLimit: 100 }, (err, data, xhr, at) => { receivedAt = at })
+assert.strictEqual(receivedAt, clock - 9 * 60 * 1000, 'a cached answer: when the response came, not now')
 clock += 2 * 60 * 1000
 get('u1')
 assert.strictEqual(sent.length, 2, 'requested again after 10 minutes')

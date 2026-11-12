@@ -51,7 +51,8 @@ function pruneCache(at) {
 }
 
 // opt: { service, url, dailyLimit, errorOf: function(data) -> error message or '' (optional) }
-// callback(err, data, xhr); xhr is null for a cached answer.
+// callback(err, data, xhr, receivedAt); xhr is null for a cached answer; receivedAt: when the
+// answer came from the network (ms), also for a cached one (the forecast's "Updated" time).
 function getJSON(opt, callback) {
 	var url = opt.url
 	var at = now()
@@ -63,12 +64,12 @@ function getJSON(opt, callback) {
 		console.warn('[eventcalendar]', opt.service, 'made', requestsToday(opt.service), 'requests today: at most one an hour from now on')
 	}
 	if (cached && at - cached.at < maxAge) {
-		return callback(null, cached.data, null)
+		return callback(null, cached.data, null, cached.at)
 	}
 	// Past the budget a failing URL too is asked at most once an hour (failures aren't cached);
 	// meanwhile the older answer, if there is one.
 	if (overBudget && failedAt[url] && at - failedAt[url] < LIMITED_MAX_AGE) {
-		return cached ? callback(null, cached.data, null) : callback('Over the daily request budget', null, null)
+		return cached ? callback(null, cached.data, null, cached.at) : callback('Over the daily request budget', null, null)
 	}
 	if (pending[url]) {
 		pending[url].push(callback)
@@ -80,9 +81,11 @@ function getJSON(opt, callback) {
 		if (!err && opt.errorOf) {
 			err = opt.errorOf(data) || null
 		}
+		var receivedAt
 		if (!err) {
 			pruneCache(at)
-			cache[url] = { at: now(), data: data }
+			receivedAt = now()
+			cache[url] = { at: receivedAt, data: data }
 			delete failedAt[url]
 		} else {
 			failedAt[url] = now()
@@ -92,7 +95,7 @@ function getJSON(opt, callback) {
 		// Each caller gets its answer, even when an earlier one throws.
 		for (var i = 0; i < callbacks.length; i++) {
 			try {
-				callbacks[i](err, data, xhr)
+				callbacks[i](err, data, xhr, receivedAt)
 			} catch (e) {
 				console.warn('[eventcalendar] weather callback failed:', e)
 			}

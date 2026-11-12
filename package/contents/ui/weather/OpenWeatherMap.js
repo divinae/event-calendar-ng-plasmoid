@@ -274,14 +274,14 @@ var dailyRefused = {}
 var dailyRefusedFor = 6 * 60 * 60 * 1000
 
 // The forecast, then the current weather; without the current weather (it failed): the forecast
-// alone, the panel shows its first step then.
-function withCurrent(args, list, xhr, callback) {
+// alone, the panel shows its first step then. receivedAt: when the forecast came (RequestCache).
+function withCurrent(args, list, xhr, receivedAt, callback) {
 	var result = { list: list, current: null }
 	fetch('weather', args, function(currentErr, currentData) {
 		if (!currentErr) {
 			result.current = parseCurrentData(currentData, args.units)
 		}
-		callback(null, result, xhr)
+		callback(null, result, xhr, receivedAt)
 	})
 }
 
@@ -290,31 +290,31 @@ function updateFreeDaily(config, callback) {
 	// dailyRefusedNow: /forecast/daily answered 401; the app id is fine (the days aren't in its
 	// plan) only if /forecast works.
 	function fromSteps(dailyRefusedNow) {
-		fetch('forecast', args, function(err, data, xhr) {
+		fetch('forecast', args, function(err, data, xhr, receivedAt) {
 			if (err) return handleError('OpenWeatherMap.forecast', callback, err, data, xhr)
 			if (dailyRefusedNow) {
 				dailyRefused[args.appId] = Date.now()
 			}
-			withCurrent(args, daysFromSteps(parseHourlyData(data, args.units)), xhr, callback)
+			withCurrent(args, daysFromSteps(parseHourlyData(data, args.units)), xhr, receivedAt, callback)
 		})
 	}
 	if (dailyRefused[args.appId] && Date.now() - dailyRefused[args.appId] < dailyRefusedFor) {
 		return fromSteps()
 	}
-	fetch('forecast/daily', args, function(err, data, xhr) {
+	fetch('forecast/daily', args, function(err, data, xhr, receivedAt) {
 		if (err && xhr && xhr.status === 401) {
 			return fromSteps(true)
 		}
 		if (err) return handleError('OpenWeatherMap.forecast/daily', callback, err, data, xhr)
-		withCurrent(args, parseDailyData(data, args.units), xhr, callback)
+		withCurrent(args, parseDailyData(data, args.units), xhr, receivedAt, callback)
 	})
 }
 
 function updateFreeHourly(config, callback) {
 	var args = configArgs(config)
-	fetch('forecast', args, function(err, data, xhr) {
+	fetch('forecast', args, function(err, data, xhr, receivedAt) {
 		if (err) return handleError('OpenWeatherMap.forecast', callback, err, data, xhr)
-		withCurrent(args, parseHourlyData(data, args.units), xhr, callback)
+		withCurrent(args, parseHourlyData(data, args.units), xhr, receivedAt, callback)
 	})
 }
 
@@ -341,9 +341,9 @@ function fetchOneCall(config, callback) {
 	if (err) return callback(err)
 	fetchCoords(args, function(coordErr, coord, xhr) {
 		if (coordErr) return handleError('OpenWeatherMap.weather', callback, coordErr, coord, xhr)
-		getJSON(oneCallUrl(coord, args), function(err, data, xhr) {
+		getJSON(oneCallUrl(coord, args), function(err, data, xhr, receivedAt) {
 			if (err) return handleError('OpenWeatherMap.onecall', callback, err, data, xhr)
-			callback(null, data, xhr)
+			callback(null, data, xhr, receivedAt)
 		})
 	})
 }
@@ -377,9 +377,9 @@ function updateDailyWeather(config, callback) {
 	if (!usesOneCall(config)) {
 		return updateFreeDaily(config, callback)
 	}
-	fetchOneCall(config, function(err, data, xhr) {
+	fetchOneCall(config, function(err, data, xhr, receivedAt) {
 		if (err) return callback(err, data, xhr)
-		callback(null, parseOneCallDaily(data, config.weatherUnits), xhr)
+		callback(null, parseOneCallDaily(data, config.weatherUnits), xhr, receivedAt)
 	})
 }
 
@@ -387,9 +387,9 @@ function updateHourlyWeather(config, callback) {
 	if (!usesOneCall(config)) {
 		return updateFreeHourly(config, callback)
 	}
-	fetchOneCall(config, function(err, data, xhr) {
+	fetchOneCall(config, function(err, data, xhr, receivedAt) {
 		if (err) return callback(err, data, xhr)
-		callback(null, parseOneCallHourly(data, config.weatherUnits), xhr)
+		callback(null, parseOneCallHourly(data, config.weatherUnits), xhr, receivedAt)
 	})
 }
 

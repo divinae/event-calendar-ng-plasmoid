@@ -57,7 +57,7 @@ function getRainUnits(config) {
 		},
 		...
 	]
-}, xhr)
+}, xhr, receivedAt) // receivedAt: when the forecast came (ms), from RequestCache; else undefined
 */
 function updateDailyWeather(config, callback) {
 	if (!weatherIsSetup(config)) {
@@ -85,7 +85,7 @@ function updateDailyWeather(config, callback) {
 		},
 		...
 	]
-}, xhr)
+}, xhr, receivedAt)
 */
 function updateHourlyWeather(config, callback) {
 	if (!weatherIsSetup(config)) {
