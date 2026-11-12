@@ -283,6 +283,12 @@
 			<!-- Notify about unanswered invitations for today, with Yes / Maybe / No. -->
 			<default>true</default>
 		</entry>
+		<entry name="notificationsSent" type="String">
+			<!-- JSON {"calendar|event|start|kind": ms sent} of the last day's event notifications, so a
+			     restart repeats none and a late reminder knows what was sent. Empty: never written yet
+			     (the first check then marks reminders gone by as sent, without a late one each). -->
+			<default></default>
+		</entry>
 		<entry name="invitationsNotified" type="StringList">
 			<!-- "day|calendar|event|start" of invitations notified today, so they aren't repeated. -->
 			<default></default>

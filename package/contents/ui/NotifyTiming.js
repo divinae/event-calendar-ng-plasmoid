@@ -57,6 +57,44 @@ function dueFor(eventItem, reminderMinutes, win, nowMs) {
 	return due
 }
 
+// A reminder whose time went by unsent (the event came after it: created or moved late, a fetch
+// later, a restart or the computer asleep), while the event is still ahead: one, sent late, with
+// the minutes left. reminderMinutes as for dueFor; sent: key -> time sent (with this check's own
+// keys already in). Returns null, or { kind: 'reminder', minutes: minutes left, key, keys: the keys
+// of all the reminders gone by, to be marked sent }. None when one of them was sent already (the
+// one this check sent in its window too).
+function lateReminder(eventItem, reminderMinutes, win, nowMs, sent) {
+	var start = new Date(eventItem.startDateTime).getTime()
+	if (!isFinite(start) || start <= nowMs) {
+		return null
+	}
+	var id = String(eventItem.calendarId || '') + '|' + String(eventItem.id || eventItem.summary || '') + '|' + start
+	var keys = []
+	var anySent = false
+	var list = reminderMinutes || []
+	for (var i = 0; i < list.length; i++) {
+		var minutes = Number(list[i])
+		if (!(minutes > 0) || floorMinute(start - minutes * MINUTE) > win.to) {
+			continue // Not yet (or not a reminder before the start)
+		}
+		var key = id + '|' + minutes
+		if (keys.indexOf(key) >= 0) {
+			continue
+		}
+		keys.push(key)
+		if (sent && sent[key]) {
+			anySent = true
+		}
+	}
+	if (keys.length === 0) {
+		return null
+	}
+	if (anySent) {
+		return { kind: 'reminder', minutes: 0, key: '', keys: keys, already: true }
+	}
+	return { kind: 'reminder', minutes: Math.max(1, Math.ceil((start - nowMs) / MINUTE)), key: keys[keys.length - 1], keys: keys }
+}
+
 // Drops sent keys older than a day (key -> time sent).
 function pruneSent(sent, nowMs) {
 	var kept = {}

@@ -292,6 +292,11 @@ CalendarManager {
 			notificationManager.soundPlayer.play(sound)
 		}
 	}
+	function hasShownNotification(eventItem) {
+		return shownEventNotifications.some(function(shown) {
+			return shown.eventItem.calendarId === eventItem.calendarId && shown.eventItem.id == eventItem.id
+		})
+	}
 	function applyEventChange(shown, eventItem, now, changedKinds) {
 		shown.eventItem = eventItem
 		var signature = notificationSignature(eventItem)
@@ -628,11 +633,38 @@ CalendarManager {
 
 	// Every minute since the last check (see NotifyTiming), each notification once.
 	property real lastNotifyCheck: NaN
-	property var sentNotifications: ({}) // key -> when sent
+	// key -> when sent; kept in the config (notificationsSent) so a restart repeats nothing.
+	property var sentNotifications: loadSentNotifications()
+	property string savedSentText: ''
+	// Never written yet (eg: just updated): the first synced check marks the reminders gone by as
+	// sent instead of sending each late at once (they were likely shown before).
+	property bool lateSeeded: false
+	function loadSentNotifications() {
+		var text = String(plasmoid.configuration.notificationsSent || '')
+		savedSentText = text
+		lateSeeded = !!text
+		if (!text) {
+			return {}
+		}
+		try {
+			var sent = JSON.parse(text)
+			return sent && typeof sent === 'object' ? sent : {}
+		} catch (e) {
+			return {}
+		}
+	}
+	function saveSentNotifications(sent) {
+		var text = JSON.stringify(sent)
+		if (text !== savedSentText) {
+			savedSentText = text
+			plasmoid.configuration.notificationsSent = text
+		}
+	}
 	function checkForEventsStarting() {
 		var now = timeModel.currentTime.getTime()
 		var win = NotifyTiming.checkWindow(isFinite(lastNotifyCheck) ? lastNotifyCheck : null, now, 10 * 60000)
 		lastNotifyCheck = now
+		var seedingLate = !lateSeeded
 		var sent = NotifyTiming.pruneSent(sentNotifications, now)
 		allEventItems().forEach(function(eventItem) {
 			if (Tasks.isTask(eventItem)) {
@@ -667,8 +699,27 @@ CalendarManager {
 					sendEventReminderNotification(eventItem, due[i].minutes)
 				}
 			}
+			// A reminder gone by unsent (the event came after it): once, late, with the time left.
+			// Only with synced events (not the cached ones shown before the first fetch).
+			if (notify && upcomingEvents.eventsSynced) {
+				var late = NotifyTiming.lateReminder(eventItem, reminderMinutesFor(eventItem), win, now, sent)
+				if (late) {
+					late.keys.forEach(function(key) { sent[key] = sent[key] || now })
+					// Moved while its notification is still shown: that one shows the new time instead.
+					if (!late.already && !seedingLate && hasShownNotification(eventItem)) {
+						logger.log('notification: late reminder skipped, one still shown', eventItem.startDateTime)
+					} else if (!late.already && !seedingLate && plasmoid.configuration.eventReminderNotificationEnabled) {
+						logger.log('notification: late reminder,', late.minutes, 'min left', eventItem.startDateTime)
+						sendEventReminderNotification(eventItem, late.minutes)
+					}
+				}
+			}
 		})
 		sentNotifications = sent
+		if (upcomingEvents.eventsSynced) {
+			lateSeeded = true
+			saveSentNotifications(sent)
+		}
 		checkSnoozedReminders()
 		checkSnoozedTasks()
 	}
