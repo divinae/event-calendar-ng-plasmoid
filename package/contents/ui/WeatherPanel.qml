@@ -82,6 +82,7 @@ ColumnLayout {
 	property bool showHourly: true
 	property bool showNextDays: true
 	property bool loading: false // A forecast request is running
+	property var updatedAt: null // When the forecast came (ms)
 	property string errorText: "" // The last request failed
 	signal retryRequested()
 	readonly property bool hasData: !!current || !!today || hourly.length > 0
@@ -100,40 +101,28 @@ ColumnLayout {
 	function timeText(dt) {
 		return Shared.formatTime(new Date(dt * 1000), appletConfig.clock24h ? 'HH:mm' : 'h AP')
 	}
+	// "Updated 14:05", or with the date when not today.
+	function updatedText(ms) {
+		if (!ms) {
+			return ""
+		}
+		var at = new Date(ms)
+		var time = Shared.formatTime(at, appletConfig.clock24h ? 'HH:mm' : 'h:mm AP')
+		if (Shared.isSameDate(at, new Date())) {
+			return i18nc("weather forecast received at, %1 = time", "Updated %1", time)
+		}
+		return i18nc("weather forecast received at, %1 = date and time", "Updated %1", Shared.formatDate(at, Locale.ShortFormat) + ' ' + time)
+	}
 	function precipitationText(mm) {
 		return mm > 0 ? i18nc("precipitation in mm", "%1 mm", Math.round(mm * 10) / 10) : ""
 	}
 
-	// The section name, underlined: a line below it, then the section's content.
-	component SectionTitle: ColumnLayout {
-		property alias text: titleLabel.text
-		property alias detail: detailLabel.text // On the right, dimmed (eg: the rain to come)
+	// Between the sections: a line (no titles: the chart and the days speak for themselves).
+	component SectionDivider: Kirigami.Separator {
 		Layout.fillWidth: true
 		Layout.topMargin: Kirigami.Units.largeSpacing * 2
 		Layout.bottomMargin: Kirigami.Units.smallSpacing
-		spacing: Kirigami.Units.smallSpacing
-		RowLayout {
-			Layout.fillWidth: true
-			PlasmaComponents3.Label {
-				id: titleLabel
-				Layout.fillWidth: true
-				elide: Text.ElideRight
-				textFormat: Text.PlainText
-				// Above the text below it: larger and bolder, not dimmed.
-				font.weight: Font.DemiBold
-				font.pointSize: appletConfig.fontPoints(Kirigami.Theme.defaultFont) * 1.1
-			}
-			PlasmaComponents3.Label {
-				id: detailLabel
-				visible: !!text
-				textFormat: Text.PlainText
-				opacity: panel.dimOpacity
-			}
-		}
-		Kirigami.Separator {
-			Layout.fillWidth: true
-			opacity: appletConfig.darkTheme ? 0.6 : 1
-		}
+		opacity: appletConfig.darkTheme ? 0.6 : 1
 	}
 
 	// Not configured
@@ -208,18 +197,12 @@ ColumnLayout {
 		}
 	}
 
-	// "Weather" as the card's title (like the Day view's "Tasks" beside it), the location on the
-	// right with a pin, a small spinner while refreshing.
+	// No title (the weather speaks for itself): the location on the right with a pin, a small
+	// spinner while refreshing.
 	RowLayout {
 		visible: panel.showData && !panel.compact
 		Layout.fillWidth: true
 		spacing: Kirigami.Units.smallSpacing
-		PlasmaComponents3.Label {
-			text: i18n("Weather")
-			textFormat: Text.PlainText
-			font.weight: Font.Bold
-			font.pointSize: appletConfig.fontPoints(Kirigami.Theme.defaultFont) * 1.25
-		}
 		Item {
 			Layout.fillWidth: true
 		}
@@ -487,13 +470,8 @@ ColumnLayout {
 	//   line at freezing, rounded rain bars, the high and the low in bold, a red line at the current time
 	readonly property bool fancyChart: plasmoid.configuration.weatherChartStyle === "fancy"
 	readonly property bool chartRainAmounts: plasmoid.configuration.weatherChartRainAmounts
-	SectionTitle {
+	SectionDivider {
 		visible: panel.showData && !panel.compact && panel.showHourly && panel.hourly.length > 1
-		// The hours the chart spans (Settings > Weather > Forecast chart > Hours shown).
-		readonly property int hours: hourChart.points.length > 1 ? Math.round((hourChart.points[hourChart.points.length - 1].dt - hourChart.points[0].dt) / 3600) : 0
-		text: panel.isToday ? i18np("Next hour", "Next %1 hours", hours) : i18nc("weather by hour of the shown day", "During the day")
-		readonly property real rain: ForecastChart.rainTotal(hourChart.points)
-		detail: panel.chartRainAmounts && rain > 0 ? i18nc("precipitation during the hours of the chart", "Rain: %1", panel.precipitationText(rain)) : ""
 	}
 	Item {
 		id: hourChart
@@ -873,6 +851,34 @@ ColumnLayout {
 		}
 	}
 
+	// Under the chart: on the left the rain the chart's hours bring in all, in the rain's color
+	// (Settings > Weather > Forecast chart > Rain amounts), on the right when the forecast came
+	// (dimmed; with the date when not today).
+	RowLayout {
+		readonly property real rain: hourChart.visible ? ForecastChart.rainTotal(hourChart.points) : 0
+		readonly property bool rainShown: panel.chartRainAmounts && rain > 0
+		visible: panel.showData && !panel.compact && (!!updatedLabel.text || rainShown)
+		Layout.fillWidth: true
+		spacing: Kirigami.Units.smallSpacing
+		PlasmaComponents3.Label {
+			visible: parent.rainShown
+			textFormat: Text.PlainText
+			text: visible ? i18nc("precipitation during the hours of the chart", "Rain: %1", panel.precipitationText(parent.rain)) : ""
+			font: Kirigami.Theme.smallFont
+			color: Kirigami.Theme.linkColor
+		}
+		PlasmaComponents3.Label {
+			id: updatedLabel
+			Layout.fillWidth: true
+			horizontalAlignment: Text.AlignRight
+			elide: Text.ElideLeft
+			textFormat: Text.PlainText
+			text: panel.updatedText(panel.updatedAt)
+			font: Kirigami.Theme.smallFont
+			opacity: panel.dimOpacity
+		}
+	}
+
 	//--- Next days: day, icon, high / low. With the chart's larger icons, larger here too and the
 	// text to fit them. The days given (a week at most, as far as the weather service goes:
 	// OpenWeatherMap's free API about 5), as many as fit in maxHeight, whole rows only.
@@ -894,9 +900,8 @@ ColumnLayout {
 		var room = maxHeight - heightBesideDays + nextDaysList.spacing
 		return Math.max(1, Math.min(nextDays.length, Math.floor(room / nextDaysRowStep)))
 	}
-	SectionTitle {
+	SectionDivider {
 		visible: panel.nextDaysWanted
-		text: i18n("Next days")
 	}
 	ColumnLayout {
 		id: nextDaysList

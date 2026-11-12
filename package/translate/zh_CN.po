@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 10:46+0100\n"
+"POT-Creation-Date: 2026-11-12 11:01+0100\n"
 "PO-Revision-Date: 2019-04-17 16:43+0800\n"
 "Last-Translator: Core小睿 <i@coreja.com>\n"
 "Language-Team: \n"
@@ -47,7 +47,6 @@ msgid "Tasks"
 msgstr "任务"
 
 #: ../contents/config/config.qml ../contents/ui/config/ConfigViews.qml
-#: ../contents/ui/WeatherPanel.qml
 msgid "Weather"
 msgstr "天气"
 
@@ -2237,8 +2236,8 @@ msgid "Rain amounts"
 msgstr "降雨量"
 
 #: ../contents/ui/config/ConfigWeather.qml
-msgid "The total above the chart, the amounts at the heaviest hours"
-msgstr "图表上方显示总量，雨量最大的时段显示数值"
+msgid "The total under the chart, the amounts at the heaviest hours"
+msgstr "图表下方显示总量，雨量最大的时段显示数值"
 
 #: ../contents/ui/config/GoogleLoginManager.qml
 msgid "Not signed in to this Google account. Sign in again."
@@ -4632,6 +4631,16 @@ msgid "Polar night"
 msgstr "极夜"
 
 #: ../contents/ui/WeatherPanel.qml
+msgctxt "weather forecast received at, %1 = time"
+msgid "Updated %1"
+msgstr "更新于 %1"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "weather forecast received at, %1 = date and time"
+msgid "Updated %1"
+msgstr "更新于 %1"
+
+#: ../contents/ui/WeatherPanel.qml
 msgid "Set a location in Settings > Weather to see the forecast here."
 msgstr "在 设置 > 天气 中设置位置后即可在此查看天气预报。"
 
@@ -4658,23 +4667,9 @@ msgid "No forecast for this day."
 msgstr "此日无天气预报。"
 
 #: ../contents/ui/WeatherPanel.qml
-msgid "Next hour"
-msgid_plural "Next %1 hours"
-msgstr[0] "未来 %1 小时"
-
-#: ../contents/ui/WeatherPanel.qml
-msgctxt "weather by hour of the shown day"
-msgid "During the day"
-msgstr "当天逐小时"
-
-#: ../contents/ui/WeatherPanel.qml
 msgctxt "precipitation during the hours of the chart"
 msgid "Rain: %1"
 msgstr "降雨：%1"
-
-#: ../contents/ui/WeatherPanel.qml
-msgid "Next days"
-msgstr "未来几天"
 
 #: ../contents/ui/WeekView.qml
 msgctxt "%1 = day and time, %2 = event title"
@@ -4725,6 +4720,20 @@ msgstr "工作地点：%1"
 
 #~ msgid "Helper page (optional): <a href=\"%1\">%1</a>"
 #~ msgstr "辅助页面（可选）：<a href=\"%1\">%1</a>"
+
+#~ msgid "The total above the chart, the amounts at the heaviest hours"
+#~ msgstr "图表上方显示总量，雨量最大的时段显示数值"
+
+#~ msgid "Next hour"
+#~ msgid_plural "Next %1 hours"
+#~ msgstr[0] "未来 %1 小时"
+
+#~ msgctxt "weather by hour of the shown day"
+#~ msgid "During the day"
+#~ msgstr "当天逐小时"
+
+#~ msgid "Next days"
+#~ msgstr "未来几天"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "已完成 (最近 30 天)"

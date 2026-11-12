@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 10:46+0100\n"
+"POT-Creation-Date: 2026-11-12 11:01+0100\n"
 "PO-Revision-Date: 2017-10-31 20:08+0200\n"
 "Last-Translator: Serhii Golovko <cappelikan@gmail.com>\n"
 "Language-Team: \n"
@@ -48,7 +48,6 @@ msgid "Tasks"
 msgstr "Завдання"
 
 #: ../contents/config/config.qml ../contents/ui/config/ConfigViews.qml
-#: ../contents/ui/WeatherPanel.qml
 msgid "Weather"
 msgstr "Погода"
 
@@ -2357,8 +2356,8 @@ msgid "Rain amounts"
 msgstr "Кількість опадів"
 
 #: ../contents/ui/config/ConfigWeather.qml
-msgid "The total above the chart, the amounts at the heaviest hours"
-msgstr "Сума над графіком, кількість у найдощовіші години"
+msgid "The total under the chart, the amounts at the heaviest hours"
+msgstr "Сума під графіком, кількість у найдощовіші години"
 
 #: ../contents/ui/config/GoogleLoginManager.qml
 msgid "Not signed in to this Google account. Sign in again."
@@ -4845,6 +4844,16 @@ msgid "Polar night"
 msgstr "Полярна ніч"
 
 #: ../contents/ui/WeatherPanel.qml
+msgctxt "weather forecast received at, %1 = time"
+msgid "Updated %1"
+msgstr "Оновлено %1"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "weather forecast received at, %1 = date and time"
+msgid "Updated %1"
+msgstr "Оновлено %1"
+
+#: ../contents/ui/WeatherPanel.qml
 msgid "Set a location in Settings > Weather to see the forecast here."
 msgstr "Вкажіть місце у «Параметри» > «Погода», щоб бачити тут прогноз."
 
@@ -4871,25 +4880,9 @@ msgid "No forecast for this day."
 msgstr "Немає прогнозу на цей день."
 
 #: ../contents/ui/WeatherPanel.qml
-msgid "Next hour"
-msgid_plural "Next %1 hours"
-msgstr[0] "Наступна %1 година"
-msgstr[1] "Наступні %1 години"
-msgstr[2] "Наступні %1 годин"
-
-#: ../contents/ui/WeatherPanel.qml
-msgctxt "weather by hour of the shown day"
-msgid "During the day"
-msgstr "Протягом дня"
-
-#: ../contents/ui/WeatherPanel.qml
 msgctxt "precipitation during the hours of the chart"
 msgid "Rain: %1"
 msgstr "Дощ: %1"
-
-#: ../contents/ui/WeatherPanel.qml
-msgid "Next days"
-msgstr "Наступні дні"
 
 #: ../contents/ui/WeekView.qml
 msgctxt "%1 = day and time, %2 = event title"
@@ -4942,6 +4935,22 @@ msgstr "Місце роботи: %1"
 
 #~ msgid "Helper page (optional): <a href=\"%1\">%1</a>"
 #~ msgstr "Допоміжна сторінка (необов'язково): <a href=\"%1\">%1</a>"
+
+#~ msgid "The total above the chart, the amounts at the heaviest hours"
+#~ msgstr "Сума над графіком, кількість у найдощовіші години"
+
+#~ msgid "Next hour"
+#~ msgid_plural "Next %1 hours"
+#~ msgstr[0] "Наступна %1 година"
+#~ msgstr[1] "Наступні %1 години"
+#~ msgstr[2] "Наступні %1 годин"
+
+#~ msgctxt "weather by hour of the shown day"
+#~ msgid "During the day"
+#~ msgstr "Протягом дня"
+
+#~ msgid "Next days"
+#~ msgstr "Наступні дні"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Виконані (останні 30 днів)"

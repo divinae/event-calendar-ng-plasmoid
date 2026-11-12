@@ -15,6 +15,7 @@ Item {
 	property var currentWeatherData: null
 	property var lastForecastAt: null
 	property var lastForecastErr: null
+	property var weatherUpdatedAt: null // The last forecast received (ms), not a failed try
 	property int weatherRequests: 0 // Running weather requests
 	readonly property bool weatherLoading: weatherRequests > 0
 
@@ -371,6 +372,7 @@ Item {
 			})
 
 			logic.lastForecastAt = Date.now()
+			logic.weatherUpdatedAt = logic.lastForecastAt
 			logic.lastForecastErr = null
 			logic.weatherNetworkFailed = false
 			logic.weatherArrived()
@@ -395,6 +397,7 @@ Item {
 			})
 
 			logic.lastForecastAt = Date.now()
+			logic.weatherUpdatedAt = logic.lastForecastAt
 			logic.lastForecastErr = null
 			logic.weatherNetworkFailed = false
 			logic.weatherArrived()

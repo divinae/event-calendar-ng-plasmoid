@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 10:46+0100\n"
+"POT-Creation-Date: 2026-11-12 11:01+0100\n"
 "PO-Revision-Date: 2021-07-29 01:08+0200\n"
 "Last-Translator: Ugo Ugowsky <ugowsky@gmail.com>\n"
 "Language-Team: Slovenian <lugos-slo@lugos.si>\n"
@@ -48,7 +48,6 @@ msgid "Tasks"
 msgstr "Opravila"
 
 #: ../contents/config/config.qml ../contents/ui/config/ConfigViews.qml
-#: ../contents/ui/WeatherPanel.qml
 msgid "Weather"
 msgstr "Vreme"
 
@@ -2361,8 +2360,8 @@ msgid "Rain amounts"
 msgstr "Količine padavin"
 
 #: ../contents/ui/config/ConfigWeather.qml
-msgid "The total above the chart, the amounts at the heaviest hours"
-msgstr "Vsota nad grafom, količine ob najbolj deževnih urah"
+msgid "The total under the chart, the amounts at the heaviest hours"
+msgstr "Vsota pod grafom, količine ob najbolj deževnih urah"
 
 #: ../contents/ui/config/GoogleLoginManager.qml
 msgid "Not signed in to this Google account. Sign in again."
@@ -4889,6 +4888,16 @@ msgid "Polar night"
 msgstr "Polarna noč"
 
 #: ../contents/ui/WeatherPanel.qml
+msgctxt "weather forecast received at, %1 = time"
+msgid "Updated %1"
+msgstr "Posodobljeno %1"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "weather forecast received at, %1 = date and time"
+msgid "Updated %1"
+msgstr "Posodobljeno %1"
+
+#: ../contents/ui/WeatherPanel.qml
 msgid "Set a location in Settings > Weather to see the forecast here."
 msgstr "Nastavite lokacijo v Nastavitve > Vreme, da bo tu prikazana napoved."
 
@@ -4915,26 +4924,9 @@ msgid "No forecast for this day."
 msgstr "Za ta dan ni napovedi."
 
 #: ../contents/ui/WeatherPanel.qml
-msgid "Next hour"
-msgid_plural "Next %1 hours"
-msgstr[0] "Naslednja %1 ura"
-msgstr[1] "Naslednji %1 uri"
-msgstr[2] "Naslednje %1 ure"
-msgstr[3] "Naslednjih %1 ur"
-
-#: ../contents/ui/WeatherPanel.qml
-msgctxt "weather by hour of the shown day"
-msgid "During the day"
-msgstr "Čez dan"
-
-#: ../contents/ui/WeatherPanel.qml
 msgctxt "precipitation during the hours of the chart"
 msgid "Rain: %1"
 msgstr "Dež: %1"
-
-#: ../contents/ui/WeatherPanel.qml
-msgid "Next days"
-msgstr "Naslednji dnevi"
 
 #: ../contents/ui/WeekView.qml
 msgctxt "%1 = day and time, %2 = event title"
@@ -4988,6 +4980,23 @@ msgstr "Delovna lokacija: %1"
 
 #~ msgid "Helper page (optional): <a href=\"%1\">%1</a>"
 #~ msgstr "Pomožna stran (izbirno): <a href=\"%1\">%1</a>"
+
+#~ msgid "The total above the chart, the amounts at the heaviest hours"
+#~ msgstr "Vsota nad grafom, količine ob najbolj deževnih urah"
+
+#~ msgid "Next hour"
+#~ msgid_plural "Next %1 hours"
+#~ msgstr[0] "Naslednja %1 ura"
+#~ msgstr[1] "Naslednji %1 uri"
+#~ msgstr[2] "Naslednje %1 ure"
+#~ msgstr[3] "Naslednjih %1 ur"
+
+#~ msgctxt "weather by hour of the shown day"
+#~ msgid "During the day"
+#~ msgstr "Čez dan"
+
+#~ msgid "Next days"
+#~ msgstr "Naslednji dnevi"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Dokončana (zadnjih 30 dni)"

@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 10:46+0100\n"
+"POT-Creation-Date: 2026-11-12 11:01+0100\n"
 "PO-Revision-Date: 2021-10-19 20:30-0300\n"
 "Last-Translator: Bernardo Barzotto Zomer <bernardobarzottoz@gmail.com>\n"
 "Language-Team: Portuguese <kde-i18n-pt_BR@kde.org>\n"
@@ -47,7 +47,6 @@ msgid "Tasks"
 msgstr "Tarefas"
 
 #: ../contents/config/config.qml ../contents/ui/config/ConfigViews.qml
-#: ../contents/ui/WeatherPanel.qml
 msgid "Weather"
 msgstr "Clima"
 
@@ -2346,8 +2345,8 @@ msgid "Rain amounts"
 msgstr "Quantidades de chuva"
 
 #: ../contents/ui/config/ConfigWeather.qml
-msgid "The total above the chart, the amounts at the heaviest hours"
-msgstr "O total acima do gráfico, as quantidades nas horas mais chuvosas"
+msgid "The total under the chart, the amounts at the heaviest hours"
+msgstr "O total abaixo do gráfico, as quantidades nas horas mais chuvosas"
 
 #: ../contents/ui/config/GoogleLoginManager.qml
 msgid "Not signed in to this Google account. Sign in again."
@@ -4789,6 +4788,16 @@ msgid "Polar night"
 msgstr "Noite polar"
 
 #: ../contents/ui/WeatherPanel.qml
+msgctxt "weather forecast received at, %1 = time"
+msgid "Updated %1"
+msgstr "Atualizado %1"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "weather forecast received at, %1 = date and time"
+msgid "Updated %1"
+msgstr "Atualizado %1"
+
+#: ../contents/ui/WeatherPanel.qml
 msgid "Set a location in Settings > Weather to see the forecast here."
 msgstr ""
 "Defina uma localização em Configurações > Clima para ver a previsão aqui."
@@ -4816,24 +4825,9 @@ msgid "No forecast for this day."
 msgstr "Sem previsão para este dia."
 
 #: ../contents/ui/WeatherPanel.qml
-msgid "Next hour"
-msgid_plural "Next %1 hours"
-msgstr[0] "Próxima hora"
-msgstr[1] "Próximas %1 horas"
-
-#: ../contents/ui/WeatherPanel.qml
-msgctxt "weather by hour of the shown day"
-msgid "During the day"
-msgstr "Durante o dia"
-
-#: ../contents/ui/WeatherPanel.qml
 msgctxt "precipitation during the hours of the chart"
 msgid "Rain: %1"
 msgstr "Chuva: %1"
-
-#: ../contents/ui/WeatherPanel.qml
-msgid "Next days"
-msgstr "Próximos dias"
 
 #: ../contents/ui/WeekView.qml
 msgctxt "%1 = day and time, %2 = event title"
@@ -4885,6 +4879,21 @@ msgstr "Local de trabalho: %1"
 
 #~ msgid "Helper page (optional): <a href=\"%1\">%1</a>"
 #~ msgstr "Página auxiliar (opcional): <a href=\"%1\">%1</a>"
+
+#~ msgid "The total above the chart, the amounts at the heaviest hours"
+#~ msgstr "O total acima do gráfico, as quantidades nas horas mais chuvosas"
+
+#~ msgid "Next hour"
+#~ msgid_plural "Next %1 hours"
+#~ msgstr[0] "Próxima hora"
+#~ msgstr[1] "Próximas %1 horas"
+
+#~ msgctxt "weather by hour of the shown day"
+#~ msgid "During the day"
+#~ msgstr "Durante o dia"
+
+#~ msgid "Next days"
+#~ msgstr "Próximos dias"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Concluídas (últimos 30 dias)"

@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 10:46+0100\n"
+"POT-Creation-Date: 2026-11-12 11:01+0100\n"
 "PO-Revision-Date: 2022-10-25 17:15+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -47,7 +47,6 @@ msgid "Tasks"
 msgstr "할 일"
 
 #: ../contents/config/config.qml ../contents/ui/config/ConfigViews.qml
-#: ../contents/ui/WeatherPanel.qml
 msgid "Weather"
 msgstr "날씨"
 
@@ -2298,8 +2297,8 @@ msgid "Rain amounts"
 msgstr "강수량"
 
 #: ../contents/ui/config/ConfigWeather.qml
-msgid "The total above the chart, the amounts at the heaviest hours"
-msgstr "차트 위에 합계, 비가 가장 많이 오는 시간에 양 표시"
+msgid "The total under the chart, the amounts at the heaviest hours"
+msgstr "차트 아래에 합계, 비가 가장 많이 오는 시간에 양 표시"
 
 #: ../contents/ui/config/GoogleLoginManager.qml
 msgid "Not signed in to this Google account. Sign in again."
@@ -4703,6 +4702,16 @@ msgid "Polar night"
 msgstr "극야"
 
 #: ../contents/ui/WeatherPanel.qml
+msgctxt "weather forecast received at, %1 = time"
+msgid "Updated %1"
+msgstr "%1 업데이트됨"
+
+#: ../contents/ui/WeatherPanel.qml
+msgctxt "weather forecast received at, %1 = date and time"
+msgid "Updated %1"
+msgstr "%1 업데이트됨"
+
+#: ../contents/ui/WeatherPanel.qml
 msgid "Set a location in Settings > Weather to see the forecast here."
 msgstr "여기에 일기 예보를 표시하려면 설정 > 날씨에서 위치를 설정하십시오."
 
@@ -4729,23 +4738,9 @@ msgid "No forecast for this day."
 msgstr "이 날의 일기 예보가 없습니다."
 
 #: ../contents/ui/WeatherPanel.qml
-msgid "Next hour"
-msgid_plural "Next %1 hours"
-msgstr[0] "다음 %1시간"
-
-#: ../contents/ui/WeatherPanel.qml
-msgctxt "weather by hour of the shown day"
-msgid "During the day"
-msgstr "하루 동안"
-
-#: ../contents/ui/WeatherPanel.qml
 msgctxt "precipitation during the hours of the chart"
 msgid "Rain: %1"
 msgstr "강수량: %1"
-
-#: ../contents/ui/WeatherPanel.qml
-msgid "Next days"
-msgstr "다음 며칠"
 
 #: ../contents/ui/WeekView.qml
 msgctxt "%1 = day and time, %2 = event title"
@@ -4796,6 +4791,20 @@ msgstr "근무 위치: %1"
 
 #~ msgid "Helper page (optional): <a href=\"%1\">%1</a>"
 #~ msgstr "도우미 페이지(선택 사항): <a href=\"%1\">%1</a>"
+
+#~ msgid "The total above the chart, the amounts at the heaviest hours"
+#~ msgstr "차트 위에 합계, 비가 가장 많이 오는 시간에 양 표시"
+
+#~ msgid "Next hour"
+#~ msgid_plural "Next %1 hours"
+#~ msgstr[0] "다음 %1시간"
+
+#~ msgctxt "weather by hour of the shown day"
+#~ msgid "During the day"
+#~ msgstr "하루 동안"
+
+#~ msgid "Next days"
+#~ msgstr "다음 며칠"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "완료됨 (최근 30일)"

@@ -36,6 +36,7 @@ Item {
 	property bool weatherIsSetup: false
 	property bool weatherEnabled: true // Settings > Views > Weather (PopupView.weatherInViews)
 	property bool weatherLoading: false
+	property var weatherUpdatedAt: null // When the forecast came (ms)
 	property string weatherError: ""
 	signal weatherRetryRequested()
 
@@ -148,6 +149,7 @@ Item {
 		WeatherPanel {
 			isSetup: panels.weatherIsSetup
 			loading: panels.weatherLoading
+			updatedAt: panels.weatherUpdatedAt
 			errorText: panels.weatherError
 			onRetryRequested: panels.weatherRetryRequested()
 			isToday: panels.showingToday
