@@ -30,7 +30,6 @@ ConfigPage {
 	GoogleLoginManager {
 		id: googleLoginManager
 		configBridge: page.configBridge
-		redirectMode: "local"
 	}
 	function googleAccountLabel(account, index) {
 		return account && account.label ? account.label : i18n("Google Account %1", index + 1)

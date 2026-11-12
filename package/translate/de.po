@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-10 09:52+0100\n"
+"POT-Creation-Date: 2026-11-12 10:46+0100\n"
 "PO-Revision-Date: 2021-04-09 19:18+0200\n"
 "Last-Translator: Tim Lehner <tim.le20tl@gmail.com>\n"
 "Language-Team: German <>\n"
@@ -873,10 +873,6 @@ msgstr "Das System konnte den Browser nicht automatisch öffnen."
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Copy Link"
 msgstr "Link kopieren"
-
-#: ../contents/ui/config/CalendarsGoogle.qml
-msgid "Helper page (optional): <a href=\"%1\">%1</a>"
-msgstr "Hilfsseite (optional): <a href=\"%1\">%1</a>"
 
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid ""
@@ -4932,6 +4928,9 @@ msgstr "Arbeitsort: %1"
 #~ msgctxt "event time (24 hour clock)"
 #~ msgid "h:mm"
 #~ msgstr "h:mm"
+
+#~ msgid "Helper page (optional): <a href=\"%1\">%1</a>"
+#~ msgstr "Hilfsseite (optional): <a href=\"%1\">%1</a>"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Erledigt (letzte 30 Tage)"

@@ -34,15 +34,8 @@ Item {
 	property var tasklistList: []
 	property var tasklistIdList: []
 
-	property string localRedirectUri: "http://127.0.0.1:53682/"
-	property string hostedRedirectUri: "https://divinae.github.io/event-calendar-ng-plasmoid/"
-	property string redirectMode: "local"
-	function normalizedRedirectMode(mode) {
-		return mode === "hosted" ? "hosted" : "local"
-	}
-	readonly property string redirectUri: normalizedRedirectMode(redirectMode) === "hosted"
-		? hostedRedirectUri
-		: localRedirectUri
+	// Google sends the browser back here, to google_redirect.py on this computer.
+	readonly property string redirectUri: "http://127.0.0.1:53682/"
 	property string defaultClientId: "352447874752-sej1ldpd6piqgovtpog0dr91tb4sq5q3.apps.googleusercontent.com"
 	property var configBridge: null
 	function normalizedClientValue(value) {
@@ -186,16 +179,12 @@ Item {
 	function resetAuthState() {
 		authState = generateAuthState()
 	}
-	function redirectUriForMode(mode) {
-		return normalizedRedirectMode(mode) === "hosted" ? hostedRedirectUri : localRedirectUri
-	}
-	function buildAuthContext(modeOverride) {
-		var mode = typeof modeOverride === "string" ? modeOverride : redirectMode
+	function buildAuthContext() {
 		var usePkce = !effectiveClientSecret
 		return {
 			clientId: effectiveClientId,
 			clientSecret: effectiveClientSecret,
-			redirectUri: redirectUriForMode(mode),
+			redirectUri: redirectUri,
 			pkceVerifier: usePkce ? pkceVerifier : "",
 			pkceChallenge: usePkce ? pkceChallenge : "",
 			state: authState,
@@ -211,7 +200,6 @@ Item {
 			error(configError)
 			throw new Error(configError)
 		}
-		var mode = normalizedRedirectMode(redirectMode)
 		if (!effectiveClientSecret) {
 			resetPkce()
 		} else {
@@ -219,7 +207,7 @@ Item {
 			pkceChallenge = ""
 		}
 		resetAuthState()
-		pendingAuthContext = buildAuthContext(mode)
+		pendingAuthContext = buildAuthContext()
 	}
 	function authConfigurationError() {
 		return authConfigurationErrorFor(effectiveClientId, effectiveClientSecret)

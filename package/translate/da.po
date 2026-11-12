@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-10 09:52+0100\n"
+"POT-Creation-Date: 2026-11-12 10:46+0100\n"
 "PO-Revision-Date: 2019-05-04 00:48-0400\n"
 "Last-Translator: Chris Darnell <chris@cedeel.com>\n"
 "Language-Team: Chris Darnell <chris@cedeel.com>\n"
@@ -849,10 +849,6 @@ msgstr "Skrivebordet kunne ikke åbne browseren automatisk."
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Copy Link"
 msgstr "Kopiér link"
-
-#: ../contents/ui/config/CalendarsGoogle.qml
-msgid "Helper page (optional): <a href=\"%1\">%1</a>"
-msgstr "Hjælpeside (valgfri): <a href=\"%1\">%1</a>"
 
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid ""
@@ -4861,6 +4857,9 @@ msgstr "Arbejdssted: %1"
 #~ msgctxt "event time (24 hour clock)"
 #~ msgid "h:mm"
 #~ msgstr "t.mm"
+
+#~ msgid "Helper page (optional): <a href=\"%1\">%1</a>"
+#~ msgstr "Hjælpeside (valgfri): <a href=\"%1\">%1</a>"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Fuldført (seneste 30 dage)"

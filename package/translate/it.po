@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-10 09:52+0100\n"
+"POT-Creation-Date: 2026-11-12 10:46+0100\n"
 "PO-Revision-Date: 2020-11-12 19:45+0100\n"
 "Last-Translator: Guido Mazzone <guido.mazzone93@outlook.it>\n"
 "Language-Team: Italian <guido.mazzone93@outlook.it>\n"
@@ -673,10 +673,6 @@ msgstr "Il desktop non è riuscito ad aprire automaticamente il browser."
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Copy Link"
 msgstr "Copia link"
-
-#: ../contents/ui/config/CalendarsGoogle.qml
-msgid "Helper page (optional): <a href=\"%1\">%1</a>"
-msgstr "Pagina di supporto (facoltativa): <a href=\"%1\">%1</a>"
 
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "If your browser shows a connection error, that's expected. Copy the URL from the address bar anyway and paste it below. If auto-capture works, you do not need to paste anything."
@@ -4424,6 +4420,9 @@ msgstr "Luogo di lavoro: %1"
 #~ msgctxt "event time (24 hour clock)"
 #~ msgid "h:mm"
 #~ msgstr "h:mm"
+
+#~ msgid "Helper page (optional): <a href=\"%1\">%1</a>"
+#~ msgstr "Pagina di supporto (facoltativa): <a href=\"%1\">%1</a>"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Completate (ultimi 30 giorni)"

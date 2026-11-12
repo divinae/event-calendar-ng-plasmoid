@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-10 09:52+0100\n"
+"POT-Creation-Date: 2026-11-12 10:46+0100\n"
 "PO-Revision-Date: 2021-07-29 01:08+0200\n"
 "Last-Translator: Ugo Ugowsky <ugowsky@gmail.com>\n"
 "Language-Team: Slovenian <lugos-slo@lugos.si>\n"
@@ -869,10 +869,6 @@ msgstr "Namizje ni moglo samodejno odpreti brskalnika."
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid "Copy Link"
 msgstr "Kopiraj povezavo"
-
-#: ../contents/ui/config/CalendarsGoogle.qml
-msgid "Helper page (optional): <a href=\"%1\">%1</a>"
-msgstr "Pomožna stran (izbirno): <a href=\"%1\">%1</a>"
 
 #: ../contents/ui/config/CalendarsGoogle.qml
 msgid ""
@@ -4984,6 +4980,9 @@ msgstr "Delovna lokacija: %1"
 #~ msgctxt "event time (24 hour clock)"
 #~ msgid "h:mm"
 #~ msgstr "h:mm"
+
+#~ msgid "Helper page (optional): <a href=\"%1\">%1</a>"
+#~ msgstr "Pomožna stran (izbirno): <a href=\"%1\">%1</a>"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Dokončana (zadnjih 30 dni)"
