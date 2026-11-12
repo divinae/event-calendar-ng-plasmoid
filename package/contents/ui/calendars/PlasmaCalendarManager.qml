@@ -423,8 +423,14 @@ CalendarManager {
 		try {
 			return readEventsForDuration(dateMin, dateMax)
 		} finally {
-			readingRange = false
+			// Cleared once the event loop runs again, not now: a plugin that sends dataReady queued
+			// (not inside setDisplayedDate) would otherwise read again after every read, every
+			// 500 ms for ever, since each read moves the grid (month by month, then back).
+			Qt.callLater(endReadingRange)
 		}
+	}
+	function endReadingRange() {
+		readingRange = false
 	}
 	function readEventsForDuration(dateMin, dateMax) {
 		var items = []
