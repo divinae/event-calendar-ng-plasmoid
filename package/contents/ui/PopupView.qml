@@ -86,12 +86,16 @@ MouseArea {
 	onCurrentViewChanged: {
 		closeOverlays() // Overlays belong to the view they were opened from.
 		if (openLastView) {
-			plasmoid.configuration.popupLastView = currentView
+			// Later: written now, currentView's own binding (which reads it) would run again inside
+			// this change (a binding loop at the start).
+			Qt.callLater(function() { plasmoid.configuration.popupLastView = popup.currentView })
 		}
 	}
 	onOpenLastViewChanged: {
 		if (openLastView) {
-			plasmoid.configuration.popupLastView = currentView
+			// Later: written now, currentView's own binding (which reads it) would run again inside
+			// this change (a binding loop at the start).
+			Qt.callLater(function() { plasmoid.configuration.popupLastView = popup.currentView })
 		}
 	}
 	// The Day view needs the hourly forecast (also when the popup is made in it: see

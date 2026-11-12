@@ -15,7 +15,7 @@ GridLayout {
 	readonly property int minimumWidth: dateSelector.implicitWidth + columnSpacing + timeSelector.implicitWidth
 
 	signal dateTimeShifted(date oldDateTime, int deltaDateTime, date newDateTime)
-	onDateTimeShifted: {
+	onDateTimeShifted: function(oldDateTime, deltaDateTime, newDateTime) {
 		dateTimeSelector.dateTime = newDateTime
 	}
 
@@ -28,7 +28,7 @@ GridLayout {
 		dateTime: dateTimeSelector.dateTime
 		dateFormat: i18nc("event editor date format", "d MMM, yyyy")
 
-		onDateTimeShifted: {
+		onDateTimeShifted: function(oldDateTime, deltaDateTime, newDateTime) {
 			dateTimeSelector.dateTimeShifted(oldDateTime, deltaDateTime, newDateTime)
 		}
 	}
@@ -42,7 +42,7 @@ GridLayout {
 
 		dateTime: dateTimeSelector.dateTime
 
-		onDateTimeShifted: {
+		onDateTimeShifted: function(oldDateTime, deltaDateTime, newDateTime) {
 			dateTimeSelector.dateTimeShifted(oldDateTime, deltaDateTime, newDateTime)
 		}
 	}
