@@ -592,7 +592,13 @@ PinchArea {
 				target: monthScroll
 				filterMouseEvents: true
 				keyNavigationEnabled: false
-				onWheel: root.followToday = false
+				// Only when the month really scrolls: a wheel over a month that fits the view moves
+				// nothing, and the midnight follow (PopupView) should still move to the new month.
+				onWheel: {
+					if (monthScroll.contentHeight > monthScroll.height) {
+						root.followToday = false
+					}
+				}
 			}
 
 			QQC2.StackView {
