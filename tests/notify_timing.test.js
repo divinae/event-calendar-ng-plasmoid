@@ -156,3 +156,31 @@ console.log('notify_timing: ok')
 	const google = { calendarId: 'a@b', id: 'abc_123', summary: 'x', startDateTime: start, endDateTime: end }
 	assert.strictEqual(T.eventId(google), 'abc_123', 'others: their own id')
 }
+
+// Late start: an event still running whose start went by unsent, once.
+{
+	const event = ev(10, 0, { endDateTime: new Date(2026, 9, 19, 11, 30) })
+	const key = 'c|e1|' + new Date(2026, 9, 19, 10, 0).getTime() + '|start'
+	// Came at 10:05: late, 5 min in.
+	let win = T.checkWindow(at(10, 4, 0), at(10, 5, 20), MAX)
+	assert.deepStrictEqual(kinds(T.dueFor(event, [], win, at(10, 5, 20))), [], 'its window went by')
+	let late = T.lateStart(event, win, at(10, 5, 20), {})
+	assert.strictEqual(late.key, key, 'the start key of dueFor')
+	assert.strictEqual(late.minutes, 5)
+	assert.strictEqual(T.lateStart(event, win, at(10, 5, 20), { [key]: at(10, 0) }), null, 'sent before')
+	// On time: dueFor's, not late.
+	win = T.checkWindow(at(9, 59, 0), at(10, 0, 5), MAX)
+	assert.deepStrictEqual(kinds(T.dueFor(event, [], win, at(10, 0, 5))), ['start'])
+	assert.strictEqual(T.lateStart(event, win, at(10, 0, 5), {}), null, 'in this window')
+	// Ended, not started yet, all day, or started long ago: none.
+	win = T.checkWindow(at(11, 29), at(11, 31), MAX)
+	assert.strictEqual(T.lateStart(event, win, at(11, 31), {}), null, 'ended')
+	win = T.checkWindow(at(9, 0), at(9, 1), MAX)
+	assert.strictEqual(T.lateStart(event, win, at(9, 1), {}), null, 'not started')
+	win = T.checkWindow(at(10, 4), at(10, 5), MAX)
+	assert.strictEqual(T.lateStart(Object.assign({ start: { date: '2026-10-19' } }, event), win, at(10, 5), {}), null, 'all day')
+	const long = ev(0, 0, { endDateTime: new Date(2026, 9, 20, 0, 0) })
+	win = T.checkWindow(at(13, 0), at(13, 1), MAX)
+	assert.strictEqual(T.lateStart(long, win, at(13, 1), {}), null, 'started more than 12 h ago')
+	console.log('notify_timing late start: ok')
+}

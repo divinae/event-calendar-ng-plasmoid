@@ -109,6 +109,29 @@ function lateReminder(eventItem, reminderMinutes, win, nowMs, sent) {
 }
 
 // Drops sent keys older than a day (key -> time sent).
+// A start gone by unsent while the event is still running (it came after its start: created or
+// moved late, a fetch later, a restart or the computer asleep): one start notification, late.
+// Returns null, or { key: dueFor's start key, minutes: minutes since the start }. None for an
+// all-day event, a start in this window (dueFor's), one sent before, or a start more than
+// LATE_START_MAX ago (its sent key is pruned after a day: no second one after a restart).
+var LATE_START_MAX = 12 * 60 * MINUTE
+function lateStart(eventItem, win, nowMs, sent) {
+	if (eventItem.start && eventItem.start.date) {
+		return null
+	}
+	var start = new Date(eventItem.startDateTime).getTime()
+	var end = new Date(eventItem.endDateTime).getTime()
+	if (!isFinite(start) || !isFinite(end) || end <= nowMs || floorMinute(start) > win.from
+			|| nowMs - start > LATE_START_MAX) {
+		return null
+	}
+	var key = String(eventItem.calendarId || '') + '|' + eventId(eventItem) + '|' + start + '|start'
+	if (sent && sent[key]) {
+		return null
+	}
+	return { key: key, minutes: Math.max(0, Math.floor((nowMs - start) / MINUTE)) }
+}
+
 function pruneSent(sent, nowMs) {
 	var kept = {}
 	for (var key in sent) {

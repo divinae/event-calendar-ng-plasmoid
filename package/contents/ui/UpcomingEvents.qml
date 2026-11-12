@@ -725,6 +725,16 @@ CalendarManager {
 						sendEventReminderNotification(eventItem, late.minutes)
 					}
 				}
+				// Running already, its start gone by unsent: the start notification, late, once.
+				var lateStart = NotifyTiming.lateStart(eventItem, win, now, sent)
+				if (lateStart) {
+					sent[lateStart.key] = now
+					if (!seedingLate && plasmoid.configuration.eventStartingNotificationEnabled
+							&& !sent[meetingKey(eventItem) + '|alert']) {
+						logger.log('notification: event starting, late,', lateStart.minutes, 'min in', eventItem.startDateTime)
+						sendEventStartingNotification(eventItem)
+					}
+				}
 			}
 		})
 		sentNotifications = sent
