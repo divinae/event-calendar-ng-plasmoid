@@ -49,7 +49,7 @@ CalendarManager {
 	// Disturb or full-screen alert; still shown in the views. One occurrence: calendar, id, start.
 	readonly property var mutedKeys: plasmoid.configuration.mutedEventKeys || []
 	function muteKey(eventItem) {
-		return String(eventItem.calendarId || '') + '|' + String(eventItem.id || '') + '|' + new Date(eventItem.startDateTime).getTime()
+		return String(eventItem.calendarId || '') + '|' + NotifyTiming.eventId(eventItem) + '|' + new Date(eventItem.startDateTime).getTime()
 	}
 	function isMuted(eventItem) {
 		return !!eventItem && mutedKeys.indexOf(muteKey(eventItem)) >= 0
@@ -486,14 +486,26 @@ CalendarManager {
 		})
 	}
 
+	// The loaded copy of an event (same calendar and key id, NotifyTiming.eventId), or null.
+	function currentEventItem(eventItem) {
+		var id = NotifyTiming.eventId(eventItem)
+		var matches = Shared.toArray((eventsByCalendar[eventItem.calendarId] || {}).items).filter(function(other) {
+			return NotifyTiming.eventId(other) === id
+		})
+		var start = new Date(eventItem.startDateTime).getTime()
+		return matches.filter(function(other) { return new Date(other.startDateTime).getTime() === start })[0]
+			|| (matches.length === 1 ? matches[0] : null)
+	}
 	function checkSnoozedReminders() {
 		var now = timeModel.currentTime
 		var remaining = []
 		for (var i = 0; i < snoozedReminders.length; i++) {
 			var snoozed = snoozedReminders[i]
 			if (snoozed.at <= now) {
-				if (snoozed.eventItem.startDateTime > now) {
-					sendSnoozedReminderNotification(snoozed.eventItem)
+				// The event as it is now: changed meanwhile, or deleted or muted (then nothing).
+				var current = currentEventItem(snoozed.eventItem)
+				if (current && shouldNotify(current) && current.startDateTime > now) {
+					sendSnoozedReminderNotification(current)
 				}
 				// Else: the event already started, the "starting" notification covers it.
 			} else {
@@ -506,7 +518,7 @@ CalendarManager {
 	//--- At a meeting's start, independent of the notifications: open its link (auto-join).
 	// Keys without the calendar, so a meeting in two calendars is joined once.
 	function meetingKey(eventItem) {
-		return String(eventItem.id || eventItem.summary || '') + '|' + new Date(eventItem.startDateTime).getTime()
+		return NotifyTiming.eventId(eventItem) + '|' + new Date(eventItem.startDateTime).getTime()
 	}
 	// A full-screen alert for this meeting (main.qml shows it on every screen).
 	signal meetingAlertRequested(var eventItem)
@@ -896,7 +908,7 @@ CalendarManager {
 	// key -> { until: its planned end (ms), at: when it was marked (ms): its real end, for Glance }
 	property var endedEvents: ({})
 	function endedKey(eventItem) {
-		return String(eventItem.calendarId || '') + '|' + String(eventItem.id || eventItem.summary || '') + '|' + new Date(eventItem.startDateTime).getTime()
+		return String(eventItem.calendarId || '') + '|' + NotifyTiming.eventId(eventItem) + '|' + new Date(eventItem.startDateTime).getTime()
 	}
 	function isMarkedEnded(eventItem) {
 		return !!endedEvents[endedKey(eventItem)]
