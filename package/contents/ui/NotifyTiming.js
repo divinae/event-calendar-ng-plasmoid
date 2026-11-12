@@ -75,7 +75,8 @@ function dueFor(eventItem, reminderMinutes, win, nowMs) {
 // the minutes left. reminderMinutes as for dueFor; sent: key -> time sent (with this check's own
 // keys already in). Returns null, or { kind: 'reminder', minutes: minutes left, key, keys: the keys
 // of all the reminders gone by, to be marked sent }. None when one of them was sent already (the
-// one this check sent in its window too).
+// one this check sent in its window too). Reminder times a day or more ago don't count: their sent
+// keys are pruned after a day (pruneSent), so a "2 days before" one would come again a day later.
 function lateReminder(eventItem, reminderMinutes, win, nowMs, sent) {
 	var start = new Date(eventItem.startDateTime).getTime()
 	if (!isFinite(start) || start <= nowMs) {
@@ -89,6 +90,9 @@ function lateReminder(eventItem, reminderMinutes, win, nowMs, sent) {
 		var minutes = Number(list[i])
 		if (!(minutes > 0) || floorMinute(start - minutes * MINUTE) > win.to) {
 			continue // Not yet (or not a reminder before the start)
+		}
+		if (nowMs - floorMinute(start - minutes * MINUTE) >= 24 * 60 * MINUTE) {
+			continue // A day or more ago: its key may be pruned already
 		}
 		var key = id + '|' + minutes
 		if (keys.indexOf(key) >= 0) {

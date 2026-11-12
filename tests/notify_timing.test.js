@@ -144,6 +144,30 @@ console.log('notify_timing: ok')
 	assert.strictEqual(T.lateReminder(event, [0, -5], win, at(17, 14), {}), null, 'none before the start')
 }
 
+// A reminder 2 days before (2880 min): sent on time, its key pruned a day later, and then no second
+// one as a late reminder.
+{
+	const event = { id: 'e1', calendarId: 'c', startDateTime: new Date(2026, 9, 21, 17, 25) }
+	const sentAt = at(17, 25, 5) // Oct 19
+	let win = T.checkWindow(at(17, 24, 0), sentAt, MAX)
+	assert.deepStrictEqual(kinds(T.dueFor(event, [2880], win, sentAt)), ['reminder:2880'], 'on time, 2 days before')
+	const keyOf = m => 'c|e1|' + new Date(2026, 9, 21, 17, 25).getTime() + '|' + m
+	let sent = { [keyOf(2880)]: sentAt }
+	assert.ok(T.lateReminder(event, [2880], win, sentAt, sent).already, 'just sent')
+	// A day later (Oct 20, 17:26): the key is pruned, the reminder time a day ago.
+	const dayLater = sentAt + 24 * 3600000 + 60000
+	sent = T.pruneSent(sent, dayLater)
+	assert.deepStrictEqual(Object.keys(sent), [], 'pruned')
+	win = T.checkWindow(dayLater - 60000, dayLater, MAX)
+	assert.strictEqual(T.lateReminder(event, [2880], win, dayLater, sent), null, 'no second one a day later')
+	// With a 10 min one too: still nothing until that one is due.
+	assert.strictEqual(T.lateReminder(event, [2880, 10], win, dayLater, sent), null, 'nor with a later reminder')
+	// Within the day it still comes late (eg: the event came an hour after the reminder's time).
+	const hourLater = sentAt + 3600000
+	win = T.checkWindow(hourLater - 60000, hourLater, MAX)
+	assert.strictEqual(T.lateReminder(event, [2880], win, hourLater, {}).key, keyOf(2880), 'late within the day')
+}
+
 //--- eventId: Akonadi's id (calendar_start_end) without the end, so a new end keeps the keys.
 {
 	const start = new Date(2026, 10, 10, 9, 50), end = new Date(2026, 10, 10, 10, 0)
