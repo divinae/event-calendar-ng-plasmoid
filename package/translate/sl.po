@@ -1112,12 +1112,14 @@ msgstr "Googlov koledar v brskalniku"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Close notifications when the event ends"
-msgstr ""
+msgstr "Zapri obvestila, ko se dogodek konča"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid ""
 "A reminder or start notification still shown, also one kept until dismissed"
 msgstr ""
+"Opomnik ali obvestilo o začetku, ki je še prikazano, tudi tisto, ohranjeno "
+"do zaprtja"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Reminder Before an Event"
@@ -1820,7 +1822,7 @@ msgstr "Odpri v nazadnje uporabljenem pogledu"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Follow the date at midnight"
-msgstr ""
+msgstr "Sledi datumu ob polnoči"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid ""
@@ -1828,6 +1830,9 @@ msgid ""
 "month, the Agenda, the Day and Week views. A view moved or scrolled "
 "elsewhere stays. Off: nothing moves."
 msgstr ""
+"Ob polnoči se to, kar prikazuje danes, premakne na novi dan: izbrani dan, "
+"mesec, dnevni red, pogleda dneva in tedna. Pogled, premaknjen ali pomaknjen "
+"drugam, ostane. Izklopljeno: nič se ne premakne."
 
 #: ../contents/ui/config/ConfigViews.qml ../contents/ui/PopupHeader.qml
 msgid "View switcher"

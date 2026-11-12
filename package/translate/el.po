@@ -1121,12 +1121,14 @@ msgstr "Ημερολόγιο Google στον περιηγητή"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Close notifications when the event ends"
-msgstr ""
+msgstr "Κλείσιμο ειδοποιήσεων όταν λήξει το συμβάν"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid ""
 "A reminder or start notification still shown, also one kept until dismissed"
 msgstr ""
+"Μια υπενθύμιση ή ειδοποίηση έναρξης που εμφανίζεται ακόμα, και μία που "
+"διατηρείται μέχρι να απορριφθεί"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Reminder Before an Event"
@@ -1833,7 +1835,7 @@ msgstr "Άνοιγμα στην τελευταία προβολή"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Follow the date at midnight"
-msgstr ""
+msgstr "Ακολούθηση της ημερομηνίας τα μεσάνυχτα"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid ""
@@ -1841,6 +1843,9 @@ msgid ""
 "month, the Agenda, the Day and Week views. A view moved or scrolled "
 "elsewhere stays. Off: nothing moves."
 msgstr ""
+"Τα μεσάνυχτα, ό,τι δείχνει το σήμερα περνά στη νέα μέρα: η επιλεγμένη μέρα, "
+"ο μήνας, η ατζέντα, οι προβολές ημέρας και εβδομάδας. Μια προβολή που "
+"μετακινήθηκε ή κύλησε αλλού μένει. Ανενεργό: τίποτα δεν μετακινείται."
 
 #: ../contents/ui/config/ConfigViews.qml ../contents/ui/PopupHeader.qml
 msgid "View switcher"

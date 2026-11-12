@@ -1110,12 +1110,14 @@ msgstr "Google Agenda in de webbrowser"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Close notifications when the event ends"
-msgstr ""
+msgstr "Meldingen sluiten wanneer het evenement eindigt"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid ""
 "A reminder or start notification still shown, also one kept until dismissed"
 msgstr ""
+"Een herinnering of startmelding die nog wordt getoond, ook een die blijft "
+"tot ze wordt gesloten"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Reminder Before an Event"
@@ -1821,7 +1823,7 @@ msgstr "Openen in de laatst gebruikte weergave"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Follow the date at midnight"
-msgstr ""
+msgstr "De datum volgen om middernacht"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid ""
@@ -1829,6 +1831,10 @@ msgid ""
 "month, the Agenda, the Day and Week views. A view moved or scrolled "
 "elsewhere stays. Off: nothing moves."
 msgstr ""
+"Om middernacht gaat wat vandaag toont door naar de nieuwe dag: de "
+"geselecteerde dag, de maand, de agenda, de dag- en weekweergave. Een "
+"weergave die elders naartoe is verplaatst of gescrold, blijft. Uit: niets "
+"verschuift."
 
 #: ../contents/ui/config/ConfigViews.qml ../contents/ui/PopupHeader.qml
 msgid "View switcher"

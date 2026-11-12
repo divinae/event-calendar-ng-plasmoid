@@ -1053,12 +1053,12 @@ msgstr "浏览器中的 Google 日历"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Close notifications when the event ends"
-msgstr ""
+msgstr "日程结束时关闭通知"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid ""
 "A reminder or start notification still shown, also one kept until dismissed"
-msgstr ""
+msgstr "仍在显示的提醒或开始通知，包括保留到关闭为止的通知"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Reminder Before an Event"
@@ -1716,7 +1716,7 @@ msgstr "以上次使用的视图打开"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Follow the date at midnight"
-msgstr ""
+msgstr "午夜时跟随日期"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid ""
@@ -1724,6 +1724,8 @@ msgid ""
 "month, the Agenda, the Day and Week views. A view moved or scrolled "
 "elsewhere stays. Off: nothing moves."
 msgstr ""
+"午夜时，显示今天的内容会跳到新的一天：所选日期、月份、日程、日视图和周视图。"
+"已移到或滚动到别处的视图保持不动。关闭：什么都不移动。"
 
 #: ../contents/ui/config/ConfigViews.qml ../contents/ui/PopupHeader.qml
 msgid "View switcher"

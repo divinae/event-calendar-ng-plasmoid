@@ -888,11 +888,11 @@ msgstr "ブラウザーの Google Calendar"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Close notifications when the event ends"
-msgstr ""
+msgstr "予定の終了時に通知を閉じる"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "A reminder or start notification still shown, also one kept until dismissed"
-msgstr ""
+msgstr "表示中のリマインダーや開始通知（閉じるまで残す通知も含む）"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Reminder Before an Event"
@@ -1467,11 +1467,11 @@ msgstr "最後に使ったビューで開く"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Follow the date at midnight"
-msgstr ""
+msgstr "深夜0時に日付を追う"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "At midnight, what shows today goes on to the new day: the selected day, the month, the Agenda, the Day and Week views. A view moved or scrolled elsewhere stays. Off: nothing moves."
-msgstr ""
+msgstr "深夜0時に、今日を表示しているもの（選択した日、月、アジェンダ、日表示と週表示）が新しい日に進みます。別の場所へ移動またはスクロールした表示はそのままです。オフ：何も動きません。"
 
 #: ../contents/ui/config/ConfigViews.qml ../contents/ui/PopupHeader.qml
 msgid "View switcher"

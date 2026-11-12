@@ -897,11 +897,11 @@ msgstr "Kalendarz Google w przeglądarce"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Close notifications when the event ends"
-msgstr ""
+msgstr "Zamykaj powiadomienia, gdy wydarzenie się kończy"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "A reminder or start notification still shown, also one kept until dismissed"
-msgstr ""
+msgstr "Przypomnienie lub powiadomienie o rozpoczęciu wciąż widoczne, także takie zachowane do zamknięcia"
 
 #: ../contents/ui/config/ConfigEvents.qml
 msgid "Reminder Before an Event"
@@ -1482,11 +1482,11 @@ msgstr "Otwieraj w ostatnio używanym widoku"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "Follow the date at midnight"
-msgstr ""
+msgstr "Podążaj za datą o północy"
 
 #: ../contents/ui/config/ConfigViews.qml
 msgid "At midnight, what shows today goes on to the new day: the selected day, the month, the Agenda, the Day and Week views. A view moved or scrolled elsewhere stays. Off: nothing moves."
-msgstr ""
+msgstr "O północy to, co pokazuje dzisiaj, przechodzi na nowy dzień: wybrany dzień, miesiąc, agenda, widoki dnia i tygodnia. Widok przesunięty lub przewinięty gdzie indziej zostaje. Wyłączone: nic się nie przesuwa."
 
 #: ../contents/ui/config/ConfigViews.qml ../contents/ui/PopupHeader.qml
 msgid "View switcher"
