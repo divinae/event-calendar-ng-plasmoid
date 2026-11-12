@@ -192,6 +192,11 @@ function parseHourlyData(weatherData, units) {
 }
 
 // The current weather (/weather, or One Call's current): what the Weather panel shows as "Now".
+// "City, CC" from /weather's answer ('' without a name).
+function placeName(data) {
+	return data && data.name ? String(data.name) + (data.sys && data.sys.country ? ', ' + data.sys.country : '') : ''
+}
+
 function parseCurrentData(data, units) {
 	if (!data || (!data.main && !isFinite(data.temp))) {
 		return null
@@ -204,8 +209,9 @@ function parseCurrentData(data, units) {
 		text: sentence(weather ? weather.description : ''),
 		description: weather ? weather.description : '',
 		precipitation: amount(data.rain, '1h') + amount(data.snow, '1h'),
-		// The city's name (/weather; One Call has none), shown as the panel's location.
-		place: data.name ? String(data.name) + (data.sys && data.sys.country ? ', ' + data.sys.country : '') : '',
+		// The city's name (/weather; One Call has none, its own comes from fetchCoords), shown as the
+		// panel's location.
+		place: placeName(data),
 	}
 	// Its place (/weather; One Call has it apart), eg: for the moon's rise and set.
 	if (data.coord) {
@@ -320,7 +326,8 @@ function updateFreeHourly(config, callback) {
 
 //--- One Call (3.0)
 // One Call needs coordinates, the settings have the city id: /weather has them, asked once per city.
-var cityCoords = {} // cityId -> { lat, lon }
+// Its city name is kept too: One Call's answer has none, and the Day view shows it as the location.
+var cityCoords = {} // cityId -> { lat, lon, place }
 
 function fetchCoords(args, callback) {
 	var known = cityCoords[args.cityId]
@@ -330,7 +337,7 @@ function fetchCoords(args, callback) {
 	fetch('weather', args, function(err, data, xhr) {
 		if (err) return callback(err, data, xhr)
 		if (!data || !data.coord) return callback('OpenWeatherMap: no coordinates for the city', data, xhr)
-		cityCoords[args.cityId] = { lat: data.coord.lat, lon: data.coord.lon }
+		cityCoords[args.cityId] = { lat: data.coord.lat, lon: data.coord.lon, place: placeName(data) }
 		callback(null, cityCoords[args.cityId])
 	})
 }
@@ -343,32 +350,36 @@ function fetchOneCall(config, callback) {
 		if (coordErr) return handleError('OpenWeatherMap.weather', callback, coordErr, coord, xhr)
 		getJSON(oneCallUrl(coord, args), function(err, data, xhr, receivedAt) {
 			if (err) return handleError('OpenWeatherMap.onecall', callback, err, data, xhr)
-			callback(null, data, xhr, receivedAt)
+			callback(null, data, xhr, receivedAt, coord.place)
 		})
 	})
 }
 
-// One Call's current weather, with its place (the response's, eg: for the moon's rise and set).
-function parseOneCallCurrent(data, units) {
+// One Call's current weather, with its place (the response's coordinates, eg: for the moon's rise
+// and set; the city's name from fetchCoords).
+function parseOneCallCurrent(data, units, place) {
 	var current = parseCurrentData(data.current, units)
 	if (current && isFinite(data.lat) && isFinite(data.lon)) {
 		current.latitude = Number(data.lat)
 		current.longitude = Number(data.lon)
 	}
+	if (current && place) {
+		current.place = place
+	}
 	return current
 }
 
-function parseOneCallDaily(data, units) {
+function parseOneCallDaily(data, units, place) {
 	return {
 		list: (data.daily || []).map(function(item) { return parseDay(item, units) }),
-		current: parseOneCallCurrent(data, units),
+		current: parseOneCallCurrent(data, units, place),
 	}
 }
 
-function parseOneCallHourly(data, units) {
+function parseOneCallHourly(data, units, place) {
 	return {
 		list: (data.hourly || []).map(function(item) { return parseHour(item, units, '1h') }),
-		current: parseOneCallCurrent(data, units),
+		current: parseOneCallCurrent(data, units, place),
 	}
 }
 
@@ -377,9 +388,9 @@ function updateDailyWeather(config, callback) {
 	if (!usesOneCall(config)) {
 		return updateFreeDaily(config, callback)
 	}
-	fetchOneCall(config, function(err, data, xhr, receivedAt) {
+	fetchOneCall(config, function(err, data, xhr, receivedAt, place) {
 		if (err) return callback(err, data, xhr)
-		callback(null, parseOneCallDaily(data, config.weatherUnits), xhr, receivedAt)
+		callback(null, parseOneCallDaily(data, config.weatherUnits, place), xhr, receivedAt)
 	})
 }
 
@@ -387,9 +398,9 @@ function updateHourlyWeather(config, callback) {
 	if (!usesOneCall(config)) {
 		return updateFreeHourly(config, callback)
 	}
-	fetchOneCall(config, function(err, data, xhr, receivedAt) {
+	fetchOneCall(config, function(err, data, xhr, receivedAt, place) {
 		if (err) return callback(err, data, xhr)
-		callback(null, parseOneCallHourly(data, config.weatherUnits), xhr, receivedAt)
+		callback(null, parseOneCallHourly(data, config.weatherUnits, place), xhr, receivedAt)
 	})
 }
 
