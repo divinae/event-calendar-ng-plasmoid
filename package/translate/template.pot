@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-06 11:28+0100\n"
+"POT-Creation-Date: 2026-11-10 09:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3194,16 +3194,6 @@ msgstr ""
 
 #: ../contents/ui/lib/PythonModules.qml
 msgid "Couldn't install the modules: %1"
-msgstr ""
-
-#: ../contents/ui/LocaleFuncs.js
-msgctxt "event time on the hour (24 hour clock)"
-msgid "h"
-msgstr ""
-
-#: ../contents/ui/LocaleFuncs.js
-msgctxt "event time (24 hour clock)"
-msgid "h:mm"
 msgstr ""
 
 #: ../contents/ui/LocaleFuncs.js

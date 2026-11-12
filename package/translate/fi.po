@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-06 11:28+0100\n"
+"POT-Creation-Date: 2026-11-10 09:52+0100\n"
 "PO-Revision-Date: 2022-03-21 23:40+ZONE\n"
 "Last-Translator: Ilpo Kantonen <ilpo@iki.fi>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3173,16 +3173,6 @@ msgid "Couldn't install the modules: %1"
 msgstr "Moduuleja ei voitu asentaa: %1"
 
 #: ../contents/ui/LocaleFuncs.js
-msgctxt "event time on the hour (24 hour clock)"
-msgid "h"
-msgstr "h"
-
-#: ../contents/ui/LocaleFuncs.js
-msgctxt "event time (24 hour clock)"
-msgid "h:mm"
-msgstr "h:mm"
-
-#: ../contents/ui/LocaleFuncs.js
 msgctxt "event time on the hour (12 hour clock)"
 msgid "h AP"
 msgstr "g AP"
@@ -4413,6 +4403,14 @@ msgstr "Ei enää tapahtumia tänään"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Työskentelypaikka: %1"
+
+#~ msgctxt "event time on the hour (24 hour clock)"
+#~ msgid "h"
+#~ msgstr "h"
+
+#~ msgctxt "event time (24 hour clock)"
+#~ msgid "h:mm"
+#~ msgstr "h:mm"
 
 #~ msgid "Completed (last 30 days)"
 #~ msgstr "Valmiit (viimeiset 30 päivää)"
