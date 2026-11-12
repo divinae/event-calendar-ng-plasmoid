@@ -197,12 +197,18 @@ ColumnLayout {
 		}
 	}
 
-	// No title (the weather speaks for itself): the location on the right with a pin, a small
-	// spinner while refreshing.
+	// "Weather" as the card's title (like the Day view's "Tasks" beside it), the location on the
+	// right with a pin, a small spinner while refreshing.
 	RowLayout {
 		visible: panel.showData && !panel.compact
 		Layout.fillWidth: true
 		spacing: Kirigami.Units.smallSpacing
+		PlasmaComponents3.Label {
+			text: i18n("Weather")
+			textFormat: Text.PlainText
+			font.weight: Font.Bold
+			font.pointSize: appletConfig.fontPoints(Kirigami.Theme.defaultFont) * 1.25
+		}
 		Item {
 			Layout.fillWidth: true
 		}
@@ -851,32 +857,17 @@ ColumnLayout {
 		}
 	}
 
-	// Under the chart: on the left the rain the chart's hours bring in all, in the rain's color
-	// (Settings > Weather > Forecast chart > Rain amounts), on the right when the forecast came
-	// (dimmed; with the date when not today).
-	RowLayout {
+	// Under the chart: the rain the chart's hours bring in all, in the rain's color
+	// (Settings > Weather > Forecast chart > Rain amounts).
+	PlasmaComponents3.Label {
 		readonly property real rain: hourChart.visible ? ForecastChart.rainTotal(hourChart.points) : 0
-		readonly property bool rainShown: panel.chartRainAmounts && rain > 0
-		visible: panel.showData && !panel.compact && (!!updatedLabel.text || rainShown)
+		visible: panel.showData && !panel.compact && panel.chartRainAmounts && rain > 0
 		Layout.fillWidth: true
-		spacing: Kirigami.Units.smallSpacing
-		PlasmaComponents3.Label {
-			visible: parent.rainShown
-			textFormat: Text.PlainText
-			text: visible ? i18nc("precipitation during the hours of the chart", "Rain: %1", panel.precipitationText(parent.rain)) : ""
-			font: Kirigami.Theme.smallFont
-			color: Kirigami.Theme.linkColor
-		}
-		PlasmaComponents3.Label {
-			id: updatedLabel
-			Layout.fillWidth: true
-			horizontalAlignment: Text.AlignRight
-			elide: Text.ElideLeft
-			textFormat: Text.PlainText
-			text: panel.updatedText(panel.updatedAt)
-			font: Kirigami.Theme.smallFont
-			opacity: panel.dimOpacity
-		}
+		elide: Text.ElideRight
+		textFormat: Text.PlainText
+		text: visible ? i18nc("precipitation during the hours of the chart", "Rain: %1", panel.precipitationText(rain)) : ""
+		font: Kirigami.Theme.smallFont
+		color: Kirigami.Theme.linkColor
 	}
 
 	//--- Next days: day, icon, high / low. With the chart's larger icons, larger here too and the
@@ -937,4 +928,17 @@ ColumnLayout {
 	}
 
 	Item { Layout.fillHeight: true }
+
+	// At the card's bottom, greyed: when the forecast came (with the date when not today).
+	PlasmaComponents3.Label {
+		visible: panel.showData && !panel.compact && !!text
+		Layout.fillWidth: true
+		Layout.topMargin: Kirigami.Units.smallSpacing
+		horizontalAlignment: Text.AlignRight
+		elide: Text.ElideLeft
+		textFormat: Text.PlainText
+		text: panel.updatedText(panel.updatedAt)
+		font: Kirigami.Theme.smallFont
+		color: Kirigami.Theme.disabledTextColor
+	}
 }

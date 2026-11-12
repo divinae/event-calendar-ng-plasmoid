@@ -37,7 +37,7 @@ msgstr "Kalendrar"
 msgid "Tasks"
 msgstr "Uppgifter"
 
-#: ../contents/config/config.qml ../contents/ui/config/ConfigViews.qml
+#: ../contents/config/config.qml ../contents/ui/config/ConfigViews.qml ../contents/ui/WeatherPanel.qml
 msgid "Weather"
 msgstr "Väder"
 

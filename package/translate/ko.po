@@ -47,6 +47,7 @@ msgid "Tasks"
 msgstr "할 일"
 
 #: ../contents/config/config.qml ../contents/ui/config/ConfigViews.qml
+#: ../contents/ui/WeatherPanel.qml
 msgid "Weather"
 msgstr "날씨"
 

@@ -35,7 +35,7 @@ msgstr "Calendários"
 msgid "Tasks"
 msgstr "Tarefas"
 
-#: ../contents/config/config.qml ../contents/ui/config/ConfigViews.qml
+#: ../contents/config/config.qml ../contents/ui/config/ConfigViews.qml ../contents/ui/WeatherPanel.qml
 msgid "Weather"
 msgstr "Meteorologia"
 
