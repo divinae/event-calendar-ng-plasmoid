@@ -759,8 +759,11 @@ CalendarManager {
 
 	// Every minute since the last check (see NotifyTiming), each notification once.
 	property real lastNotifyCheck: NaN
-	// key -> when sent; kept in the config (notificationsSent) so a restart repeats nothing.
-	property var sentNotifications: loadSentNotifications()
+	// key -> when sent; kept in the config (notificationsSent) so a restart repeats nothing. Loaded
+	// once at start (Component.onCompleted), not through a binding: a config write before the first
+	// check would run it again. Widget state, not on the settings pages (OK would write back the
+	// copy the dialog opened with, and reminders sent meanwhile would come again late).
+	property var sentNotifications: ({})
 	property string savedSentText: ''
 	// Never written yet (eg: just updated): the first synced check marks the reminders gone by as
 	// sent instead of sending each late at once (they were likely shown before).
@@ -778,6 +781,9 @@ CalendarManager {
 		} catch (e) {
 			return {}
 		}
+	}
+	Component.onCompleted: {
+		sentNotifications = loadSentNotifications()
 	}
 	function saveSentNotifications(sent) {
 		var text = JSON.stringify(sent)

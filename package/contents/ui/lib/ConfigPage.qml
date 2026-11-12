@@ -168,8 +168,6 @@ KCM.SimpleKCM {
 	property var cfg_meetLinkAuthUserDefault
 	property var cfg_invitationNotificationEnabled
 	property var cfg_invitationNotificationEnabledDefault
-	property var cfg_notificationsSent
-	property var cfg_notificationsSentDefault
 	property var cfg_invitationsNotified
 	property var cfg_invitationsNotifiedDefault
 	property var cfg_meetingPauseMedia

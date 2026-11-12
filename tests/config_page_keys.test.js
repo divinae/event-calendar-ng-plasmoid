@@ -17,6 +17,7 @@ const widgetState = [
 	'cameraDevice', 'cameraMirrored', // The camera check's choices
 	'mutedEventKeys', // Mute Notifications, per event
 	'clockHiddenCalendarIds', // The popup's calendar menu
+	'notificationsSent', // Sent event notifications, written each minute (UpcomingEvents)
 ]
 
 const missing = keys.filter(k => !page.includes(`property var cfg_${k}\n`))
