@@ -36,7 +36,8 @@ QtObject {
 		}
 	}
 
-	// See NotificationManager.notify. answer(actionId) is called once by the manager's wrapper.
+	// See NotificationManager.notify. answer(actionId, closedBy) is called by the manager's wrapper
+	// (closedBy only with 'closed').
 	// closeAfterMs > 0: closed by us after that time (KNotification has no per-notification
 	// timeout); then it isn't kept in Plasma's history.
 	// closeAtMs > 0 (eg: the event's end): a notification still shown then is closed, sooner than
@@ -76,6 +77,13 @@ QtObject {
 		// actions) a while longer, then free it.
 		var closeTimer = null
 		var isClosed = false
+		// Why it was closed, for the log: 'end' (closeAtMs), 'timeout' (closeAfterMs), 'widget'
+		// (close()), '' = in Plasma (dismissed, or its popup timed out into the history).
+		var closedBy = ''
+		function closeFor(reason) {
+			closedBy = reason
+			n.close()
+		}
 		var keptShown = persistent || closeAfterMs > 0
 		var closeAfterAt = closeAfterMs > 0 ? Date.now() + closeAfterMs : 0
 		function scheduleClose(atMs, sending) {
@@ -84,27 +92,29 @@ QtObject {
 				closeTimer = null
 			}
 			var at = closeAfterAt
+			var reason = 'timeout'
 			// When sending, an end already gone by doesn't count (eg: a snoozed reminder).
 			if (keptShown && atMs > 0 && !(sending && atMs <= Date.now()) && (at === 0 || atMs < at)) {
 				at = atMs
+				reason = 'end'
 			}
 			if (at === 0) {
 				return
 			}
 			var closeIn = Math.min(at - Date.now(), 2147483647) // A Timer's int
 			if (closeIn <= 0) {
-				n.close()
+				closeFor(reason)
 				return
 			}
 			closeTimer = closeTimerComponent.createObject(n, { interval: closeIn })
-			closeTimer.triggered.connect(function() { n.close() })
+			closeTimer.triggered.connect(function() { closeFor(reason) })
 		}
 		n.closed.connect(function() {
 			isClosed = true
 			if (closeTimer) {
 				closeTimer.stop()
 			}
-			answer('closed')
+			answer('closed', closedBy)
 			var cleanup = cleanupTimerComponent.createObject(n)
 			cleanup.triggered.connect(function() { n.destroy() })
 		})
@@ -124,7 +134,7 @@ QtObject {
 			},
 			close: function() {
 				if (!isClosed) {
-					n.close()
+					closeFor('widget')
 				}
 			},
 		}

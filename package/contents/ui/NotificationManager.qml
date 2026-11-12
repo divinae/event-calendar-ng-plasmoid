@@ -17,6 +17,7 @@ import "./NotificationState.js" as NotificationState
 // - resident: true = Plasma keeps it shown when clicked or an action is chosen (closed by us or
 //   dismissed); then 'closed' also comes after an action.
 // - urgency: 'low' | 'normal' | 'critical'.
+// - logInfo: shown in the log with it (Settings > debugging), never a title.
 // - actions: ["id,Label", ...].
 // callback(actionId) once: an action id, 'default' (the notification was clicked) or 'closed'.
 // Returns a handle with setCloseAt(ms) (see KNotificationBackend.send), or null.
@@ -60,17 +61,30 @@ QtObject {
 		})
 	}
 
+	// Numbers the notifications in the log (Settings > debugging), to follow one from sent to closed.
+	property int logCount: 0
 	function notify(args, callback) {
-		logger.debug('NotificationManager.notify', args.event) // No event titles in logs
+		var logId = '#' + (++logCount) + ' ' + (args.event || 'reminder')
+		// No event titles in logs. logInfo: eg: the event's start.
+		logger.debug('notification', logId, 'sent', args.logInfo || '')
 		var answered = false
 		var closed = false
-		function answer(actionId) {
+		function answer(actionId, closedBy) {
 			// Once, or (resident) any actions, then 'closed' once.
 			if (closed || answered) {
 				return
 			}
 			answered = !args.resident
 			closed = actionId === 'closed'
+			if (closed) {
+				logger.debug('notification', logId, 'closed', {
+					end: 'at the event\'s end',
+					timeout: 'after its timeout',
+					widget: 'by the widget',
+				}[closedBy] || 'in Plasma (dismissed, or timed out into the history)')
+			} else {
+				logger.debug('notification', logId, 'action:', actionId === 'default' ? 'clicked' : actionId)
+			}
 			if (typeof callback === 'function') {
 				callback(actionId)
 			}
@@ -94,7 +108,7 @@ QtObject {
 			var id = parts.shift()
 			return { id: id, label: parts.join(',') }
 		})
-		return backend.send({
+		var handle = backend.send({
 			componentName: own ? "eventcalendar" : "plasma_workspace",
 			eventId: own ? (args.event || "reminder") : "notification",
 			title: title,
@@ -103,5 +117,9 @@ QtObject {
 			urgency: args.urgency,
 			resident: !!args.resident,
 		}, actionList, args.expireTimeout === 0, answer, args.expireTimeout > 0 ? args.expireTimeout : 0, args.closeAt || 0)
+		if (handle) {
+			handle.logId = logId
+		}
+		return handle
 	}
 }
