@@ -2,13 +2,16 @@ import QtQuick
 
 // Plays a sound file with the first player that works: PipeWire, PulseAudio, then libcanberra.
 // (QtMultimedia isn't used: importing it crashed plasmashell on some distros.)
+// Played as a notification sound (media role "event", PipeWire's "Notification"), so the volume
+// applet's "Notification Sounds" slider sets its level, as for every other notification.
+// canberra-gtk-play uses that role by itself.
 QtObject {
 	id: soundPlayer
 
 	property var executable: ExecUtil {}
 	readonly property var players: [
-		['pw-play'],
-		['paplay'],
+		['pw-play', '--media-role=Notification'],
+		['paplay', '--property=media.role=event'],
 		['canberra-gtk-play', '-f'],
 	]
 
