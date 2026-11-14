@@ -1,3 +1,16 @@
+## v1.23.1 - November 14 2026
+
+Thanks to frispete (#44–#46).
+
+### Notifications
+* **The reminder and start sounds follow the "Notification Sounds" volume**: they're played as notification sounds, not as a separate stream at full volume (#44).
+
+### Weather
+* **OpenWeatherMap One Call shows the city** on the weather card again, taken from the request that already gives it the city's coordinates (#45).
+
+### Day view
+* **The moon card is titled "Moon"**, like the weather card's "Weather" and the "Tasks" beside them (#46).
+
 ## v1.23.0 - November 12 2026
 
 All thanks to frispete (#30–#43).

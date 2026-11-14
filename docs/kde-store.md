@@ -28,7 +28,7 @@ version, the changelog and the file for each release.
 
 **Version**
 
-    1.23.0
+    1.23.1
 
 **License**
 
@@ -88,6 +88,15 @@ Requires Plasma 6 and python3; secret-tool or KWallet for sign-ins. CalDAV and .
 Bugs and ideas: https://github.com/divinae/event-calendar-ng-plasmoid/issues
 
 Support: https://ko-fi.com/divinae4535
+```
+
+**Changelog (1.23.1)**
+
+```
+- Reminder and start sounds follow the "Notification Sounds" volume
+- OpenWeatherMap One Call: the weather card shows the city again
+- Day view: the moon card titled "Moon", like "Weather" and "Tasks"
+- Thanks to frispete
 ```
 
 **Changelog (1.23.0)**
@@ -227,8 +236,8 @@ Support: https://ko-fi.com/divinae4535
 
 ## Files
 
-- **Product file:** `eventcalendar-ng-v1.23.0.plasmoid` from the
-  [v1.23.0 release](https://github.com/divinae/event-calendar-ng-plasmoid/releases/tag/v1.23.0),
+- **Product file:** `eventcalendar-ng-v1.23.1.plasmoid` from the
+  [v1.23.1 release](https://github.com/divinae/event-calendar-ng-plasmoid/releases/tag/v1.23.1),
   or `./build`.
 - **Screenshots** (`docs/screenshots/`, mock data; the store takes at most 5), in this order:
   1. `month.png` (the cover)
