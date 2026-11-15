@@ -56,10 +56,10 @@ if SCRIPT_DIR not in sys.path:
 # command answers "DEPS: ..." (the widget offers to install them), not a traceback.
 try:
 	import icsjson  # noqa: E402  (also puts the bundled icalendar / recurring_ical_events on sys.path)
-	from icalendar import Calendar, Event  # noqa: E402
+	from icalendar import Alarm, Calendar, Event  # noqa: E402
 except ImportError as import_error:
 	icsjson = None
-	Calendar = Event = None
+	Alarm = Calendar = Event = None
 	MISSING_MODULE = getattr(import_error, "name", None) or str(import_error)
 else:
 	MISSING_MODULE = ""
@@ -682,7 +682,8 @@ def set_date(event, key, value):
 
 
 def apply_event_fields(event, data):
-	"""Change only the given fields of a VEVENT (summary, location, description, start, end)."""
+	"""Change only the given fields of a VEVENT (summary, location, description, start, end, and
+	those of apply_extra_fields)."""
 	set_text(event, "SUMMARY", data.get("summary"))
 	set_text(event, "LOCATION", data.get("location"))
 	set_text(event, "DESCRIPTION", data.get("description"))
@@ -706,6 +707,67 @@ def apply_event_fields(event, data):
 	if end is not None:
 		event.pop("DURATION", None)
 		set_date(event, "DTEND", end)
+	apply_extra_fields(event, data)
+
+
+TRANSPARENCY = {"opaque": "OPAQUE", "transparent": "TRANSPARENT"}
+VISIBILITY = {"default": None, "public": "PUBLIC", "private": "PRIVATE", "confidential": "CONFIDENTIAL"}
+MAX_REMINDERS = 5
+MAX_REMINDER_MINUTES = 40320  # 4 weeks, as the editor allows
+
+
+def apply_extra_fields(event, data):
+	"""Show as (transparency: TRANSP), visibility (CLASS; "default": none), color (caldavColor: a
+	CSS color name as COLOR, RFC 7986; null: none) and reminders (Google style: its "popup"
+	overrides as display alarms; the event's other alarms, eg: email, stay)."""
+	if data.get("transparency") is not None:
+		if data["transparency"] not in TRANSPARENCY:
+			raise CalDavError("INPUT", "transparency must be opaque or transparent")
+		event.pop("TRANSP", None)
+		event.add("TRANSP", TRANSPARENCY[data["transparency"]])
+	if data.get("visibility") is not None:
+		if data["visibility"] not in VISIBILITY:
+			raise CalDavError("INPUT", "visibility must be default, public, private or confidential")
+		event.pop("CLASS", None)
+		if VISIBILITY[data["visibility"]]:
+			event.add("CLASS", VISIBILITY[data["visibility"]])
+	if "caldavColor" in data:
+		color = data["caldavColor"]
+		if color is not None and not (isinstance(color, str) and re.fullmatch(r"[a-z]{3,30}", color)):
+			raise CalDavError("INPUT", "caldavColor must be a CSS color name")
+		event.pop("COLOR", None)
+		if color:
+			event.add("COLOR", color)
+	if data.get("reminders") is not None:
+		set_reminders(event, data["reminders"])
+
+
+def set_reminders(event, reminders):
+	if not isinstance(reminders, dict):
+		raise CalDavError("INPUT", "reminders must be an object")
+	minutes = []
+	for override in reminders.get("overrides") or []:
+		if not isinstance(override, dict) or override.get("method") != "popup":
+			continue
+		value = override.get("minutes")
+		if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= MAX_REMINDER_MINUTES:
+			raise CalDavError("INPUT", "A reminder's minutes must be 0 to {}".format(MAX_REMINDER_MINUTES))
+		if value not in minutes:
+			minutes.append(value)
+	if len(minutes) > MAX_REMINDERS:
+		raise CalDavError("INPUT", "At most {} reminders".format(MAX_REMINDERS))
+	start, end = icsjson.get_event_bounds(event)
+	if start is None or end is None:
+		raise CalDavError("INPUT", "Reminders need the event's start")
+	# The alarms the widget shows as reminders go; the others (email, after the start) stay.
+	event.subcomponents = [c for c in event.subcomponents if icsjson.alarm_minutes(c, event, start, end) is None]
+	summary = icsjson.stringify(event.get("SUMMARY")) or "Reminder"
+	for value in sorted(minutes):
+		alarm = Alarm()
+		alarm.add("ACTION", "DISPLAY")
+		alarm.add("DESCRIPTION", summary)
+		alarm.add("TRIGGER", datetime.timedelta(minutes=-value))
+		event.add_component(alarm)
 
 
 def now_utc():

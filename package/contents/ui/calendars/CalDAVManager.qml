@@ -7,6 +7,9 @@ import "../lib"
 import "../lib/Async.js" as Async
 import "../lib/Base64Compat.js" as Base64Compat
 import "../Shared.js" as Shared
+import "../code/ColorIdMap.js" as ColorIdMap
+import "../code/GooglePalette.js" as GooglePalette
+import "CalDAVColors.js" as CalDAVColors
 import "CalDAVErrors.js" as CalDAVErrors
 
 // CalDAV calendars (Nextcloud, Fastmail, iCloud, Radicale, …) through scripts/caldav.py: the
@@ -104,13 +107,17 @@ CalendarManager {
 	}
 
 	// The event's fields as the helper takes them (Google style), base64 JSON on its command line.
+	// A colorId (one of Google's event colors, '' or null: the calendar's) goes as its CSS name.
 	function eventArg(fields) {
 		var body = {}
-		;['summary', 'location', 'description', 'start', 'end', 'recurrence'].forEach(function(key) {
+		;['summary', 'location', 'description', 'start', 'end', 'recurrence', 'reminders', 'transparency', 'visibility'].forEach(function(key) {
 			if (fields && fields[key] !== undefined) {
 				body[key] = fields[key]
 			}
 		})
+		if (fields && fields.colorId !== undefined) {
+			body.caldavColor = CalDAVColors.cssName(fields.colorId)
+		}
 		return Base64Compat.base64EncodeString(JSON.stringify(body)) // UTF-8
 	}
 
@@ -220,13 +227,40 @@ CalendarManager {
 			return
 		}
 		data.items.forEach(function(event) {
-			event.backgroundColor = calendar.backgroundColor
+			// Its own color (COLOR): one of Google's event colors as Google events show them, else
+			// the CSS color as it is.
+			event.colorId = CalDAVColors.colorIdOf(event.icalColor)
+			event.backgroundColor = event.colorId ? eventColor(event.colorId) : (event.icalColor || calendar.backgroundColor)
 			// caldavReadOnly: occurrences without their series in the resource (see caldav.py).
 			event.canEdit = calendar.accessRole === 'owner' && !event.caldavReadOnly
 		})
 		// What the calendar gave its events: an unchanged calendar (the same tag) with another
-		// color or rights is still shown anew (EventModel's unchanged check compares it).
-		data.look = calendar.backgroundColor + '|' + calendar.accessRole
+		// color, rights or palette is still shown anew (EventModel's unchanged check compares it).
+		data.look = calendar.backgroundColor + '|' + calendar.accessRole + '|' + plasmoid.configuration.googleColorPalette
+	}
+
+	// A colorId as Google events show it (the palette setting, as GoogleCalendarManager.parseColor).
+	function eventColor(colorId) {
+		if (plasmoid.configuration.googleColorPalette === 'classic') {
+			var classic = ColorIdMap.colorIdMap.event[colorId]
+			return classic ? classic.background : GooglePalette.eventColor(colorId)
+		}
+		return GooglePalette.eventColor(colorId)
+	}
+	// The palette setting changed (EventModel.recolorEvents): the loaded events' colors again.
+	function recolorEvents() {
+		for (var calendarId in caldavManager.eventsByCalendar) {
+			var data = caldavManager.eventsByCalendar[calendarId]
+			if (!getCalendar(calendarId) || !data || !data.items) {
+				continue
+			}
+			data.items.forEach(function(event) {
+				if (event.colorId) {
+					event.backgroundColor = eventColor(event.colorId)
+				}
+			})
+			calendarFetched(calendarId, data) // EventModel keeps its own copy
+		}
 	}
 
 	//--- Writing

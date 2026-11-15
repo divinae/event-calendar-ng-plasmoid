@@ -1228,6 +1228,11 @@ CalendarManager {
 		var calendarManager = getCalendarManager(calendarId)
 		return !!calendarManager && calendarManager.calendarManagerId === 'GoogleCalendar'
 	}
+	// A CalDAV calendar (color, availability and reminders of its own, see caldav.py).
+	function isCalDAVCalendar(calendarId) {
+		var calendarManager = getCalendarManager(calendarId)
+		return !!calendarManager && calendarManager.calendarManagerId === 'CalDAV'
+	}
 	// Repeat rules can be edited (Google, CalDAV).
 	function supportsRecurrence(calendarId) {
 		return !!managerWith(calendarId, 'updateEventFromServer')

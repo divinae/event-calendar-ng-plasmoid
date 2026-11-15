@@ -40,4 +40,10 @@ assert.strictEqual(R.sameAs(own, { custom: false }), false)
 assert.deepStrictEqual(plain(R.popupMinutes(own)), [10, 60])
 assert.strictEqual(R.popupMinutes({ custom: false }), null)
 
+// CalDAV: the alarms' minutes, always the event's own list.
+const caldav = R.fromMinutes([60, 10])
+assert.deepStrictEqual(plain(caldav), { custom: true, items: [{ value: 10, unit: 'minutes' }, { value: 1, unit: 'hours' }], others: [] })
+assert.deepStrictEqual(plain(R.fromMinutes(undefined)), { custom: true, items: [], others: [] })
+assert.deepStrictEqual(plain(R.toGoogle(caldav)), { useDefault: false, overrides: [{ method: 'popup', minutes: 10 }, { method: 'popup', minutes: 60 }] })
+
 console.log('reminders: ok')

@@ -58,6 +58,14 @@ function fromEvent(eventItem) {
 	return { custom: true, items: items, others: others }
 }
 
+// The editor's state from a CalDAV event's alarms (reminderMinutes): always its own list (no
+// calendar defaults there).
+function fromMinutes(minutes) {
+	var items = toList(minutes).map(function(m) { return split(m) })
+	items.sort(function(a, b) { return toMinutes(a) - toMinutes(b) })
+	return { custom: true, items: items, others: [] }
+}
+
 // The reminders value to send to Google.
 function toGoogle(state) {
 	if (!state.custom) {

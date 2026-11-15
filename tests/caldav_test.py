@@ -577,6 +577,49 @@ class PutTests(unittest.TestCase):
 		self.assertEqual(master["DTSTART"].dt.isoformat(), "2026-11-02T08:00:00+00:00")
 		self.assertEqual(str(override["SUMMARY"]), "Override")
 
+	ALARMS = vcal(
+		"BEGIN:VEVENT\r\nUID:al-1\r\nDTSTAMP:20261001T000000Z\r\nDTSTART:20261102T080000Z\r\n"
+		"DTEND:20261102T090000Z\r\nSUMMARY:Alarms\r\nTRANSP:OPAQUE\r\nCLASS:PUBLIC\r\nCOLOR:teal\r\n"
+		"BEGIN:VALARM\r\nACTION:DISPLAY\r\nTRIGGER:-PT15M\r\nDESCRIPTION:x\r\nEND:VALARM\r\n"
+		"BEGIN:VALARM\r\nACTION:AUDIO\r\nTRIGGER;RELATED=END:-PT2H\r\nEND:VALARM\r\n"
+		"BEGIN:VALARM\r\nACTION:EMAIL\r\nTRIGGER:-P1D\r\nSUMMARY:m\r\nDESCRIPTION:m\r\nATTENDEE:mailto:a@example.com\r\nEND:VALARM\r\n"
+		"BEGIN:VALARM\r\nACTION:DISPLAY\r\nTRIGGER:PT5M\r\nDESCRIPTION:after\r\nEND:VALARM\r\nEND:VEVENT\r\n")
+
+	def test_reminders_color_and_availability(self):
+		item = caldav.resource_items(BASE + "/cal/al-1.ics", '"e"', self.ALARMS, datetime.datetime(2026, 11, 1), datetime.datetime(2026, 11, 9))[0]
+		self.assertEqual(item["reminderMinutes"], [15, 60]) # RELATED=END: 2 h before the end, 1 h long
+		self.assertEqual((item["icalColor"], item["visibility"]), ("teal", "public"))
+		self.assertNotIn("transparency", item) # Busy, the default
+		data = {"reminders": {"useDefault": False, "overrides": [{"method": "popup", "minutes": 30}, {"method": "popup", "minutes": 0},
+			{"method": "email", "minutes": 99}]}, "caldavColor": "red", "transparency": "transparent", "visibility": "private"}
+		_, body = caldav.build_updated_calendar(self.ALARMS, data, stamp=self.stamp)
+		event = Calendar.from_ical(body).walk("VEVENT")[0]
+		alarms = event.walk("VALARM")
+		# The two shown as reminders replaced; the email and the one after the start kept.
+		self.assertEqual(sorted((str(a["ACTION"]), a["TRIGGER"].dt) for a in alarms), [
+			("DISPLAY", datetime.timedelta(minutes=-30)), ("DISPLAY", datetime.timedelta(0)),
+			("DISPLAY", datetime.timedelta(minutes=5)), ("EMAIL", datetime.timedelta(days=-1))])
+		self.assertEqual([str(a["DESCRIPTION"]) for a in alarms if a["TRIGGER"].dt == datetime.timedelta(minutes=-30)], ["Alarms"])
+		self.assertEqual((str(event["COLOR"]), str(event["TRANSP"]), str(event["CLASS"])), ("red", "TRANSPARENT", "PRIVATE"))
+		item = caldav.resource_items(BASE + "/cal/al-1.ics", '"e"', body, datetime.datetime(2026, 11, 1), datetime.datetime(2026, 11, 9))[0]
+		self.assertEqual((item["reminderMinutes"], item["transparency"], item["visibility"], item["icalColor"]),
+			([0, 30], "transparent", "private", "red"))
+		# None of them, and the calendar's color: removed; untouched without the keys.
+		_, body = caldav.build_updated_calendar(body, {"reminders": {"useDefault": False, "overrides": []},
+			"caldavColor": None, "visibility": "default"}, stamp=self.stamp)
+		event = Calendar.from_ical(body).walk("VEVENT")[0]
+		self.assertEqual(len(event.walk("VALARM")), 2)
+		self.assertNotIn("COLOR", event)
+		self.assertNotIn("CLASS", event)
+		_, body = caldav.build_updated_calendar(body, {"summary": "Only this"}, stamp=self.stamp)
+		self.assertEqual(len(Calendar.from_ical(body).walk("VEVENT")[0].walk("VALARM")), 2)
+		for bad in ({"caldavColor": "#ff0000"}, {"transparency": "busy"}, {"visibility": "secret"},
+				{"reminders": {"overrides": [{"method": "popup", "minutes": -5}]}},
+				{"reminders": {"overrides": [{"method": "popup", "minutes": m} for m in range(6)]}}):
+			with self.assertRaises(caldav.CalDavError) as ctx:
+				caldav.build_updated_calendar(self.ALARMS, bad, stamp=self.stamp)
+			self.assertEqual(ctx.exception.kind, "INPUT", bad)
+
 	def test_update_start_keeps_duration_and_recurrence_replacement(self):
 		_, body = caldav.build_updated_calendar(self.EXISTING, {"start": {"dateTime": "2026-11-02T10:00:00Z"}})
 		master = Calendar.from_ical(body).walk("VEVENT")[0]
