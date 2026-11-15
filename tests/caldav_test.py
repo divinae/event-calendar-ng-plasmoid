@@ -5,6 +5,7 @@ import datetime
 import importlib.util
 import io
 import json
+import os
 import pathlib
 import sys
 import tempfile
@@ -23,6 +24,17 @@ from icalendar import Calendar  # noqa: E402
 
 HAS_RIE = icsjson.recurring_ical_events is not None
 BASE = "https://cloud.example.com"
+
+# Undo files (delete / restore) in a directory of the tests, not the user's runtime directory.
+UNDO_HOME = tempfile.TemporaryDirectory()
+
+
+def setUpModule():
+	os.environ["XDG_RUNTIME_DIR"] = UNDO_HOME.name
+
+
+def tearDownModule():
+	UNDO_HOME.cleanup()
 
 
 class FakeClient(caldav.Client):
@@ -617,10 +629,41 @@ class PutTests(unittest.TestCase):
 		self.assertTrue(err.getvalue().startswith("INPUT: "))
 
 	def test_delete(self):
-		client = FakeClient([(204, {}, "")])
-		self.assertEqual(caldav.delete_event(client, BASE + "/cal/x.ics", '"e"'), {"ok": True})
-		self.assertEqual(client.sent[0][:2], ("DELETE", BASE + "/cal/x.ics"))
-		self.assertEqual(client.sent[0][3]["If-Match"], '"e"')
+		client = FakeClient([(200, {}, self.EXISTING), (204, {}, "")])
+		result = caldav.delete_event(client, BASE + "/cal/x.ics", '"e"')
+		self.assertEqual([s[:2] for s in client.sent], [("GET", BASE + "/cal/x.ics"), ("DELETE", BASE + "/cal/x.ics")])
+		self.assertEqual(client.sent[1][3]["If-Match"], '"e"')
+		self.assertTrue(result["ok"])
+		self.assertRegex(result["undo"], "^[0-9a-f]{32}$")
+
+	def test_restore_puts_a_deleted_event_back_once(self):
+		client = FakeClient([(200, {}, self.EXISTING), (204, {}, "")])
+		token = caldav.delete_event(client, BASE + "/cal/x.ics", '"e"')["undo"]
+		undo_file = os.path.join(caldav.undo_dir(), token + ".json")
+		self.assertEqual(os.stat(undo_file).st_mode & 0o777, 0o600)
+		self.assertEqual(os.stat(caldav.undo_dir()).st_mode & 0o777, 0o700)
+		client = FakeClient([(201, {"ETag": '"back"'}, "")])
+		self.assertEqual(caldav.restore_event(client, token), {"href": BASE + "/cal/x.ics", "etag": '"back"'})
+		method, url, body, headers = client.sent[0]
+		self.assertEqual((method, url), ("PUT", BASE + "/cal/x.ics"))
+		self.assertEqual(headers["If-None-Match"], "*")
+		self.assertEqual(body.decode("utf-8"), self.EXISTING)
+		self.assertFalse(os.path.exists(undo_file))
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.restore_event(FakeClient([]), token)
+		self.assertEqual(ctx.exception.kind, "NOTFOUND")
+		for bad in ("", "../x", "A" * 32):
+			with self.assertRaises(caldav.CalDavError) as ctx:
+				caldav.restore_event(FakeClient([]), bad)
+			self.assertEqual(ctx.exception.kind, "INPUT")
+
+	def test_old_undo_files_are_removed(self):
+		token = caldav.save_undo({"href": BASE + "/cal/x.ics", "body": "", "etag": ""})
+		undo_file = os.path.join(caldav.undo_dir(), token + ".json")
+		old = os.path.getmtime(undo_file) - caldav.UNDO_MAX_AGE - 10
+		os.utime(undo_file, (old, old))
+		caldav.save_undo({"href": BASE + "/cal/y.ics", "body": "", "etag": ""})
+		self.assertFalse(os.path.exists(undo_file))
 
 
 # Weekly on Mondays at 10:00 in Berlin from 19 Oct 2026, over the end of summer time (25 Oct): one
@@ -905,7 +948,14 @@ class RecurringEditTests(unittest.TestCase):
 		result = caldav.delete_event(client, BASE + "/cal/berlin-1.ics", '"v2"', rid)
 		self.assertEqual([s[0] for s in client.sent], ["GET", "PUT"])
 		self.assertEqual(client.sent[1][3]["If-Match"], '"v2"')
+		token = result.pop("undo")
 		self.assertEqual(result, {"ok": True, "href": BASE + "/cal/berlin-1.ics", "etag": '"v3"'})
+		# Undo: the series as it was, unless it changed since the delete.
+		client = FakeClient([(204, {"ETag": '"v4"'}, "")])
+		self.assertEqual(caldav.restore_event(client, token)["etag"], '"v4"')
+		self.assertEqual(client.sent[0][3]["If-Match"], '"v3"')
+		self.assertNotIn("If-None-Match", client.sent[0][3])
+		self.assertEqual(client.sent[0][2].decode("utf-8"), BERLIN)
 		with self.assertRaises(caldav.CalDavError) as ctx:
 			caldav.put_event(FakeClient([]), BASE + "/cal/", {"summary": "x"}, recurrence_id=rid)
 		self.assertEqual(ctx.exception.kind, "INPUT")

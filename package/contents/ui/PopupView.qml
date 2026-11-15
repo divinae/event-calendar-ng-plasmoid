@@ -235,7 +235,7 @@ MouseArea {
 		undoTimer.restart()
 	}
 	// Delete an event (or, with wholeSeries, its repeating series), with an undo offer once
-	// it's gone (Google calendars).
+	// it's gone (Google and CalDAV calendars).
 	function deleteWithUndo(eventItem, wholeSeries) {
 		var calendarId = eventItem.calendarId
 		var undoable = eventModel.canRestore(calendarId)

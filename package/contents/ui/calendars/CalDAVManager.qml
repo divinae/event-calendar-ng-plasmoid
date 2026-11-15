@@ -14,6 +14,7 @@ import "CalDAVErrors.js" as CalDAVErrors
 // keyring (scope caldav-account); the helper reads it there, it's never on a command line.
 // Repeating events: each occurrence is an event (recurringEventId = the series' UID,
 // caldavRecurrenceId = its original start); one occurrence changes with --recurrence-id.
+// Undo of a delete (restoreEvent): the helper keeps the resource as it was (a token per delete).
 CalendarManager {
 	id: caldavManager
 
@@ -362,6 +363,7 @@ CalendarManager {
 		// An occurrence: only it goes (an EXDATE in its series).
 		write(loaded.calendar, ['delete', '--href', loaded.event.caldavHref, '--etag', String(loaded.event.caldavEtag || '')]
 			.concat(recurrenceIdArgs(loaded.event)), function(data) {
+			keepUndo(calendarId, eventId, data)
 			adoptEtag(calendarId, loaded.event.caldavHref, data) // The series' other occurrences
 			eventDeleted(calendarId, eventId, loaded.event)
 			removeEvent(calendarId, eventId)
@@ -377,7 +379,8 @@ CalendarManager {
 			if (done) done('deleteSeries: series not loaded')
 			return
 		}
-		write(calendar, ['delete', '--href', occurrence.caldavHref, '--etag', String(occurrence.caldavEtag || '')], function() {
+		write(calendar, ['delete', '--href', occurrence.caldavHref, '--etag', String(occurrence.caldavEtag || '')], function(data) {
+			keepUndo(calendarId, seriesId, data)
 			eventItems(calendarId).slice().forEach(function(item) {
 				if (item.recurringEventId === seriesId) {
 					removeEvent(calendarId, item.id)
@@ -385,6 +388,37 @@ CalendarManager {
 				}
 			})
 		}, done)
+	}
+
+	// The undo tokens of the deletes: { "<calendar id>\n<event or series id>": token }.
+	property var undoTokens: ({})
+	function keepUndo(calendarId, eventId, data) {
+		if (data && data.undo) {
+			undoTokens[calendarId + '\n' + eventId] = data.undo
+		}
+	}
+
+	// Undo a delete (eventId: the event, the occurrence or the series' UID): the resource put back as
+	// it was. If that fails, copy (Undo.restoreCopy, single events only) is created as a new event.
+	// done(err), always called (refreshed afterwards).
+	function restoreEvent(calendarId, eventId, copy, done) {
+		var calendar = getCalendar(calendarId)
+		var key = calendarId + '\n' + eventId
+		var token = undoTokens[key]
+		var fallback = function(report) {
+			if (copy && calendar) {
+				createEventFromData(calendarId, copy, done)
+			} else {
+				report()
+				if (done) done('restoreEvent: failed')
+			}
+		}
+		if (!calendar || !token) {
+			fallback(function() { reportError(i18n("CalDAV: %1", i18n("Unknown error"))) })
+			return
+		}
+		delete undoTokens[key]
+		write(calendar, ['restore', '--undo', token], null, done, fallback)
 	}
 
 	// Import (ImportView, one event at a time, Google-style fields): created as a new event. Not

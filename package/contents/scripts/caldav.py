@@ -10,6 +10,8 @@ Commands (all take --account ID --user USERNAME):
 	put --url CALENDAR [--href RES --etag E [--recurrence-id RID]] [--event-b64 B64]
 	                                          (event JSON as base64 of UTF-8, else on stdin)
 	delete --href RES --etag E [--recurrence-id RID]
+	                                          (gives "undo": a token for restore)
+	restore --undo TOKEN                      (puts a deleted event or occurrence back)
 	get --href RES                            (a repeating event's series, as an import gives it)
 	import --url CALENDAR --file PATH
 
@@ -33,7 +35,9 @@ import ipaddress
 import json
 import os
 import re
+import secrets
 import socket
+import time
 import sys
 import urllib.error
 import urllib.parse
@@ -1061,15 +1065,74 @@ def put_event(client, cal_url, data, href=None, etag=None, recurrence_id=None):
 
 def delete_event(client, href, etag, recurrence_id=None):
 	"""Delete an event or a whole series; with recurrence_id only that occurrence (the series stays,
-	changed: its new etag is returned)."""
-	if recurrence_id is None:
-		client.request("DELETE", href, None, {"If-Match": quote_etag(etag)}, ok=(200, 202, 204))
-		return {"ok": True}
+	changed: its new etag is returned). "undo": a token for restore_event (the resource as it was)."""
 	href = check_url(href)
 	match = quote_etag(etag)
 	_, _, existing, href = client.request("GET", href, ok=(200,))
+	if recurrence_id is None:
+		client.request("DELETE", href, None, {"If-Match": match}, ok=(200, 202, 204))
+		return {"ok": True, "undo": save_undo({"href": href, "body": existing.decode("utf-8", "replace"), "etag": ""})}
 	final_url, new_etag = put_calendar(client, href, build_deleted_occurrence(existing, recurrence_id), {"If-Match": match})
-	return {"ok": True, "href": final_url, "etag": new_etag}
+	undo = save_undo({"href": final_url, "body": existing.decode("utf-8", "replace"), "etag": new_etag})
+	return {"ok": True, "href": final_url, "etag": new_etag, "undo": undo}
+
+
+#--- Undo of deletes: the resource as it was, kept for a day in a private file (the user's runtime
+# directory: memory only, gone at logout), only its token goes to the widget.
+
+UNDO_MAX_AGE = 24 * 3600
+UNDO_TOKEN = re.compile(r"[0-9a-f]{32}")
+
+
+def undo_dir():
+	base = os.environ.get("XDG_RUNTIME_DIR") or os.path.join(os.path.expanduser("~"), ".cache", "plasma-eventcalendar")
+	path = os.path.join(base, "eventcalendar-caldav-undo")
+	os.makedirs(path, mode=0o700, exist_ok=True)
+	return path
+
+
+def prune_undo(path, now):
+	for name in os.listdir(path):
+		try:
+			if now - os.path.getmtime(os.path.join(path, name)) > UNDO_MAX_AGE:
+				os.remove(os.path.join(path, name))
+		except OSError:
+			pass
+
+
+def save_undo(entry):
+	"""The token, or "" when it can't be kept (no undo then, the delete still counts)."""
+	try:
+		path = undo_dir()
+		prune_undo(path, time.time())
+		token = secrets.token_hex(16)
+		fd = os.open(os.path.join(path, token + ".json"), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+		with os.fdopen(fd, "w", encoding="utf-8") as out:
+			json.dump(entry, out)
+		return token
+	except OSError:
+		return ""
+
+
+def restore_event(client, token):
+	"""Put a deleted event back as it was: a deleted resource again at its href (If-None-Match), a
+	deleted occurrence by the series before its EXDATE (If-Match: unless it changed since)."""
+	if not UNDO_TOKEN.fullmatch(token or ""):
+		raise CalDavError("INPUT", "Not an undo token")
+	file_path = os.path.join(undo_dir(), token + ".json")
+	try:
+		with open(file_path, encoding="utf-8") as source:
+			entry = json.load(source)
+	except (OSError, ValueError):
+		raise CalDavError("NOTFOUND", "Nothing to undo (too old, or already undone)")
+	href = check_url(entry["href"])
+	headers = {"If-Match": quote_etag(entry["etag"])} if entry.get("etag") else {"If-None-Match": "*"}
+	final_url, etag = put_calendar(client, href, entry["body"], headers)
+	try:
+		os.remove(file_path)
+	except OSError:
+		pass
+	return {"href": final_url, "etag": etag}
 
 
 def get_series(client, href):
@@ -1226,6 +1289,10 @@ def build_parser():
 	cmd.add_argument("--recurrence-id", default=None, help="Only this occurrence of the series (its caldavRecurrenceId JSON)")
 	common(cmd)
 
+	cmd = sub.add_parser("restore")
+	cmd.add_argument("--undo", required=True, help="The token a delete gave")
+	common(cmd)
+
 	cmd = sub.add_parser("get")
 	cmd.add_argument("--href", required=True)
 	common(cmd)
@@ -1289,6 +1356,8 @@ def run(args, stdin):
 		return put_event(client, args.url, data, args.href or None, args.etag or None, recurrence_id)
 	if args.command == "delete":
 		return delete_event(client, args.href, args.etag, recurrence_id)
+	if args.command == "restore":
+		return restore_event(client, args.undo)
 	if args.command == "get":
 		return get_series(client, args.href)
 	if args.command == "import":

@@ -839,7 +839,7 @@ CalendarManager {
 		}
 	}
 
-	// done(err): optional, called once the server answered (Google). A deleted task's in-progress
+	// done(err): optional, called once the server answered (Google, CalDAV). A deleted task's in-progress
 	// mark goes once it's deleted.
 	function deleteEvent(calendarId, eventId, done) {
 		var calendarManager = managerWith(calendarId, 'deleteEvent')
@@ -860,7 +860,7 @@ CalendarManager {
 		}
 	}
 
-	// Whole recurring series (Google): seriesId is an occurrence's recurringEventId.
+	// Whole recurring series (Google, CalDAV): seriesId is an occurrence's recurringEventId.
 	function deleteSeries(calendarId, seriesId, done) {
 		var calendarManager = managerWith(calendarId, 'deleteSeries')
 		if (calendarManager) {
@@ -873,7 +873,7 @@ CalendarManager {
 		}
 	}
 
-	// Deleted events can be brought back (Google): see restoreEvent.
+	// Deleted events can be brought back (Google, CalDAV): see restoreEvent.
 	function canRestore(calendarId) {
 		return !!managerWith(calendarId, 'restoreEvent')
 	}
@@ -1223,12 +1223,12 @@ CalendarManager {
 		forwardTaskList('clearCompleted', listId, [], done, '', true)
 	}
 
-	// Repeat rules can be edited (Google Calendar).
 	// A Google calendar (its own fields: color, guests, Meet, reminders, event types).
 	function isGoogleCalendar(calendarId) {
 		var calendarManager = getCalendarManager(calendarId)
 		return !!calendarManager && calendarManager.calendarManagerId === 'GoogleCalendar'
 	}
+	// Repeat rules can be edited (Google, CalDAV).
 	function supportsRecurrence(calendarId) {
 		return !!managerWith(calendarId, 'updateEventFromServer')
 	}
