@@ -69,3 +69,12 @@ testDisplayCalendarColor()
 testClassicColorsAreMapped()
 testCurrentColorsPassThrough()
 testUnknownColorsFallBackToColorId()
+
+// eventColorFor: the current color, or the API's with 'classic'; null for none.
+{
+	const classic = { 11: { background: '#dc2127' } }
+	assert.strictEqual(palette.eventColorFor('11', 'current', classic), '#d50000')
+	assert.strictEqual(palette.eventColorFor('11', 'classic', classic), '#dc2127')
+	assert.strictEqual(palette.eventColorFor('7', 'classic', classic), null)
+	assert.strictEqual(palette.eventColorFor('', 'current', classic), null)
+}

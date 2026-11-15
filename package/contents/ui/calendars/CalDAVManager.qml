@@ -189,6 +189,10 @@ CalendarManager {
 	// calendar read for that range, the helper keeps those with every word in their title,
 	// location or description (as the loaded events are searched). callback(err, items): parsed
 	// like fetched events.
+	// Only with calendars (the manager is always there, an account maybe not).
+	function canSearch() {
+		return getCalendarList().length > 0
+	}
 	function searchEvents(query, timeMin, timeMax, callback) {
 		var tasks = getCalendarList().map(function(calendar) {
 			return function(done) {
@@ -204,13 +208,8 @@ CalendarManager {
 			}
 		})
 		Async.settleAll(tasks, function(results) {
-			var found = []
-			var firstError = null
-			results.forEach(function(result) {
-				firstError = firstError || result.err
-				found = found.concat(result.data || [])
-			})
-			callback(found.length ? null : firstError, found)
+			var joined = Async.joinedLists(results)
+			callback(joined.err, joined.items)
 		})
 	}
 
@@ -231,6 +230,10 @@ CalendarManager {
 			// the CSS color as it is.
 			event.colorId = CalDAVColors.colorIdOf(event.icalColor)
 			event.backgroundColor = event.colorId ? eventColor(event.colorId) : (event.icalColor || calendar.backgroundColor)
+			// Its alarms as Google's own reminders too, so a copy (EventCopy, Undo) keeps them.
+			event.reminders = { useDefault: false, overrides: Shared.toArray(event.reminderMinutes).map(function(minutes) {
+				return { method: 'popup', minutes: minutes }
+			}) }
 			// caldavReadOnly: occurrences without their series in the resource (see caldav.py).
 			event.canEdit = calendar.accessRole === 'owner' && !event.caldavReadOnly
 		})
@@ -241,11 +244,8 @@ CalendarManager {
 
 	// A colorId as Google events show it (the palette setting, as GoogleCalendarManager.parseColor).
 	function eventColor(colorId) {
-		if (plasmoid.configuration.googleColorPalette === 'classic') {
-			var classic = ColorIdMap.colorIdMap.event[colorId]
-			return classic ? classic.background : GooglePalette.eventColor(colorId)
-		}
-		return GooglePalette.eventColor(colorId)
+		return GooglePalette.eventColorFor(colorId, plasmoid.configuration.googleColorPalette, ColorIdMap.colorIdMap.event)
+			|| GooglePalette.eventColor(colorId)
 	}
 	// The palette setting changed (EventModel.recolorEvents): the loaded events' colors again.
 	function recolorEvents() {
@@ -484,8 +484,10 @@ CalendarManager {
 			fallback(function() { reportError(i18n("CalDAV: %1", i18n("Unknown error"))) })
 			return
 		}
-		delete undoTokens[key]
-		write(calendar, ['restore', '--undo', token], null, done, fallback)
+		// The token stays until it worked: a restore that failed (offline) can be tried again.
+		write(calendar, ['restore', '--undo', token], function() {
+			delete undoTokens[key]
+		}, done, fallback)
 	}
 
 	// Events moved to another calendar, until it's read again: { "<calendar id>\n<event id>":

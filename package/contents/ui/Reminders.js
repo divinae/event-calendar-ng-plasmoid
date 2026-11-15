@@ -89,6 +89,25 @@ function sameAs(a, b) {
 	return JSON.stringify(toGoogle(a)) === JSON.stringify(toGoogle(b))
 }
 
+// The reminders value to send to a CalDAV calendar: its alarms, as many and as far ahead as they
+// are (set in other apps too), not Google's 5 and 4 weeks.
+function toCalDAV(state) {
+	var seen = {}
+	var overrides = []
+	toList(state.items).forEach(function(item) {
+		var minutes = Math.max(0, Math.round(Number(item.value) || 0) * (UNIT_MINUTES[item.unit] || 1))
+		if (!seen[minutes]) {
+			seen[minutes] = true
+			overrides.push({ method: 'popup', minutes: minutes })
+		}
+	})
+	overrides.sort(function(a, b) { return a.minutes - b.minutes })
+	return { useDefault: false, overrides: overrides }
+}
+function sameForCalDAV(a, b) {
+	return JSON.stringify(toCalDAV(a)) === JSON.stringify(toCalDAV(b))
+}
+
 // The notification minutes, as the widget reads them from a parsed event (reminderMinutes).
 function popupMinutes(state) {
 	return toGoogle(state).overrides

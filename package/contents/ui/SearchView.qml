@@ -103,9 +103,7 @@ Item {
 
 	Keys.onEscapePressed: closeRequested()
 	Component.onCompleted: {
-		canSearchRemote = eventModel.calendarManagerList.some(function(m) {
-			return typeof m.searchEvents === 'function'
-		})
+		canSearchRemote = eventModel.calendarManagerList.some(eventModel.canSearch)
 		searchField.forceActiveFocus()
 	}
 

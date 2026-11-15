@@ -427,11 +427,7 @@ Rectangle {
 			var calendar = calendarSelector.selectedCalendar
 			return appletConfig.eventColor(calendar && calendar.backgroundColor || "")
 		}
-		if (plasmoid.configuration.googleColorPalette === 'classic') {
-			var classic = ColorIdMap.colorIdMap.event[id]
-			return appletConfig.eventColor(classic ? classic.background : "")
-		}
-		return appletConfig.eventColor(GooglePalette.eventColor(id))
+		return appletConfig.eventColor(GooglePalette.eventColorFor(id, plasmoid.configuration.googleColorPalette, ColorIdMap.colorIdMap.event) || "")
 	}
 	//--- Reminders (Google): the calendar's defaults, or the event's own notification times
 	property bool remindersCustom: false
@@ -439,7 +435,12 @@ Rectangle {
 	property var reminderOthers: [] // Other kinds (email), kept as they are
 	property var initialReminders: ({ custom: false, items: [], others: [] })
 	readonly property var reminderState: ({ custom: remindersCustom || caldavFeatures, items: reminderItems, others: reminderOthers })
-	readonly property bool remindersChanged: !Reminders.sameAs(reminderState, initialReminders)
+	readonly property bool remindersChanged: caldavFeatures ? !Reminders.sameForCalDAV(reminderState, initialReminders)
+		: !Reminders.sameAs(reminderState, initialReminders)
+	// What to send: CalDAV's alarms as they are (Reminders.toCalDAV), Google's within its limits.
+	function remindersBody() {
+		return caldavFeatures ? Reminders.toCalDAV(reminderState) : Reminders.toGoogle(reminderState)
+	}
 	readonly property bool canAddReminder: reminderItems.length + reminderOthers.length < Reminders.MAX_OVERRIDES
 	function addReminder() {
 		var used = reminderItems.map(Reminders.toMinutes)
@@ -457,8 +458,9 @@ Rectangle {
 		reminderItems = items
 	}
 	function fillReminders(item, asCopy) {
-		// CalDAV: its alarms (reminderMinutes), there are no calendar defaults.
-		var state = item && item.calendarManagerId === 'CalDAV' ? Reminders.fromMinutes(item.reminderMinutes) : Reminders.fromEvent(item)
+		// CalDAV: its alarms (reminderMinutes, also of a cached copy), there are no calendar defaults.
+		var caldav = !!item && String(item.calendarId || '').indexOf('caldav-') === 0
+		var state = caldav ? Reminders.fromMinutes(item.reminderMinutes) : Reminders.fromEvent(item)
 		remindersCustom = state.custom
 		reminderItems = state.items
 		reminderOthers = state.others
@@ -751,7 +753,7 @@ Rectangle {
 		addConferenceArgs(args)
 		addTypePropertiesArgs(args)
 		if ((googleFeatures || caldavFeatures) && remindersChanged) {
-			args.reminders = Reminders.toGoogle(reminderState)
+			args.reminders = remindersBody()
 		}
 		return args
 	}
@@ -784,7 +786,7 @@ Rectangle {
 				data.colorId = colorId
 			}
 			if ((googleFeatures && remindersCustom) || (caldavFeatures && reminderItems.length)) {
-				data.reminders = Reminders.toGoogle(reminderState)
+				data.reminders = remindersBody()
 			}
 			addAvailabilityArgs(data)
 			if (googleFeatures) {

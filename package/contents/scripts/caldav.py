@@ -87,11 +87,12 @@ def tag(ns, name):
 
 
 class CalDavError(Exception):
-	def __init__(self, kind, message):
+	def __init__(self, kind, message, status=None):
 		assert kind in ERROR_KINDS
 		super().__init__(message)
 		self.kind = kind
 		self.message = message
+		self.status = status  # The HTTP status, when the server sent one
 
 	def line(self):
 		return "{}: {}".format(self.kind, " ".join(str(self.message).split()))
@@ -108,12 +109,12 @@ def url_path(url):
 def error_for_status(status, url):
 	path = url_path(url)
 	if status in (401, 403):
-		return CalDavError("AUTH", "Access denied (HTTP {}) for {}".format(status, path))
+		return CalDavError("AUTH", "Access denied (HTTP {}) for {}".format(status, path), status)
 	if status in (404, 410):
-		return CalDavError("NOTFOUND", "Not found (HTTP {}): {}".format(status, path))
+		return CalDavError("NOTFOUND", "Not found (HTTP {}): {}".format(status, path), status)
 	if status == 412:
-		return CalDavError("CONFLICT", "Changed on the server (HTTP 412): {}".format(path))
-	return CalDavError("PROTOCOL", "Unexpected HTTP {} for {}".format(status, path))
+		return CalDavError("CONFLICT", "Changed on the server (HTTP 412): {}".format(path), status)
+	return CalDavError("PROTOCOL", "Unexpected HTTP {} for {}".format(status, path), status)
 
 
 #--- URL rules
@@ -557,16 +558,44 @@ def plain_text(html):
 	return re.sub(r"<[^>]*>", " ", str(html or "")).replace("&nbsp;", " ").replace("&amp;", "&")
 
 
-def matching_items(items, match):
-	"""The items with every word of match in their title, location or description."""
+MAX_MATCHES = 100  # Per calendar, the ones nearest to now (Google's search gives 50)
+
+
+def has_words(words, *texts):
+	haystack = search_text(" ".join(plain_text(t) for t in texts))
+	return all(word in haystack for word in words)
+
+
+def resource_has_words(calendar_data, words):
+	"""Any VEVENT of the resource with all the words (before its repeats are expanded)."""
+	try:
+		cal = Calendar.from_ical(calendar_data)
+	except Exception:
+		return True  # resource_items says what's wrong with it
+	return any(has_words(words, icsjson.stringify(e.get("SUMMARY")), icsjson.stringify(e.get("LOCATION")),
+		icsjson.stringify(e.get("DESCRIPTION"))) for e in cal.walk("VEVENT"))
+
+
+def matching_items(items, match, now=None):
+	"""The items with every word of match in their title, location or description: at most
+	MAX_MATCHES, those nearest to now."""
 	words = search_text(match).split()
 	if not words:
 		return []
-	found = []
-	for item in items:
-		haystack = search_text(" ".join([item.get("summary") or "", item.get("location") or "", plain_text(item.get("description"))]))
-		if all(word in haystack for word in words):
-			found.append(item)
+	found = [item for item in items if has_words(words, item.get("summary") or "", item.get("location") or "", item.get("description") or "")]
+	if len(found) > MAX_MATCHES:
+		now = now or datetime.datetime.now(datetime.timezone.utc)
+
+		def distance(item):
+			value = item["start"].get("dateTime") or item["start"].get("date")
+			try:
+				when = datetime.datetime.fromisoformat(value)
+			except ValueError:
+				return datetime.timedelta.max
+			if when.tzinfo is None:
+				when = when.astimezone()
+			return abs(when - now)
+		found = sorted(found, key=distance)[:MAX_MATCHES]
 	return found
 
 
@@ -586,7 +615,11 @@ def query(client, url, start, end, if_ctag="", probe_ctag=True, match=None):
 		{"Depth": "1", "Content-Type": "application/xml; charset=utf-8"},
 		ok=(207,),
 	)
-	items = query_items(parse_multistatus(data, final_url), start, end)
+	entries = parse_multistatus(data, final_url)
+	if match is not None:
+		words = search_text(match).split()
+		entries = [e for e in entries if resource_has_words(prop_text(e["props"], tag(NS_CALDAV, "calendar-data")) or "", words)]
+	items = query_items(entries, start, end)
 	if match is not None:
 		items = matching_items(items, match)
 	return {"items": items, "ctag": ctag}
@@ -710,10 +743,24 @@ def apply_event_fields(event, data):
 	apply_extra_fields(event, data)
 
 
+EXTRA_FIELDS = ("transparency", "visibility", "caldavColor", "reminders")
+
+
+def extra_values(event):
+	"""The apply_extra_fields values of a VEVENT as they compare: TRANSP, CLASS, COLOR, reminders."""
+	start, end = icsjson.get_event_bounds(event)
+	return {
+		"transparency": icsjson.stringify(event.get("TRANSP")).strip().upper() or "OPAQUE",
+		"visibility": icsjson.stringify(event.get("CLASS")).strip().upper(),
+		"caldavColor": icsjson.stringify(event.get("COLOR")).strip().lower(),
+		"reminders": icsjson.reminder_minutes(event, start, end) if start is not None and end is not None else [],
+	}
+
+
 TRANSPARENCY = {"opaque": "OPAQUE", "transparent": "TRANSPARENT"}
 VISIBILITY = {"default": None, "public": "PUBLIC", "private": "PRIVATE", "confidential": "CONFIDENTIAL"}
-MAX_REMINDERS = 5
-MAX_REMINDER_MINUTES = 40320  # 4 weeks, as the editor allows
+MAX_REMINDERS = 50
+MAX_REMINDER_MINUTES = 366 * 1440  # A year: alarms set in other apps may be weeks ahead
 
 
 def apply_extra_fields(event, data):
@@ -842,6 +889,7 @@ def build_updated_calendar(existing, data, stamp=None):
 	stamp = stamp or now_utc()
 	old_bounds = icsjson.get_event_bounds(event)
 	old_texts = {key: icsjson.stringify(event.get(key)) for _, key in TEXT_FIELDS}
+	old_extras = extra_values(event)
 	apply_event_fields(event, data)
 	touch(event, stamp)
 	new_bounds = icsjson.get_event_bounds(event)
@@ -855,6 +903,16 @@ def build_updated_calendar(existing, data, stamp=None):
 			if data.get(name) is not None and icsjson.stringify(override.get(key)) == old_texts[key]:
 				set_text(override, key, data[name])
 				changed.add(id(override))
+		# Show as, visibility, color and reminders likewise: where the occurrence had the series' one.
+		kept = extra_values(override)
+		same = {}
+		for name in EXTRA_FIELDS:
+			given = name in data and (data[name] is not None or name == "caldavColor")  # caldavColor null: none
+			if given and kept[name] == old_extras[name]:
+				same[name] = data[name]
+		if same:
+			apply_extra_fields(override, same)
+			changed.add(id(override))
 	if None not in old_bounds and None not in new_bounds and old_bounds != new_bounds:
 		# A new rule from the editor (recurrence given) has the end the user chose: UNTIL stays.
 		changed |= shift_instances(cal, event, old_bounds, new_bounds, shift_until=data.get("recurrence") is None)
@@ -1184,7 +1242,8 @@ def move_event(client, href, etag, to_url):
 		client.request("MOVE", href, None, {
 			"Destination": target, "Overwrite": "F", "If-Match": match}, ok=(201, 204))
 	except CalDavError as error:
-		if error.kind != "PROTOCOL":
+		# The server can't MOVE (405, 501, ...), or won't between these calendars (403).
+		if error.kind != "PROTOCOL" and error.status != 403:
 			raise
 		return copy_and_delete(client, href, match, target)
 	return {"href": target, "etag": fetch_etag(client, target)}
@@ -1196,8 +1255,12 @@ def copy_and_delete(client, href, match, target):
 	final_url, new_etag = put_calendar(client, target, existing, {"If-None-Match": "*"})
 	try:
 		client.request("DELETE", href, None, {"If-Match": match}, ok=(200, 202, 204))
-	except CalDavError:
-		try:  # Not in both calendars
+	except CalDavError as error:
+		if error.kind == "NOTFOUND":
+			return {"href": final_url, "etag": new_etag}  # Gone already: moved
+		if error.kind == "NETWORK":
+			raise  # It may have been deleted: the copy stays (in both calendars, never in none)
+		try:  # Refused (changed meanwhile, not allowed): not in both calendars
 			client.request("DELETE", final_url, None, {"If-Match": quote_etag(new_etag)} if new_etag else {}, ok=(200, 202, 204))
 		except CalDavError:
 			pass

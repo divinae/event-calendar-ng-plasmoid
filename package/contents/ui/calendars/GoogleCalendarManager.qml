@@ -447,13 +447,8 @@ CalendarManager {
 			}
 		})
 		Async.settleAll(tasks, function(results) {
-			var found = []
-			var firstError = null
-			results.forEach(function(result) {
-				firstError = firstError || result.err
-				found = found.concat(result.data || [])
-			})
-			callback(found.length ? null : firstError, found)
+			var joined = Async.joinedLists(results)
+			callback(joined.err, joined.items)
 		})
 	}
 
@@ -562,28 +557,12 @@ CalendarManager {
 		}
 	}
 
-	function parseColorId(colorIdType, colorId) {
-		// Use hardcoded colorIdMap rather than requesting the list from the API.
-		// We could possibly fetch this in the config...
-		if (typeof colorId !== "undefined") {
-			var typeMap = ColorIdMap.colorIdMap[colorIdType]
-			if (typeMap) {
-				var colorIdStr = "" + colorId // Cast to string
-				if (typeMap[colorIdStr]) {
-					return typeMap[colorId]['background']
-				}
-			}
-		}
-		return null
-	}
-
 	// "current": the colors Google Calendar shows today; "classic": the old palette the API returns.
 	readonly property bool currentGooglePalette: plasmoid.configuration.googleColorPalette !== 'classic'
 	function parseColor(calendar, event) {
-		if (currentGooglePalette) {
-			return GooglePalette.eventColor(event.colorId) || GooglePalette.calendarColor(calendar)
-		}
-		return parseColorId('event', event.colorId) || calendar.backgroundColor
+		var palette = plasmoid.configuration.googleColorPalette
+		return GooglePalette.eventColorFor(event.colorId, palette, ColorIdMap.colorIdMap.event)
+			|| (currentGooglePalette ? GooglePalette.calendarColor(calendar) : calendar.backgroundColor)
 	}
 
 	//--- Create / POST

@@ -572,7 +572,8 @@ CalendarManager {
 					continue
 				}
 				defaultEventParsing(calendarId, items[i])
-				items[i].calendarManagerId = 'GoogleCalendar'
+				// Only Google and CalDAV calendars are cached ("account::calendar" ids).
+				items[i].calendarManagerId = String(calendarId).indexOf('caldav-') === 0 ? 'CalDAV' : 'GoogleCalendar'
 				items[i].description = ''
 			}
 			shown[calendarId] = EventTypes.splitWorkingLocations({ items: items })
@@ -793,22 +794,20 @@ CalendarManager {
 		return !!calendarManager && calendarManager.calendarManagerId === 'GoogleCalendar'
 	}
 
+	// A manager with calendars to search (Google, CalDAV) beyond the loaded range.
+	function canSearch(calendarManager) {
+		return typeof calendarManager.searchEvents === 'function'
+			&& (typeof calendarManager.canSearch !== 'function' || calendarManager.canSearch())
+	}
 	// Search the calendars that support it (Google, CalDAV) between timeMin and timeMax.
 	// callback(err, items) once all of them answered.
 	function searchEvents(query, timeMin, timeMax, callback) {
-		var managers = calendarManagerList.filter(function(m) {
-			return typeof m.searchEvents === 'function'
-		})
+		var managers = calendarManagerList.filter(canSearch)
 		Async.settleAll(managers.map(function(m) {
 			return m.searchEvents.bind(m, query, timeMin, timeMax)
 		}), function(results) {
-			var found = []
-			var firstError = null
-			results.forEach(function(result) {
-				firstError = firstError || result.err
-				found = found.concat(result.data || [])
-			})
-			callback(found.length ? null : firstError, found)
+			var joined = Async.joinedLists(results)
+			callback(joined.err, joined.items)
 		})
 	}
 
