@@ -243,11 +243,14 @@ function subtaskProgress(item) {
 	}
 }
 
-// What the editor can set on a task of a provider ('TickTick', 'GoogleTasks', …): { dueTime,
-// priority, repeat, reminders, subtasks }. Google Tasks has none of them.
+// What the editor can set on a task of a provider ('TickTick', 'GoogleTasks', 'CalDAVTasks', …):
+// { dueTime, priority, repeat, reminders, subtasks }. Google Tasks has none of them; CalDAV
+// (VTODO) all but a repeat (completing one needs the next due worked out) and a checklist
+// (its subtasks are tasks, as Google's).
 function capabilities(provider) {
 	var all = provider === 'TickTick'
-	return { dueTime: all, priority: all, repeat: all, reminders: all, subtasks: all }
+	var caldav = provider === 'CalDAVTasks'
+	return { dueTime: all || caldav, priority: all || caldav, repeat: all, reminders: all || caldav, subtasks: all }
 }
 
 // The tasks of one list in subtask order: each task followed by its subtasks (parentId, or

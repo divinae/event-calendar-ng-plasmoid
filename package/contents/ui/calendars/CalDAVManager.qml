@@ -43,7 +43,8 @@ CalendarManager {
 		var out = []
 		;(accounts || []).forEach(function(account) {
 			;(account.calendars || []).forEach(function(calendar) {
-				if (calendar.selected === false) {
+				// events: false, a task list only (CalDAVTasksManager)
+				if (calendar.selected === false || calendar.events === false) {
 					return
 				}
 				out.push({

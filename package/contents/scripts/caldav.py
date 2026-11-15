@@ -15,6 +15,13 @@ Commands (all take --account ID --user USERNAME):
 	restore --undo TOKEN                      (puts a deleted event or occurrence back)
 	move --href RES --etag E --to CALENDAR    (an event or series to another calendar, same server)
 	get --href RES                            (an event, or a repeating event's series, as an import gives it)
+	tasks --url LIST                          (the list's open tasks and those done in the last 30 days)
+	put-task --url LIST [--href RES --etag E] [--task-b64 B64]
+	                                          (a task created or changed, see vtodo.py; delete / restore /
+	                                          move work for tasks too)
+	mklist --home HOME --name N [--color C]   (a new task list)
+	setlist --url LIST [--name N] [--color C] (renamed / recolored)
+	rmlist --url LIST                         (a list deleted with its tasks)
 	import --url CALENDAR --file PATH
 
 Repeating events: a query gives each occurrence its caldavRecurrenceId (the original start, as
@@ -57,8 +64,9 @@ if SCRIPT_DIR not in sys.path:
 try:
 	import icsjson  # noqa: E402  (also puts the bundled icalendar / recurring_ical_events on sys.path)
 	from icalendar import Alarm, Calendar, Event  # noqa: E402
+	import vtodo  # noqa: E402
 except ImportError as import_error:
-	icsjson = None
+	icsjson = vtodo = None
 	Alarm = Calendar = Event = None
 	MISSING_MODULE = getattr(import_error, "name", None) or str(import_error)
 else:
@@ -379,7 +387,7 @@ def calendar_from_response(entry):
 			name = (comp.get("name") or "").strip().upper()
 			if name:
 				components.append(name)
-	if components and "VEVENT" not in components:
+	if components and "VEVENT" not in components and "VTODO" not in components:
 		return None
 	name = prop_text(props, tag(NS_DAV, "displayname"))
 	if not name:
@@ -392,6 +400,9 @@ def calendar_from_response(entry):
 		"color": normalize_color(prop_text(props, tag(NS_ICAL, "calendar-color"))),
 		"writable": True if writable is None else writable,
 		"components": components,
+		# Events: VEVENT, or no component set given (all); tasks only when VTODO is listed.
+		"events": not components or "VEVENT" in components,
+		"tasks": "VTODO" in components,
 		"ctag": ctag,
 	}
 
@@ -1268,6 +1279,125 @@ def copy_and_delete(client, href, match, target):
 	return {"href": final_url, "etag": new_etag}
 
 
+#--- Tasks (VTODO, see vtodo.py)
+
+def tasks_query_body():
+	return (
+		'<?xml version="1.0" encoding="utf-8"?>\n'
+		'<c:calendar-query {}>'
+		'<d:prop><d:getetag/><c:calendar-data/></d:prop>'
+		'<c:filter><c:comp-filter name="VCALENDAR"><c:comp-filter name="VTODO"/></c:comp-filter></c:filter>'
+		'</c:calendar-query>'
+	).format(xml_namespaces())
+
+
+def query_tasks(client, url, if_ctag="", probe_ctag=True, now=None):
+	"""The list's tasks (open, and done in the last vtodo.COMPLETED_DAYS days), each with its
+	caldavHref / caldavEtag; {"unchanged": true} as query gives it."""
+	ctag = calendar_ctag(client, url) if probe_ctag else ""
+	if if_ctag and ctag and ctag == if_ctag:
+		return {"unchanged": True, "ctag": ctag}
+	_, _, data, final_url = client.request(
+		"REPORT", url, tasks_query_body(),
+		{"Depth": "1", "Content-Type": "application/xml; charset=utf-8"},
+		ok=(207,),
+	)
+	items = []
+	for entry in parse_multistatus(data, final_url):
+		calendar_data = prop_text(entry["props"], tag(NS_CALDAV, "calendar-data"))
+		if not calendar_data:
+			continue
+		try:
+			item = vtodo.resource_task(calendar_data, now)
+		except Exception:
+			continue  # One broken resource doesn't hide the list
+		if item is not None:
+			item["caldavHref"] = entry["href"]
+			item["caldavEtag"] = prop_text(entry["props"], tag(NS_DAV, "getetag"))
+			items.append(item)
+	return {"items": items, "ctag": ctag}
+
+
+def put_task(client, list_url, data, href=None, etag=None):
+	"""Create a task, or change one (href + etag): its item as a query gives it, with href and etag."""
+	list_url = check_url(list_url)
+	stamp = now_utc()
+	try:
+		if href:
+			href = check_url(urllib.parse.urljoin(collection_url(list_url), href))
+			match = quote_etag(etag)
+			_, _, existing, href = client.request("GET", href, ok=(200,))
+			_, body = vtodo.build_updated_task(existing, data, stamp)
+			final_url, new_etag = put_calendar(client, href, body, {"If-Match": match})
+		else:
+			uid = str(uuid.uuid4())
+			body = vtodo.build_new_task(data, uid, stamp, PRODID)
+			final_url, new_etag = put_calendar(client, collection_url(list_url) + uid + ".ics", body, {"If-None-Match": "*"})
+	except vtodo.TaskInputError as error:
+		raise CalDavError("INPUT", str(error))
+	item = vtodo.resource_task(body, completed_days=36500)
+	item["caldavHref"] = final_url
+	item["caldavEtag"] = new_etag
+	return item
+
+
+def list_props_xml(name, color):
+	props = ""
+	if name is not None:
+		props += "<d:displayname>{}</d:displayname>".format(xml_escape(name))
+	if color is not None:
+		props += "<ical:calendar-color>{}</ical:calendar-color>".format(xml_escape(color))
+	return props
+
+
+def xml_escape(text):
+	return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def check_list_fields(name, color):
+	if name is not None and not name.strip():
+		raise CalDavError("INPUT", "--name is empty")
+	if color is not None and not re.fullmatch(r"#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?", color):
+		raise CalDavError("INPUT", "--color must be #rrggbb")
+
+
+def make_list(client, home, name, color=None):
+	"""A new task list (a calendar for VTODOs) in the calendar home."""
+	check_list_fields(name, color)
+	url = collection_url(check_url(home)) + str(uuid.uuid4()) + "/"
+	body = (
+		'<?xml version="1.0" encoding="utf-8"?>\n<c:mkcalendar {}><d:set><d:prop>{}'
+		'<c:supported-calendar-component-set><c:comp name="VTODO"/></c:supported-calendar-component-set>'
+		'</d:prop></d:set></c:mkcalendar>'
+	).format(xml_namespaces(), list_props_xml(name.strip(), color))
+	_, _, _, final_url = client.request("MKCALENDAR", url, body, {"Content-Type": "application/xml; charset=utf-8"}, ok=(201,))
+	return {"href": final_url, "name": name.strip(), "color": normalize_color(color or ""), "writable": True,
+		"components": ["VTODO"], "events": False, "tasks": True}
+
+
+def set_list(client, url, name=None, color=None):
+	"""Rename or recolor a list (PROPPATCH)."""
+	if name is None and color is None:
+		raise CalDavError("INPUT", "Nothing to change")
+	check_list_fields(name, color)
+	body = (
+		'<?xml version="1.0" encoding="utf-8"?>\n<d:propertyupdate {}><d:set><d:prop>{}</d:prop></d:set></d:propertyupdate>'
+	).format(xml_namespaces(), list_props_xml(name.strip() if name is not None else None, color))
+	_, _, data, final_url = client.request("PROPPATCH", check_url(url), body,
+		{"Content-Type": "application/xml; charset=utf-8"}, ok=(207,))
+	# A 207 can still refuse a property (eg: 403 for it): then nothing changed.
+	root = parse_xml(data)
+	for status in root.iter(tag(NS_DAV, "status")):
+		if not _OK_STATUS.search(status.text or ""):
+			raise CalDavError("PROTOCOL", "The server didn't change the list: {}".format((status.text or "").strip()))
+	return {"ok": True}
+
+
+def remove_list(client, url):
+	client.request("DELETE", check_url(url), None, {}, ok=(200, 202, 204))
+	return {"ok": True}
+
+
 #--- Undo of deletes: the resource as it was, kept for a day in a private file (the user's runtime
 # directory: memory only, gone at logout), only its token goes to the widget.
 
@@ -1495,6 +1625,35 @@ def build_parser():
 	cmd.add_argument("--href", required=True)
 	common(cmd)
 
+	cmd = sub.add_parser("tasks")
+	cmd.add_argument("--url", required=True)
+	cmd.add_argument("--if-ctag", default="")
+	cmd.add_argument("--no-ctag", action="store_true")
+	common(cmd)
+
+	cmd = sub.add_parser("put-task")
+	cmd.add_argument("--url", required=True)
+	cmd.add_argument("--href", default="")
+	cmd.add_argument("--etag", default="")
+	cmd.add_argument("--task-b64", default=None, help="The task JSON as base64 of UTF-8 (else read from stdin)")
+	common(cmd)
+
+	cmd = sub.add_parser("mklist")
+	cmd.add_argument("--home", required=True, help="The account's calendar home")
+	cmd.add_argument("--name", required=True)
+	cmd.add_argument("--color", default=None)
+	common(cmd)
+
+	cmd = sub.add_parser("setlist")
+	cmd.add_argument("--url", required=True)
+	cmd.add_argument("--name", default=None)
+	cmd.add_argument("--color", default=None)
+	common(cmd)
+
+	cmd = sub.add_parser("rmlist")
+	cmd.add_argument("--url", required=True)
+	common(cmd)
+
 	cmd = sub.add_parser("import")
 	cmd.add_argument("--url", required=True)
 	cmd.add_argument("--file", required=True)
@@ -1528,7 +1687,7 @@ def run(args, stdin):
 		end = parse_day(args.end)
 		if end <= start:
 			raise CalDavError("INPUT", "END must be after START")
-	if args.command == "put" and bool(args.href) != bool(args.etag):
+	if args.command in ("put", "put-task") and bool(args.href) != bool(args.etag):
 		raise CalDavError("INPUT", "--href and --etag go together")
 	recurrence_id = None
 	if getattr(args, "recurrence_id", None) is not None:
@@ -1556,6 +1715,23 @@ def run(args, stdin):
 		return delete_event(client, args.href, args.etag, recurrence_id)
 	if args.command == "restore":
 		return restore_event(client, args.undo)
+	if args.command == "tasks":
+		return query_tasks(client, args.url, args.if_ctag, not args.no_ctag)
+	if args.command == "put-task":
+		try:
+			if args.task_b64 is not None:
+				data = json.loads(base64.b64decode(args.task_b64, validate=True).decode("utf-8"))
+			else:
+				data = json.loads(stdin.read())
+		except (ValueError, UnicodeDecodeError) as error:
+			raise CalDavError("INPUT", "The task is not valid (base64) JSON: {}".format(error))
+		return put_task(client, args.url, data, args.href or None, args.etag or None)
+	if args.command == "mklist":
+		return make_list(client, args.home, args.name, args.color)
+	if args.command == "setlist":
+		return set_list(client, args.url, args.name, args.color)
+	if args.command == "rmlist":
+		return remove_list(client, args.url)
 	if args.command == "move":
 		return move_event(client, args.href, args.etag, args.to)
 	if args.command == "get":

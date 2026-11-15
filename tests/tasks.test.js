@@ -666,6 +666,7 @@ same(T.subtaskProgress(task({})), { done: 0, total: 0 })
 
 // capabilities: TickTick has them all, Google none.
 same(T.capabilities('TickTick'), { dueTime: true, priority: true, repeat: true, reminders: true, subtasks: true })
+same(T.capabilities('CalDAVTasks'), { dueTime: true, priority: true, repeat: false, reminders: true, subtasks: false })
 same(T.capabilities('GoogleTasks'), { dueTime: false, priority: false, repeat: false, reminders: false, subtasks: false })
 
 // Subtasks in the rows: right under their parent, indented.

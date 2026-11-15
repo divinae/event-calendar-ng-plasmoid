@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-15 18:26+0100\n"
+"POT-Creation-Date: 2026-11-15 18:52+0100\n"
 "PO-Revision-Date: 2022-03-21 23:40+ZONE\n"
 "Last-Translator: Ilpo Kantonen <ilpo@iki.fi>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -91,35 +91,35 @@ msgctxt "more events not shown in a month day cell"
 msgid "+%1"
 msgstr "+%1"
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1 didn't accept the user name or password"
 msgstr "CalDAV: %1 ei hyväksynyt käyttäjänimeä tai salasanaa"
 
-#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/GoogleCalendarManager.qml ../contents/ui/calendars/GoogleTasksManager.qml ../contents/ui/calendars/ICalManager.qml ../contents/ui/calendars/TickTickTasksManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml ../contents/ui/calendars/GoogleCalendarManager.qml ../contents/ui/calendars/GoogleTasksManager.qml ../contents/ui/calendars/ICalManager.qml ../contents/ui/calendars/TickTickTasksManager.qml
 msgid "Could not connect"
 msgstr "Ei voitu yhdistää"
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: the password couldn't be read from the keyring"
 msgstr "CalDAV: salasanaa ei voitu lukea avainnipusta"
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV needs Python modules: install them in Settings > Calendars > CalDAV"
 msgstr "CalDAV tarvitsee Python-moduuleja: asenna ne kohdassa Asetukset > Kalenterit > CalDAV"
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "The event was changed elsewhere meanwhile; it's loaded again"
 msgstr "Tapahtumaa muutettiin sillä välin muualla; se ladattiin uudelleen"
 
-#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/config/CalendarsCalDAV.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Unknown error"
 msgstr "Tuntematon virhe"
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1"
 msgstr "CalDAV: %1"
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: an unexpected answer"
 msgstr "CalDAV: odottamaton vastaus"
 
@@ -429,6 +429,14 @@ msgstr "Vain luku"
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Server's Color"
 msgstr "Palvelimen väri"
+
+#: ../contents/ui/config/CalendarsCalDAV.qml ../contents/ui/config/ConfigTasks.qml
+msgid "Task Lists"
+msgstr "Tehtäväluettelot"
+
+#: ../contents/ui/config/CalendarsCalDAV.qml
+msgid "Refresh the calendars to find this account's task lists too."
+msgstr "Päivitä kalenterit, niin myös tilin tehtävälistat löytyvät."
 
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Refresh Calendars"
@@ -753,7 +761,7 @@ msgstr "Google-kalenteri"
 msgid "Akonadi"
 msgstr "Akonadi"
 
-#: ../contents/ui/config/ConfigCalendars.qml
+#: ../contents/ui/config/ConfigCalendars.qml ../contents/ui/config/ConfigTasks.qml
 msgid "CalDAV"
 msgstr "CalDAV"
 
@@ -1344,16 +1352,16 @@ msgid "The daily agenda notification also lists today's and overdue tasks."
 msgstr "Päivän agendan ilmoitus luettelee myös tämän päivän ja myöhässä olevat tehtävät."
 
 #: ../contents/ui/config/ConfigTasks.qml
+msgid "The task lists of CalDAV accounts (eg: Nextcloud Tasks) are picked with their calendars, on the Calendars page under CalDAV."
+msgstr "CalDAV-tilien tehtävälistat (esim. Nextcloud Tasks) valitaan kalentereiden kanssa Kalenterit-sivulla kohdassa CalDAV."
+
+#: ../contents/ui/config/ConfigTasks.qml
 msgid "Google Tasks"
 msgstr "Google Tasks"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid "Sign in on the Google Calendar page to choose the Google task lists shown here."
 msgstr "Kirjaudu sisään Google-kalenteri-sivulla valitaksesi tässä näytettävät Googlen tehtäväluettelot."
-
-#: ../contents/ui/config/ConfigTasks.qml
-msgid "Task Lists"
-msgstr "Tehtäväluettelot"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid "No task lists loaded yet. Reload the account on the Google Calendar page."

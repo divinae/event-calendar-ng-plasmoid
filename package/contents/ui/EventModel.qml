@@ -237,6 +237,29 @@ CalendarManager {
 		accounts: appletConfig.caldavAccounts.value || []
 	}
 
+	// The task lists of each CalDAV account (those picked in Settings > Calendars > CalDAV), a
+	// manager per account as for TickTick. Accounts changed (also a list made or deleted in the
+	// Tasks view): the managers are made again, and everything fetched again.
+	Repeater {
+		id: caldavTasksRepeater
+		model: appletConfig.caldavAccounts.value || []
+		delegate: Item {
+			CalDAVTasksManager {
+				id: caldavTasksManager
+				account: modelData
+				accountsConfig: appletConfig.caldavAccounts
+			}
+			Component.onCompleted: eventModel.bindSignals(caldavTasksManager)
+			Component.onDestruction: eventModel.unbindSignals(caldavTasksManager)
+		}
+	}
+	Connections {
+		target: appletConfig.caldavAccounts
+		function onValueChanged() {
+			deferredUpdate.restart()
+		}
+	}
+
 	Repeater {
 		id: googleAccountsRepeater
 		model: googleAccountsStore.fetchableAccounts
