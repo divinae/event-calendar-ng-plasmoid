@@ -210,3 +210,62 @@ console.log('PASS plasma_calendar_utils')
 	U.pluginFilenameToPathList = savedToPaths
 	U.getEffectivePluginFilenameList = savedEffective
 }
+
+//--- Akonadi's DAV copies of the widget's CalDAV calendars
+{
+	const stdout = [
+		'davcollection|9|akonadi_davgroupware_resource_1',
+		'davcollection|10|https://Cloud.Example.com:443/remote.php/dav/calendars/me/personal/',
+		'davcollection|11|https://cloud.example.com/remote.php/dav/calendars/me/work/',
+		'davcollection|12|https://cloud.example.com/remote.php/dav/calendars/me/Personal/',
+	].join('\n')
+	const urls = U.caldavCalendarUrls([
+		{ id: 'a', calendars: [
+			{ href: 'https://cloud.example.com/remote.php/dav/calendars/me/personal', selected: true },
+			{ href: 'https://cloud.example.com/remote.php/dav/calendars/me/work/', selected: false },
+		] },
+		{ id: 'b' },
+	])
+	assert.deepStrictEqual(JSON.parse(JSON.stringify(urls)), ['https://cloud.example.com/remote.php/dav/calendars/me/personal'], 'selected ones only')
+	assert.deepStrictEqual(JSON.parse(JSON.stringify(U.akonadiMirroredCollections(stdout, {}, urls))), { 10: true },
+		'the same calendar (host case, default port, trailing slash); not an unselected one, not another path')
+	assert.deepStrictEqual(JSON.parse(JSON.stringify(U.akonadiMirroredCollections(stdout, {}, undefined))), {})
+	assert.strictEqual(U.davUrlKey('HTTP://Host:80/a/'), 'http://host/a')
+	assert.strictEqual(U.davUrlKey('https://host:8443/a//'), 'https://host:8443/a')
+}
+
+//--- Akonadi's database on SQLite: read with python3 (read only), as on PostgreSQL with psql
+{
+	const os = require('os')
+	const { execFileSync } = require('child_process')
+	const home = fs.mkdtempSync(path.join(os.tmpdir(), 'ecng-akonadi-'))
+	try {
+		const db = path.join(home, 'my akonadi.db')
+		fs.mkdirSync(path.join(home, 'config/akonadi'), { recursive: true })
+		fs.writeFileSync(path.join(home, 'config/akonadi/akonadiserverrc'), '[%General]\nDriver=QSQLITE\n\n[QSQLITE]\nName=' + db + '\n')
+		execFileSync('python3', ['-c', [
+			'import sqlite3, sys',
+			'c = sqlite3.connect(sys.argv[1])',
+			'c.execute("CREATE TABLE resourcetable (id INTEGER, name TEXT)")',
+			'c.execute("CREATE TABLE collectiontable (id INTEGER, resourceid INTEGER, remoteid BLOB)")',
+			'c.execute("CREATE TABLE collectionattributetable (collectionid INTEGER, type BLOB, value BLOB)")',
+			'c.executemany("INSERT INTO resourcetable VALUES (?, ?)", [(1, "akonadi_davgroupware_resource_1"), (2, "akonadi_ical_resource_0")])',
+			'c.executemany("INSERT INTO collectiontable VALUES (?, ?, ?)", [(10, 1, b"https://h/cal/a/"), (20, 2, b"/home/x.ics")])',
+			'c.executemany("INSERT INTO collectionattributetable VALUES (?, ?, ?)", [(10, b"collectioncolor", b"#ff3c6dff"), (10, b"ctag", b"x")])',
+			'c.commit()',
+		].join('\n'), db])
+		const cmd = U.akonadiCalendarsCommand()
+		const out = execFileSync(cmd[0], cmd.slice(1), { env: Object.assign({}, process.env, { XDG_CONFIG_HOME: path.join(home, 'config') }) }).toString()
+		assert.deepStrictEqual(out.trim().split('\n'), ['10|#ff3c6dff', 'davcollection|10|https://h/cal/a/'])
+		assert.deepStrictEqual(JSON.parse(JSON.stringify(U.parseAkonadiColors(out))), { 10: '#3c6dff' })
+		assert.deepStrictEqual(JSON.parse(JSON.stringify(U.akonadiMirroredCollections(out, {}, ['https://h/cal/a']))), { 10: true })
+		// No Driver line: SQLite is Akonadi's default.
+		fs.writeFileSync(path.join(home, 'config/akonadi/akonadiserverrc'), '[QSQLITE]\nName=' + db + '\n')
+		assert.match(execFileSync(cmd[0], cmd.slice(1), { env: Object.assign({}, process.env, { XDG_CONFIG_HOME: path.join(home, 'config') }) }).toString(), /^10\|#ff3c6dff$/m)
+		// MySQL: nothing (and no error).
+		fs.writeFileSync(path.join(home, 'config/akonadi/akonadiserverrc'), '[%General]\nDriver=QMYSQL\n')
+		assert.strictEqual(execFileSync(cmd[0], cmd.slice(1), { env: Object.assign({}, process.env, { XDG_CONFIG_HOME: path.join(home, 'config') }) }).toString(), '')
+	} finally {
+		fs.rmSync(home, { recursive: true, force: true })
+	}
+}

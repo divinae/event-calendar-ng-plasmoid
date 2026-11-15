@@ -124,7 +124,7 @@ CalendarManager {
 			})
 		}
 	}
-	// Akonadi's calendar colors by collection id and its Google calendars, from its database
+	// Akonadi's calendar colors by collection id and its Google and DAV calendars, from its database
 	// (PlasmaCalendarUtils.akonadiCalendarsCommand), read at the start and again with a fetch at most
 	// every 10 minutes.
 	property var akonadiColors: ({})
@@ -149,9 +149,12 @@ CalendarManager {
 	// (set by EventModel). Akonadi's copies of them (mirroredCollections) are left out: their events
 	// come from the sign-in, and the calendar menu lists them with the account.
 	property var googleCalendarIds: ({})
+	// The same for the widget's CalDAV calendars: their URLs (set by EventModel), Akonadi's DAV
+	// copies of them left out.
+	property var caldavCalendarUrls: []
 	property var mirroredCollections: ({})
 	function updateMirroredCollections() {
-		var mirrored = PlasmaCalendarUtils.akonadiMirroredCollections(akonadiGoogleCollections, googleCalendarIds)
+		var mirrored = PlasmaCalendarUtils.akonadiMirroredCollections(akonadiGoogleCollections, googleCalendarIds, caldavCalendarUrls)
 		if (JSON.stringify(mirrored) === JSON.stringify(mirroredCollections)) {
 			return false
 		}
@@ -159,6 +162,11 @@ CalendarManager {
 		return true
 	}
 	onGoogleCalendarIdsChanged: {
+		if (updateMirroredCollections()) {
+			refresh()
+		}
+	}
+	onCaldavCalendarUrlsChanged: {
 		if (updateMirroredCollections()) {
 			refresh()
 		}

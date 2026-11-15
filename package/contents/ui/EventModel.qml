@@ -366,6 +366,7 @@ CalendarManager {
 
 	PlasmaCalendarManager {
 		id: plasmaCalendarManager
+		caldavCalendarUrls: PlasmaCalendarUtils.caldavCalendarUrls(appletConfig.caldavAccounts.value)
 	}
 	// The selected calendars of the Google accounts that fetch (only theirs come from the sign-in),
 	// for Akonadi's copies of them. Set again on each change: an account is updated in place (no
