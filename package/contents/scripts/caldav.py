@@ -12,7 +12,8 @@ Commands (all take --account ID --user USERNAME):
 	delete --href RES --etag E [--recurrence-id RID]
 	                                          (gives "undo": a token for restore)
 	restore --undo TOKEN                      (puts a deleted event or occurrence back)
-	get --href RES                            (a repeating event's series, as an import gives it)
+	move --href RES --etag E --to CALENDAR    (an event or series to another calendar, same server)
+	get --href RES                            (an event, or a repeating event's series, as an import gives it)
 	import --url CALENDAR --file PATH
 
 Repeating events: a query gives each occurrence its caldavRecurrenceId (the original start, as
@@ -1077,6 +1078,42 @@ def delete_event(client, href, etag, recurrence_id=None):
 	return {"ok": True, "href": final_url, "etag": new_etag, "undo": undo}
 
 
+def move_event(client, href, etag, to_url):
+	"""Move an event or series (its resource) to another calendar of the same server: WebDAV MOVE,
+	or where the server can't (405, 501, ...), a copy there and the original deleted."""
+	href = check_url(href)
+	match = quote_etag(etag)
+	to_url = collection_url(check_url(to_url))
+	if origin(href) != origin(to_url):
+		raise CalDavError("INPUT", "--to is on another server")
+	target = to_url + href.rstrip("/").rsplit("/", 1)[-1]
+	if same_resource(href, target):
+		raise CalDavError("INPUT", "The event is already in that calendar")
+	try:
+		client.request("MOVE", href, None, {
+			"Destination": target, "Overwrite": "F", "If-Match": match}, ok=(201, 204))
+	except CalDavError as error:
+		if error.kind != "PROTOCOL":
+			raise
+		return copy_and_delete(client, href, match, target)
+	return {"href": target, "etag": fetch_etag(client, target)}
+
+
+def copy_and_delete(client, href, match, target):
+	_, _, existing, href = client.request("GET", href, ok=(200,))
+	# Changed meanwhile: the DELETE's If-Match fails, and the copy goes again.
+	final_url, new_etag = put_calendar(client, target, existing, {"If-None-Match": "*"})
+	try:
+		client.request("DELETE", href, None, {"If-Match": match}, ok=(200, 202, 204))
+	except CalDavError:
+		try:  # Not in both calendars
+			client.request("DELETE", final_url, None, {"If-Match": quote_etag(new_etag)} if new_etag else {}, ok=(200, 202, 204))
+		except CalDavError:
+			pass
+		raise
+	return {"href": final_url, "etag": new_etag}
+
+
 #--- Undo of deletes: the resource as it was, kept for a day in a private file (the user's runtime
 # directory: memory only, gone at logout), only its token goes to the widget.
 
@@ -1136,11 +1173,11 @@ def restore_event(client, token):
 
 
 def get_series(client, href):
-	"""A repeating event's series in Google style (as the editor takes it), with href and etag."""
+	"""A series (or a single event) in Google style (as the editor takes it), with href and etag."""
 	href = check_url(href)
 	_, headers, existing, href = client.request("GET", href, ok=(200,))
-	master, _ = series_parts(parse_existing(existing))
-	series = icsjson.event_to_raw(master)
+	master = master_event(parse_existing(existing))
+	series = icsjson.event_to_raw(master) if master is not None else None
 	if series is None:
 		raise CalDavError("PROTOCOL", "The series has no start")
 	etag = (headers.get("ETag") or "").strip() if headers is not None else ""
@@ -1293,6 +1330,12 @@ def build_parser():
 	cmd.add_argument("--undo", required=True, help="The token a delete gave")
 	common(cmd)
 
+	cmd = sub.add_parser("move")
+	cmd.add_argument("--href", required=True)
+	cmd.add_argument("--etag", required=True)
+	cmd.add_argument("--to", required=True, help="The other calendar's URL")
+	common(cmd)
+
 	cmd = sub.add_parser("get")
 	cmd.add_argument("--href", required=True)
 	common(cmd)
@@ -1358,6 +1401,8 @@ def run(args, stdin):
 		return delete_event(client, args.href, args.etag, recurrence_id)
 	if args.command == "restore":
 		return restore_event(client, args.undo)
+	if args.command == "move":
+		return move_event(client, args.href, args.etag, args.to)
 	if args.command == "get":
 		return get_series(client, args.href)
 	if args.command == "import":

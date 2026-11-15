@@ -657,6 +657,43 @@ class PutTests(unittest.TestCase):
 				caldav.restore_event(FakeClient([]), bad)
 			self.assertEqual(ctx.exception.kind, "INPUT")
 
+	def test_move_to_another_calendar(self):
+		client = FakeClient([(201, {}, ""), (207, {}, ms(resp("/other/x.ics", '<d:getetag>"m"</d:getetag>')))])
+		result = caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other")
+		self.assertEqual(result, {"href": BASE + "/other/x.ics", "etag": '"m"'})
+		method, url, _, headers = client.sent[0]
+		self.assertEqual((method, url), ("MOVE", BASE + "/cal/x.ics"))
+		self.assertEqual(headers["Destination"], BASE + "/other/x.ics")
+		self.assertEqual(headers["Overwrite"], "F")
+		self.assertEqual(headers["If-Match"], '"e"')
+		for to in ("https://elsewhere.example.com/cal/", BASE + "/cal/"):
+			with self.assertRaises(caldav.CalDavError) as ctx:
+				caldav.move_event(FakeClient([]), BASE + "/cal/x.ics", '"e"', to)
+			self.assertEqual(ctx.exception.kind, "INPUT")
+		# Changed meanwhile, or the name taken there: a conflict, nothing else tried.
+		client = FakeClient([(412, {}, "")])
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other/")
+		self.assertEqual(ctx.exception.kind, "CONFLICT")
+		self.assertEqual(len(client.sent), 1)
+
+	def test_move_without_server_support_copies_and_deletes(self):
+		client = FakeClient([(405, {}, ""), (200, {}, self.EXISTING), (201, {"ETag": '"c"'}, ""), (204, {}, "")])
+		result = caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other/")
+		self.assertEqual(result, {"href": BASE + "/other/x.ics", "etag": '"c"'})
+		self.assertEqual([s[:2] for s in client.sent], [("MOVE", BASE + "/cal/x.ics"), ("GET", BASE + "/cal/x.ics"),
+			("PUT", BASE + "/other/x.ics"), ("DELETE", BASE + "/cal/x.ics")])
+		self.assertEqual(client.sent[2][3]["If-None-Match"], "*")
+		self.assertEqual(client.sent[2][2].decode("utf-8"), self.EXISTING)
+		self.assertEqual(client.sent[3][3]["If-Match"], '"e"')
+		# The original changed meanwhile: the copy is removed again.
+		client = FakeClient([(501, {}, ""), (200, {}, self.EXISTING), (201, {"ETag": '"c"'}, ""), (412, {}, ""), (204, {}, "")])
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other/")
+		self.assertEqual(ctx.exception.kind, "CONFLICT")
+		self.assertEqual(client.sent[4][:2], ("DELETE", BASE + "/other/x.ics"))
+		self.assertEqual(client.sent[4][3]["If-Match"], '"c"')
+
 	def test_old_undo_files_are_removed(self):
 		token = caldav.save_undo({"href": BASE + "/cal/x.ics", "body": "", "etag": ""})
 		undo_file = os.path.join(caldav.undo_dir(), token + ".json")
@@ -933,9 +970,10 @@ class RecurringEditTests(unittest.TestCase):
 		self.assertEqual(series["start"], {"dateTime": "2026-10-19T10:00:00+02:00", "timeZone": "Europe/Berlin"})
 		self.assertEqual(series["recurrence"], ["RRULE:FREQ=WEEKLY;COUNT=6", "EXDATE:20261102T090000Z"])
 		self.assertEqual((series["caldavHref"], series["caldavEtag"]), (BASE + "/cal/berlin-1.ics", '"v1"'))
-		with self.assertRaises(caldav.CalDavError) as ctx:
-			caldav.get_series(FakeClient([(200, {"ETag": '"v1"'}, SINGLE)]), BASE + "/cal/single-1.ics")
-		self.assertEqual(ctx.exception.kind, "PROTOCOL")
+		# A single event too (eg: changed right after a move, before it's loaded there).
+		single = caldav.get_series(FakeClient([(200, {"ETag": '"v1"'}, SINGLE)]), BASE + "/cal/single-1.ics")
+		self.assertEqual((single["id"], single["caldavEtag"]), ("single-1", '"v1"'))
+		self.assertNotIn("recurrence", single)
 
 	def test_occurrence_requests(self):
 		rid = berlin(11, 16, 10)

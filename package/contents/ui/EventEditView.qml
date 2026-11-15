@@ -359,9 +359,9 @@ Rectangle {
 		logic.update()
 	}
 
-	//--- Calendar (Google): an existing event can move to another calendar of its account that we
-	// can write to (Google events.move). An occurrence only with its whole series.
-	// "account::" of the event's calendar, or '' (not a Google account calendar).
+	//--- Calendar (Google, CalDAV): an existing event can move to another calendar of its account
+	// that we can write to (Google events.move, a CalDAV MOVE). An occurrence only with its whole series.
+	// "account::" of the event's calendar, or '' (not an account's calendar).
 	readonly property string accountPrefix: {
 		var id = !isNew && eventItem.calendarId ? String(eventItem.calendarId) : ''
 		var i = id.indexOf('::')

@@ -1253,7 +1253,7 @@ CalendarManager {
 		}
 	}
 
-	// Events can move to another calendar of the same account (Google): see moveEvent.
+	// Events can move to another calendar of the same account (Google, CalDAV): see moveEvent.
 	function supportsMove(calendarId) {
 		return !!managerWith(calendarId, 'moveEvent')
 	}

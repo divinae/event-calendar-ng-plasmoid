@@ -177,6 +177,7 @@ CalendarManager {
 	}
 
 	onFetchAllCalendars: {
+		movedResources = {} // Read again: loaded where they are now
 		getCalendarList().forEach(function(calendar) {
 			fetchCalendar(calendar)
 		})
@@ -319,12 +320,13 @@ CalendarManager {
 			return
 		}
 		var calendar = getCalendar(calendarId)
-		var occurrence = seriesOccurrence(calendarId, eventId)
-		if (!calendar || !occurrence) {
+		// A series by an occurrence; an event just moved here (not loaded yet) by where it went.
+		var resource = seriesOccurrence(calendarId, eventId) || movedResources[calendarId + '\n' + eventId]
+		if (!calendar || !resource) {
 			callback('fetchEvent: event not loaded', null)
 			return
 		}
-		helper(['get', '--href', occurrence.caldavHref], calendar, function(err, series) {
+		helper(['get', '--href', resource.caldavHref], calendar, function(err, series) {
 			if (err) {
 				callback(err.message, null)
 			} else {
@@ -419,6 +421,44 @@ CalendarManager {
 		}
 		delete undoTokens[key]
 		write(calendar, ['restore', '--undo', token], null, done, fallback)
+	}
+
+	// Events moved to another calendar, until it's read again: { "<calendar id>\n<event id>":
+	// { caldavHref, caldavEtag } } (the editor saves its other changes there right after the move).
+	property var movedResources: ({})
+
+	// Move an event, or a series (eventId: its UID), to another calendar of the same account (its
+	// resource, see caldav.py move). done(err, { id }), always called.
+	function moveEvent(calendarId, eventId, destinationCalendarId, done, params) {
+		var calendar = getCalendar(calendarId)
+		var destination = getCalendar(destinationCalendarId)
+		var event = getEvent(calendarId, eventId) || seriesOccurrence(calendarId, eventId)
+		var fail = function(message) {
+			logger.log('caldav.moveEvent', message)
+			if (done) done('moveEvent: ' + message, null)
+		}
+		if (!calendar || !event || !event.caldavHref) {
+			fail('event not loaded')
+			return
+		}
+		if (!destination || destination.accountId !== calendar.accountId) {
+			fail('destination is in another account')
+			return
+		}
+		helper(['move', '--href', event.caldavHref, '--etag', String(event.caldavEtag || ''), '--to', destination.caldavHref], calendar, function(err, data) {
+			if (err) {
+				reportError(err.message)
+				if (done) done(err.message, null)
+				return
+			}
+			movedResources[destinationCalendarId + '\n' + eventId] = { caldavHref: data.href, caldavEtag: data.etag }
+			eventItems(calendarId).slice().forEach(function(item) {
+				if (item.caldavHref === event.caldavHref) { // The event, or all of the series' occurrences
+					removeEvent(calendarId, item.id)
+				}
+			})
+			if (done) done(null, { id: eventId })
+		})
 	}
 
 	// Import (ImportView, one event at a time, Google-style fields): created as a new event. Not
