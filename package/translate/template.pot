@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-15 14:39+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3821,11 +3821,11 @@ msgid "Show more"
 msgstr ""
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
+msgid "Couldn't search the online calendars"
 msgstr ""
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
+msgid "Searching the online calendars…"
 msgstr ""
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml

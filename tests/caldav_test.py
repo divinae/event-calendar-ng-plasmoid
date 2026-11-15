@@ -442,6 +442,17 @@ class QueryTests(unittest.TestCase):
 		self.assertFalse(item["recurring"])
 		self.assertNotIn("recurringEventId", item)
 
+	def test_match_keeps_events_with_every_word(self):
+		krakow = vcal("BEGIN:VEVENT\r\nUID:k-1\r\nDTSTART:20261104T100000Z\r\nDTEND:20261104T110000Z\r\n"
+			"SUMMARY:Trip\r\nLOCATION:Kraków\r\nDESCRIPTION:<b>Train</b>&nbsp;tickets\r\nEND:VEVENT\r\n")
+		resources = [("/cal/single-1.ics", '"e1"', SINGLE), ("/cal/k-1.ics", '"e2"', krakow)]
+		for match, found in (("krakow TRAIN", ["Trip"]), ("standup room", ["Standup"]), ("train tickets", ["Trip"]),
+				("trip standup", []), ("b", []), ("", []), ("ROOM 1", ["Standup"])):
+			client = FakeClient([(207, {}, report_response(*resources))])
+			result = caldav.query(client, BASE + "/cal/", self.start, self.end, probe_ctag=False, match=match)
+			self.assertEqual([i["summary"] for i in result["items"]], found, match)
+			self.assertEqual(client.sent[0][0], "REPORT") # No change tag asked for
+
 	def test_all_day_event(self):
 		item = self.run_query(("/cal/allday-1.ics", '"e2"', ALLDAY))[0]
 		self.assertEqual(item["start"], {"date": "2026-11-04"})

@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-15 14:39+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: 2019-06-02 22:28+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -4248,12 +4248,12 @@ msgid "Show more"
 msgstr "Daha fazla göster"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Google Takvim'de arama yapılamadı"
+msgid "Couldn't search the online calendars"
+msgstr "Çevrimiçi takvimlerde arama yapılamadı"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Google Takvim'de aranıyor…"
+msgid "Searching the online calendars…"
+msgstr "Çevrimiçi takvimlerde aranıyor…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4863,6 +4863,12 @@ msgstr "Bugün başka etkinlik yok"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Çalışma konumu: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Google Takvim'de arama yapılamadı"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Google Takvim'de aranıyor…"
 
 #~ msgid ""
 #~ "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "

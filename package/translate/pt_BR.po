@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-15 14:39+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: 2021-10-19 20:30-0300\n"
 "Last-Translator: Bernardo Barzotto Zomer <bernardobarzottoz@gmail.com>\n"
 "Language-Team: Portuguese <kde-i18n-pt_BR@kde.org>\n"
@@ -4253,12 +4253,12 @@ msgid "Show more"
 msgstr "Mostrar mais"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Não foi possível pesquisar no Google Agenda"
+msgid "Couldn't search the online calendars"
+msgstr "Não foi possível pesquisar nas agendas online"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Pesquisando no Google Agenda…"
+msgid "Searching the online calendars…"
+msgstr "Pesquisando nas agendas online…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4867,6 +4867,12 @@ msgstr "Não há mais eventos hoje"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Local de trabalho: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Não foi possível pesquisar no Google Agenda"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Pesquisando no Google Agenda…"
 
 #~ msgid ""
 #~ "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "

@@ -7,6 +7,7 @@ DEPS or KEYRING (the keyring couldn't be read, eg: not up yet at login; try agai
 Commands (all take --account ID --user USERNAME):
 	discover --url URL
 	query --url CALENDAR START END            (YYYY-MM-DD, END exclusive)
+	      [--match TEXT]                      (only events with every word in title, place or notes)
 	put --url CALENDAR [--href RES --etag E [--recurrence-id RID]] [--event-b64 B64]
 	                                          (event JSON as base64 of UTF-8, else on stdin)
 	delete --href RES --etag E [--recurrence-id RID]
@@ -39,6 +40,7 @@ import re
 import secrets
 import socket
 import time
+import unicodedata
 import sys
 import urllib.error
 import urllib.parse
@@ -545,10 +547,34 @@ def calendar_ctag(client, url):
 	return ""
 
 
-def query(client, url, start, end, if_ctag="", probe_ctag=True):
+def search_text(text):
+	"""Lower case without accents ("Kraków" matches "krakow"), as the widget's EventSearch.js."""
+	text = unicodedata.normalize("NFD", str(text or "").lower())
+	return "".join(c for c in text if not "\u0300" <= c <= "\u036f")
+
+
+def plain_text(html):
+	return re.sub(r"<[^>]*>", " ", str(html or "")).replace("&nbsp;", " ").replace("&amp;", "&")
+
+
+def matching_items(items, match):
+	"""The items with every word of match in their title, location or description."""
+	words = search_text(match).split()
+	if not words:
+		return []
+	found = []
+	for item in items:
+		haystack = search_text(" ".join([item.get("summary") or "", item.get("location") or "", plain_text(item.get("description"))]))
+		if all(word in haystack for word in words):
+			found.append(item)
+	return found
+
+
+def query(client, url, start, end, if_ctag="", probe_ctag=True, match=None):
 	"""start/end: naive datetimes (local midnight), end exclusive. if_ctag: the calendar's change tag
 	at the last fetch of the same range: unchanged, the events aren't downloaded again ({"unchanged":
-	true}). The tag is read before the events, so a change meanwhile is seen next time."""
+	true}). The tag is read before the events, so a change meanwhile is seen next time. match: only
+	the events that have its words (matching_items), for search."""
 	ctag = calendar_ctag(client, url) if probe_ctag else ""
 	if if_ctag and ctag and ctag == if_ctag:
 		return {"unchanged": True, "ctag": ctag}
@@ -560,7 +586,10 @@ def query(client, url, start, end, if_ctag="", probe_ctag=True):
 		{"Depth": "1", "Content-Type": "application/xml; charset=utf-8"},
 		ok=(207,),
 	)
-	return {"items": query_items(parse_multistatus(data, final_url), start, end), "ctag": ctag}
+	items = query_items(parse_multistatus(data, final_url), start, end)
+	if match is not None:
+		items = matching_items(items, match)
+	return {"items": items, "ctag": ctag}
 
 
 #--- put
@@ -1308,6 +1337,7 @@ def build_parser():
 	cmd.add_argument("--url", required=True)
 	cmd.add_argument("--if-ctag", default="", help="The change tag of the last fetch: unchanged, no events are downloaded")
 	cmd.add_argument("--no-ctag", action="store_true", help="Don't ask for the change tag (the server has none)")
+	cmd.add_argument("--match", default=None, help="Only events with every word of this in their title, location or description")
 	cmd.add_argument("start")
 	cmd.add_argument("end")
 	common(cmd)
@@ -1387,7 +1417,7 @@ def run(args, stdin):
 	if args.command == "discover":
 		return discover(client, args.url)
 	if args.command == "query":
-		return query(client, args.url, start, end, args.if_ctag, not args.no_ctag)
+		return query(client, args.url, start, end, args.if_ctag, not args.no_ctag and args.match is None, args.match)
 	if args.command == "put":
 		try:
 			if args.event_b64 is not None:

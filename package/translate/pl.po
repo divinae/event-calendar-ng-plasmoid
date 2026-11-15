@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-15 14:39+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: 2018-09-03 HO:MI+ZONE\n"
 "Last-Translator: Jakub Starzyk <jstarzyk98@gmail.com>\n"
 "Language-Team: Jakub Starzyk <jstarzyk98@gmail.com>\n"
@@ -3834,12 +3834,12 @@ msgid "Show more"
 msgstr "Pokaż więcej"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Nie można przeszukać Kalendarza Google"
+msgid "Couldn't search the online calendars"
+msgstr "Nie można przeszukać kalendarzy online"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Przeszukiwanie Kalendarza Google…"
+msgid "Searching the online calendars…"
+msgstr "Przeszukiwanie kalendarzy online…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4456,6 +4456,12 @@ msgstr "Dziś nie ma już wydarzeń"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Miejsce pracy: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Nie można przeszukać Kalendarza Google"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Przeszukiwanie Kalendarza Google…"
 
 #~ msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now."
 #~ msgstr "Nextcloud, Fastmail, iCloud (z hasłem aplikacji), Radicale, Baïkal i inne. Hasło jest przechowywane w systemowym pęku kluczy. Wydarzenia cykliczne są wyświetlane, ale na razie można je zmieniać tylko w ich własnej aplikacji."

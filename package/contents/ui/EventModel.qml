@@ -793,7 +793,7 @@ CalendarManager {
 		return !!calendarManager && calendarManager.calendarManagerId === 'GoogleCalendar'
 	}
 
-	// Search the calendars that support it (Google) between timeMin and timeMax.
+	// Search the calendars that support it (Google, CalDAV) between timeMin and timeMax.
 	// callback(err, items) once all of them answered.
 	function searchEvents(query, timeMin, timeMax, callback) {
 		var managers = calendarManagerList.filter(function(m) {

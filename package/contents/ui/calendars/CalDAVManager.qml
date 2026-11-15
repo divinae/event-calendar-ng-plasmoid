@@ -4,6 +4,7 @@ import org.kde.kirigami as Kirigami
 import "../ErrorType.js" as ErrorType
 import "../ScriptPath.js" as ScriptPath
 import "../lib"
+import "../lib/Async.js" as Async
 import "../lib/Base64Compat.js" as Base64Compat
 import "../Shared.js" as Shared
 import "CalDAVErrors.js" as CalDAVErrors
@@ -173,6 +174,36 @@ CalendarManager {
 			} finally {
 				caldavManager.asyncRequestsDone += 1
 			}
+		})
+	}
+
+	//--- Search
+	// Events matching query in the selected calendars between timeMin and timeMax (Dates): each
+	// calendar read for that range, the helper keeps those with every word in their title,
+	// location or description (as the loaded events are searched). callback(err, items): parsed
+	// like fetched events.
+	function searchEvents(query, timeMin, timeMax, callback) {
+		var tasks = getCalendarList().map(function(calendar) {
+			return function(done) {
+				helper(['query', '--url', calendar.caldavHref, Shared.localDateString(timeMin), Shared.localDateString(timeMax),
+					'--match=' + query], calendar, function(err, data) {
+					if (err || !(data && Array.isArray(data.items))) {
+						done(err ? err.message : 'searchEvents: no items', null)
+						return
+					}
+					calendarParsing(calendar.id, data)
+					done(null, data.items)
+				})
+			}
+		})
+		Async.settleAll(tasks, function(results) {
+			var found = []
+			var firstError = null
+			results.forEach(function(result) {
+				firstError = firstError || result.err
+				found = found.concat(result.data || [])
+			})
+			callback(found.length ? null : firstError, found)
 		})
 	}
 

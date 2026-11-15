@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-15 14:39+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: 2022-10-25 17:15+0900\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -4176,12 +4176,12 @@ msgid "Show more"
 msgstr "더 보기"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Google 캘린더를 검색할 수 없음"
+msgid "Couldn't search the online calendars"
+msgstr "온라인 캘린더를 검색할 수 없음"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Google 캘린더 검색 중…"
+msgid "Searching the online calendars…"
+msgstr "온라인 캘린더 검색 중…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4779,6 +4779,12 @@ msgstr "오늘은 더 이상 일정이 없습니다"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "근무 위치: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Google 캘린더를 검색할 수 없음"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Google 캘린더 검색 중…"
 
 #~ msgid ""
 #~ "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
