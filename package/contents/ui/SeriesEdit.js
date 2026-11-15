@@ -13,11 +13,18 @@ function instant(obj) {
 	return Shared.parseLocalDate(obj.date).getTime()
 }
 
+// "2026-11-03T10:00:00": a local time without offset (a floating time for CalDAV).
+function localDateTimeString(d) {
+	var pad = function(n) { return (n < 10 ? '0' : '') + n }
+	return Shared.localDateString(d) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds())
+}
+
 // New start / end objects for `series` (the recurring event), when its occurrence that started
 // at `occurrenceStart` (a Date) gets the times `start` / `end` (Google objects). The days the
 // occurrence moved and its new time of day are applied to the series start in local time, so a
 // daylight saving change between the two dates doesn't shift the hour. Timed events keep the
-// series' time zone, or get `timeZone` (Google needs one to expand a recurring event).
+// series' time zone, or get `timeZone` (Google needs one to expand a recurring event). With
+// neither (a CalDAV series in floating time) they stay floating: local wall-clock times.
 function shiftedTimes(series, occurrenceStart, start, end, timeZone) {
 	var newStart = new Date(instant(start))
 	var dayShift = Math.round((Shared.startOfDay(newStart) - Shared.startOfDay(new Date(occurrenceStart))) / 86400000)
@@ -34,6 +41,12 @@ function shiftedTimes(series, occurrenceStart, start, end, timeZone) {
 		}
 	}
 	var zone = (series.start && series.start.timeZone) || timeZone
+	if (!zone) {
+		return {
+			start: { dateTime: localDateTimeString(seriesStart) },
+			end: { dateTime: localDateTimeString(new Date(seriesStart.getTime() + duration)) },
+		}
+	}
 	return {
 		start: { dateTime: seriesStart.toISOString(), timeZone: zone },
 		end: { dateTime: new Date(seriesStart.getTime() + duration).toISOString(), timeZone: zone },

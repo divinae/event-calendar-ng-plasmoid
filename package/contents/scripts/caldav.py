@@ -7,10 +7,16 @@ DEPS or KEYRING (the keyring couldn't be read, eg: not up yet at login; try agai
 Commands (all take --account ID --user USERNAME):
 	discover --url URL
 	query --url CALENDAR START END            (YYYY-MM-DD, END exclusive)
-	put --url CALENDAR [--href RES --etag E] [--event-b64 B64]
+	put --url CALENDAR [--href RES --etag E [--recurrence-id RID]] [--event-b64 B64]
 	                                          (event JSON as base64 of UTF-8, else on stdin)
-	delete --href RES --etag E
+	delete --href RES --etag E [--recurrence-id RID]
+	get --href RES                            (a repeating event's series, as an import gives it)
 	import --url CALENDAR --file PATH
+
+Repeating events: a query gives each occurrence its caldavRecurrenceId (the original start, as
+{"date"} or {"dateTime", "timeZone"}). put / delete with --recurrence-id (that JSON) change or
+remove only that occurrence (an override in the same resource, or an EXDATE); without it they
+change or delete the whole series.
 
 The password comes from the keyring (secret_store.py, scope "caldav-account", key "password",
 account_id ID). For tests and command-line use only, --password-stdin reads it from the first
@@ -20,6 +26,7 @@ taken from argv and never printed.
 
 import argparse
 import base64
+import copy
 import datetime
 import hashlib
 import ipaddress
@@ -469,6 +476,9 @@ def resource_items(href, etag, calendar_data, start, end):
 	except Exception as error:
 		raise CalDavError("PROTOCOL", "Invalid calendar data in {}: {}".format(url_path(href), error))
 	recurring = resource_is_recurring(cal)
+	# Overrides without their series (eg: an invitation to one instance): nothing to change them in.
+	master = master_event(cal)
+	no_series = recurring and (master is None or not is_recurring_component(master))
 	items = []
 	for occurrence in resource_occurrences(cal, start, end):
 		converted = json.loads(icsjson.events_to_json([occurrence], indent=None))["items"]
@@ -479,6 +489,12 @@ def resource_items(href, etag, calendar_data, start, end):
 			item["recurring"] = recurring
 			if recurring:
 				item["recurringEventId"] = item["caldavUid"]
+				# The occurrence's original start: what put / delete --recurrence-id take.
+				recurrence_id = icsjson.get_event_date(occurrence, "RECURRENCE-ID")
+				if recurrence_id is not None:
+					item["caldavRecurrenceId"] = icsjson.raw_date_to_json(recurrence_id)
+				if no_series:
+					item["caldavReadOnly"] = True
 			items.append(item)
 	return items
 
@@ -697,16 +713,15 @@ def master_event(cal):
 	return None
 
 
-def build_updated_calendar(existing, data, stamp=None):
+def parse_existing(existing):
 	try:
-		cal = Calendar.from_ical(existing)
+		return Calendar.from_ical(existing)
 	except Exception as error:
 		raise CalDavError("PROTOCOL", "Invalid calendar data on the server: {}".format(error))
-	event = master_event(cal)
-	if event is None:
-		raise CalDavError("PROTOCOL", "The resource has no master event")
-	stamp = stamp or now_utc()
-	apply_event_fields(event, data)
+
+
+def touch(event, stamp):
+	"""A changed VEVENT: new DTSTAMP / LAST-MODIFIED, SEQUENCE one up."""
 	for key in ("DTSTAMP", "LAST-MODIFIED"):
 		event.pop(key, None)
 		event.add(key, stamp)
@@ -716,9 +731,251 @@ def build_updated_calendar(existing, data, stamp=None):
 		sequence = 0
 	event.pop("SEQUENCE", None)
 	event.add("SEQUENCE", sequence + 1)
+
+
+TEXT_FIELDS = (("summary", "SUMMARY"), ("location", "LOCATION"), ("description", "DESCRIPTION"))
+
+
+def build_updated_calendar(existing, data, stamp=None):
+	"""The whole event changed: for a repeating one, its series (the master VEVENT). When the series
+	starts at another day or time, its EXDATEs, RDATEs, UNTIL and overrides move with it (see
+	shift_instances), and overrides that kept the series' title, place or notes get the new ones too.
+	A series that no longer repeats loses its overrides."""
+	cal = parse_existing(existing)
+	event = master_event(cal)
+	if event is None:
+		raise CalDavError("PROTOCOL", "The resource has no master event")
+	stamp = stamp or now_utc()
+	old_bounds = icsjson.get_event_bounds(event)
+	old_texts = {key: icsjson.stringify(event.get(key)) for _, key in TEXT_FIELDS}
+	apply_event_fields(event, data)
+	touch(event, stamp)
+	new_bounds = icsjson.get_event_bounds(event)
+	if not is_recurring_component(event):
+		# No repeat any more (recurrence []): its overrides would stay as stray events.
+		for override in overrides(cal):
+			cal.subcomponents.remove(override)
+	changed = set()
+	for override in overrides(cal):
+		for name, key in TEXT_FIELDS:
+			if data.get(name) is not None and icsjson.stringify(override.get(key)) == old_texts[key]:
+				set_text(override, key, data[name])
+				changed.add(id(override))
+	if None not in old_bounds and None not in new_bounds and old_bounds != new_bounds:
+		# A new rule from the editor (recurrence given) has the end the user chose: UNTIL stays.
+		changed |= shift_instances(cal, event, old_bounds, new_bounds, shift_until=data.get("recurrence") is None)
+	for override in overrides(cal):
+		if id(override) in changed:
+			touch(override, stamp)
 	add_timezones(cal)
 	uid = icsjson.stringify(event.get("UID")).strip()
 	return uid, cal.to_ical()
+
+
+#--- repeating events: one occurrence, or the series' instances moved
+
+def overrides(cal):
+	return [event for event in cal.walk("VEVENT") if event.get("RECURRENCE-ID") is not None]
+
+
+def local_date(value, zone):
+	"""The day of a date, or of a time in zone (the series' zone; floating times as they are)."""
+	if not isinstance(value, datetime.datetime):
+		return value
+	if value.tzinfo is not None and zone is not None:
+		return value.astimezone(zone).date()
+	return value.date()
+
+
+def same_instance(a, b):
+	"""Two RECURRENCE-ID / EXDATE values name the same instance: the same day for dates, else the
+	same moment (floating times by their wall clock)."""
+	if is_all_day(a) or is_all_day(b):
+		return local_date(a, getattr(b, "tzinfo", None)) == local_date(b, getattr(a, "tzinfo", None))
+	if (a.tzinfo is None) != (b.tzinfo is None):
+		return a.replace(tzinfo=None) == b.replace(tzinfo=None)
+	return a == b
+
+
+def like_start(value, start):
+	"""value in the form of the series' DTSTART (a date, a time in its zone, or a floating time), as
+	RFC 5545 wants RECURRENCE-ID and EXDATE."""
+	if is_all_day(start):
+		return local_date(value, None)
+	if is_all_day(value):
+		return datetime.datetime.combine(value, start.time()).replace(tzinfo=start.tzinfo)
+	if start.tzinfo is None:
+		return value.replace(tzinfo=None)
+	if value.tzinfo is None:
+		return value.replace(tzinfo=start.tzinfo)
+	return value.astimezone(start.tzinfo)
+
+
+def wall_clock(value, zone):
+	"""A time as the wall clock shows it in zone (the series' zone; floating times as they are)."""
+	if value.tzinfo is not None and zone is not None:
+		return value.astimezone(zone).replace(tzinfo=None)
+	return value.replace(tzinfo=None)
+
+
+def moved_instance(value, old_start, new_start):
+	"""An instance of a series that now starts at new_start instead of old_start, in the new start's
+	form. Times move by as much as the start moved on the wall clock of the series' zone, so a
+	daylight saving change between them doesn't shift the hour, and instances at other times of the
+	day (BYHOUR, an RDATE) keep their distance to the start. With whole days on either side: as many
+	days later, at the new start's time of day."""
+	old_zone = getattr(old_start, "tzinfo", None)
+	new_zone = getattr(new_start, "tzinfo", None)
+	if is_all_day(old_start) or is_all_day(new_start) or is_all_day(value):
+		day = local_date(value, old_zone) + (local_date(new_start, new_zone) - local_date(old_start, old_zone))
+		if is_all_day(new_start):
+			return day
+		return datetime.datetime.combine(day, new_start.time()).replace(tzinfo=new_zone)
+	moved = wall_clock(value, old_zone) + (wall_clock(new_start, new_zone) - wall_clock(old_start, old_zone))
+	return moved.replace(tzinfo=new_zone)
+
+
+def date_entries(event, key):
+	"""Every value of an EXDATE or RDATE property (one or several lines): dates, times, and for RDATE
+	maybe periods ((start, end or duration) tuples)."""
+	prop = event.get(key)
+	if prop is None:
+		return []
+	values = []
+	for item in (prop if isinstance(prop, list) else [prop]):
+		for entry in getattr(item, "dts", []):
+			values.append(getattr(entry, "dt", None))
+	return values
+
+
+def date_values(event, key):
+	"""The dates / times of an EXDATE or RDATE property."""
+	return [value for value in date_entries(event, key) if isinstance(value, datetime.date)]
+
+
+def moved_until(rule, old_start, new_start):
+	"""The RRULE's UNTIL moved like the instances (it's often the last instance's start exactly), in
+	the form RFC 5545 wants: a date for a series of whole days, UTC for one in a zone."""
+	until = rule.get("UNTIL")
+	if not until:
+		return
+	value = until[0] if isinstance(until, list) else until
+	moved = moved_instance(value, old_start, new_start)
+	if isinstance(moved, datetime.datetime) and moved.tzinfo is not None:
+		moved = moved.astimezone(datetime.timezone.utc)
+	rule["UNTIL"] = [moved]
+
+
+def set_date_values(event, key, values):
+	event.pop(key, None)
+	for value in values:
+		# Dates need VALUE=DATE (RFC 5545), which icalendar writes for DTSTART but not for lists.
+		event.add(key, value, parameters={"VALUE": "DATE"} if is_all_day(value) else None)
+
+
+def shift_instances(cal, master, old_bounds, new_bounds, shift_until=True):
+	"""The series' times changed from old_bounds to new_bounds ((start, end)). A new start moves its
+	EXDATEs, RDATEs, its rule's UNTIL (with shift_until) and the RECURRENCE-IDs of its overrides
+	along. An override still at its instance's original times follows the series (start and length);
+	one moved on its own keeps its times. Returns the ids of the overrides changed."""
+	old_start, old_end = old_bounds
+	new_start, new_end = new_bounds
+	moves = old_start != new_start
+	changed = set()
+	if moves:
+		set_date_values(master, "EXDATE", [moved_instance(v, old_start, new_start) for v in date_values(master, "EXDATE")])
+		rdates = date_entries(master, "RDATE")
+		if rdates and all(isinstance(v, datetime.date) for v in rdates):  # Periods are left as they are
+			set_date_values(master, "RDATE", [moved_instance(v, old_start, new_start) for v in rdates])
+		rules = master.get("RRULE")
+		if shift_until and rules is not None:
+			for rule in (rules if isinstance(rules, list) else [rules]):
+				moved_until(rule, old_start, new_start)
+	for override in overrides(cal):
+		old_id = icsjson.get_event_date(override, "RECURRENCE-ID")
+		new_id = moved_instance(old_id, old_start, new_start) if moves else old_id
+		start, end = icsjson.get_event_bounds(override)
+		unmoved = start is not None and end is not None and same_instance(start, old_id) \
+			and is_all_day(start) == is_all_day(old_start) and end - start == old_end - old_start
+		if moves:
+			set_date(override, "RECURRENCE-ID", new_id)
+			changed.add(id(override))
+		if unmoved:
+			override.pop("DURATION", None)
+			set_date(override, "DTSTART", new_id)
+			set_date(override, "DTEND", new_id + (new_end - new_start))
+			changed.add(id(override))
+	return changed
+
+
+def parse_recurrence_id(text):
+	"""--recurrence-id: the occurrence's caldavRecurrenceId JSON from a query."""
+	try:
+		value = json.loads(text)
+	except ValueError:
+		raise CalDavError("INPUT", "--recurrence-id is not JSON")
+	return parse_when(value, "recurrence-id")
+
+
+def find_override(cal, recurrence_id):
+	for event in overrides(cal):
+		if same_instance(icsjson.get_event_date(event, "RECURRENCE-ID"), recurrence_id):
+			return event
+	return None
+
+
+def series_parts(cal):
+	"""(master, its DTSTART) of a repeating event's resource."""
+	master = master_event(cal)
+	start = icsjson.get_event_date(master, "DTSTART") if master is not None else None
+	if master is None or start is None or not is_recurring_component(master):
+		raise CalDavError("PROTOCOL", "The resource has no repeating event")
+	return master, start
+
+
+def new_override(master, recurrence_id):
+	"""An override for one instance: a copy of the series without its rule, at that instance."""
+	start, end = icsjson.get_event_bounds(master)
+	override = copy.deepcopy(master)
+	for key in ("RRULE", "RDATE", "EXDATE", "EXRULE", "DTSTART", "DTEND", "DURATION", "RECURRENCE-ID", "CREATED"):
+		override.pop(key, None)
+	override.add("RECURRENCE-ID", recurrence_id)
+	override.add("DTSTART", recurrence_id)
+	override.add("DTEND", recurrence_id + (end - start))
+	return override
+
+
+def build_updated_occurrence(existing, data, recurrence_id, stamp=None):
+	"""Only one occurrence changed: its override (made from the series if there is none yet)."""
+	if data.get("recurrence") is not None:
+		raise CalDavError("INPUT", "One occurrence has no repeat rule of its own")
+	cal = parse_existing(existing)
+	master, start = series_parts(cal)
+	recurrence_id = like_start(recurrence_id, start)
+	override = find_override(cal, recurrence_id)
+	if override is None:
+		override = new_override(master, recurrence_id)
+		cal.add_component(override)
+	apply_event_fields(override, data)
+	touch(override, stamp or now_utc())
+	add_timezones(cal)
+	return icsjson.stringify(master.get("UID")).strip(), cal.to_ical()
+
+
+def build_deleted_occurrence(existing, recurrence_id, stamp=None):
+	"""One occurrence deleted: an EXDATE on the series, and its override (if any) removed."""
+	cal = parse_existing(existing)
+	master, start = series_parts(cal)
+	recurrence_id = like_start(recurrence_id, start)
+	override = find_override(cal, recurrence_id)
+	if override is not None:
+		cal.subcomponents.remove(override)
+	exdates = date_values(master, "EXDATE")
+	if not any(same_instance(value, recurrence_id) for value in exdates):
+		set_date_values(master, "EXDATE", exdates + [recurrence_id])
+	touch(master, stamp or now_utc())
+	add_timezones(cal)
+	return cal.to_ical()
 
 
 def quote_etag(etag):
@@ -753,7 +1010,9 @@ def put_calendar(client, href, body, headers):
 	return final_url, etag
 
 
-def put_event(client, cal_url, data, href=None, etag=None):
+def put_event(client, cal_url, data, href=None, etag=None, recurrence_id=None):
+	"""Create an event, or change one (href + etag): with recurrence_id only that occurrence of its
+	series, else the whole event or series."""
 	if not isinstance(data, dict):
 		raise CalDavError("INPUT", "The event must be a JSON object")
 	cal_url = check_url(cal_url)
@@ -761,18 +1020,47 @@ def put_event(client, cal_url, data, href=None, etag=None):
 		href = check_url(urllib.parse.urljoin(collection_url(cal_url), href))
 		match = quote_etag(etag)
 		_, _, existing, href = client.request("GET", href, ok=(200,))
-		uid, body = build_updated_calendar(existing, data)
+		if recurrence_id is not None:
+			uid, body = build_updated_occurrence(existing, data, recurrence_id)
+		else:
+			uid, body = build_updated_calendar(existing, data)
 		final_url, new_etag = put_calendar(client, href, body, {"If-Match": match})
 	else:
+		if recurrence_id is not None:
+			raise CalDavError("INPUT", "--recurrence-id needs --href")
 		uid, body = build_new_calendar(data)
 		target = collection_url(cal_url) + resource_name(uid) + ".ics"
 		final_url, new_etag = put_calendar(client, target, body, {"If-None-Match": "*"})
 	return {"href": final_url, "etag": new_etag, "uid": uid}
 
 
-def delete_event(client, href, etag):
-	client.request("DELETE", href, None, {"If-Match": quote_etag(etag)}, ok=(200, 202, 204))
-	return {"ok": True}
+def delete_event(client, href, etag, recurrence_id=None):
+	"""Delete an event or a whole series; with recurrence_id only that occurrence (the series stays,
+	changed: its new etag is returned)."""
+	if recurrence_id is None:
+		client.request("DELETE", href, None, {"If-Match": quote_etag(etag)}, ok=(200, 202, 204))
+		return {"ok": True}
+	href = check_url(href)
+	match = quote_etag(etag)
+	_, _, existing, href = client.request("GET", href, ok=(200,))
+	final_url, new_etag = put_calendar(client, href, build_deleted_occurrence(existing, recurrence_id), {"If-Match": match})
+	return {"ok": True, "href": final_url, "etag": new_etag}
+
+
+def get_series(client, href):
+	"""A repeating event's series as the editor wants it (Google style, like an import: start / end
+	with their time zone, recurrence lines), with the resource's href and etag."""
+	href = check_url(href)
+	_, headers, existing, href = client.request("GET", href, ok=(200,))
+	master, _ = series_parts(parse_existing(existing))
+	series = icsjson.event_to_raw(master)
+	if series is None:
+		raise CalDavError("PROTOCOL", "The series has no start")
+	etag = (headers.get("ETag") or "").strip() if headers is not None else ""
+	series["id"] = series["iCalUID"]
+	series["caldavHref"] = href
+	series["caldavEtag"] = etag or fetch_etag(client, href)
+	return series
 
 
 #--- import
@@ -905,11 +1193,17 @@ def build_parser():
 	cmd.add_argument("--href", default="")
 	cmd.add_argument("--etag", default="")
 	cmd.add_argument("--event-b64", default=None, help="The event JSON as base64 of UTF-8 (else read from stdin)")
+	cmd.add_argument("--recurrence-id", default=None, help="Only this occurrence of the series (its caldavRecurrenceId JSON)")
 	common(cmd)
 
 	cmd = sub.add_parser("delete")
 	cmd.add_argument("--href", required=True)
 	cmd.add_argument("--etag", required=True)
+	cmd.add_argument("--recurrence-id", default=None, help="Only this occurrence of the series (its caldavRecurrenceId JSON)")
+	common(cmd)
+
+	cmd = sub.add_parser("get")
+	cmd.add_argument("--href", required=True)
 	common(cmd)
 
 	cmd = sub.add_parser("import")
@@ -947,6 +1241,9 @@ def run(args, stdin):
 			raise CalDavError("INPUT", "END must be after START")
 	if args.command == "put" and bool(args.href) != bool(args.etag):
 		raise CalDavError("INPUT", "--href and --etag go together")
+	recurrence_id = None
+	if getattr(args, "recurrence_id", None) is not None:
+		recurrence_id = parse_recurrence_id(args.recurrence_id)
 	if not args.user:
 		raise CalDavError("INPUT", "--user is required")
 	password = read_password(args, stdin)
@@ -965,9 +1262,11 @@ def run(args, stdin):
 				data = json.loads(stdin.read())
 		except (ValueError, UnicodeDecodeError) as error:
 			raise CalDavError("INPUT", "The event is not valid (base64) JSON: {}".format(error))
-		return put_event(client, args.url, data, args.href or None, args.etag or None)
+		return put_event(client, args.url, data, args.href or None, args.etag or None, recurrence_id)
 	if args.command == "delete":
-		return delete_event(client, args.href, args.etag)
+		return delete_event(client, args.href, args.etag, recurrence_id)
+	if args.command == "get":
+		return get_series(client, args.href)
 	if args.command == "import":
 		return import_file(client, args.url, args.file)
 	raise CalDavError("INPUT", "Unknown command")

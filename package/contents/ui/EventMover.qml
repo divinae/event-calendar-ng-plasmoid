@@ -88,7 +88,8 @@ Item {
 		var seriesId = eventItem.recurringEventId
 		var occurrenceStart = new Date(eventItem.startDateTime)
 		var calendar = eventModel.getCalendarList().filter(function(c) { return c.id === calendarId })[0]
-		var timeZone = (calendar && calendar.timeZone) || 'UTC'
+		// No zone of its own (CalDAV): the series' own, else it stays in floating time (SeriesEdit).
+		var timeZone = (calendar && calendar.timeZone) || ''
 		var seriesTimes = null // The series' times before the move, for undo.
 		eventModel.updateEventFromServer(calendarId, seriesId, function(series) {
 			seriesTimes = Undo.savedTimes(series)
