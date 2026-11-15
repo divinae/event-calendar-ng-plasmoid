@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 19:16+0100\n"
 "PO-Revision-Date: 2018-06-07 01:37+0300\n"
 "Last-Translator: Chris P <skylin@protonmail.com>\n"
 "Language-Team: Chris P <skylin@protonmail.com>\n"
@@ -2449,6 +2449,10 @@ msgstr "Δεν βρέθηκε πόλη."
 #: ../contents/ui/config/OpenWeatherMapCityDialog.qml
 msgid "No app id set."
 msgstr "Δεν έχει οριστεί αναγνωριστικό εφαρμογής."
+
+#: ../contents/ui/config/PimCalendarList.qml
+msgid "Its events come from the account in the CalDAV tab."
+msgstr "Τα γεγονότα του προέρχονται από τον λογαριασμό στην καρτέλα CalDAV."
 
 #: ../contents/ui/config/PimCalendarList.qml
 msgid ""

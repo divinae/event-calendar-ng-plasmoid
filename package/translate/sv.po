@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 19:16+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Mathias <EMAIL@ADDRESS>\n"
 "Language-Team: Swedish <LL@li.org>\n"
@@ -2015,6 +2015,10 @@ msgstr "Ingen stad hittades."
 #: ../contents/ui/config/OpenWeatherMapCityDialog.qml
 msgid "No app id set."
 msgstr "Inget app-id angivet."
+
+#: ../contents/ui/config/PimCalendarList.qml
+msgid "Its events come from the account in the CalDAV tab."
+msgstr "Dess händelser kommer från kontot på fliken CalDAV."
 
 #: ../contents/ui/config/PimCalendarList.qml
 msgid "Its events come from the account signed in to in the Google Calendar tab."

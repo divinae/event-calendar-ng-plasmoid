@@ -240,32 +240,50 @@ console.log('PASS plasma_calendar_utils')
 	const { execFileSync } = require('child_process')
 	const home = fs.mkdtempSync(path.join(os.tmpdir(), 'ecng-akonadi-'))
 	try {
-		const db = path.join(home, 'my akonadi.db')
-		fs.mkdirSync(path.join(home, 'config/akonadi'), { recursive: true })
-		fs.writeFileSync(path.join(home, 'config/akonadi/akonadiserverrc'), '[%General]\nDriver=QSQLITE\n\n[QSQLITE]\nName=' + db + '\n')
+		// A folder with ü and a space: QSettings writes it quoted, with \xNNNN escapes.
+		const dir = path.join(home, 'jürgen data')
+		fs.mkdirSync(dir)
+		const db = path.join(dir, 'akonadi.db')
+		const rc = path.join(home, 'config/akonadi/akonadiserverrc')
+		fs.mkdirSync(path.dirname(rc), { recursive: true })
+		const escaped = db.replace('ü', '\\xfc')
+		fs.writeFileSync(rc, '[%General]\nDriver=QSQLITE\n\n[QSQLITE]\nName="' + escaped + '"\n')
 		execFileSync('python3', ['-c', [
 			'import sqlite3, sys',
 			'c = sqlite3.connect(sys.argv[1])',
 			'c.execute("CREATE TABLE resourcetable (id INTEGER, name TEXT)")',
-			'c.execute("CREATE TABLE collectiontable (id INTEGER, resourceid INTEGER, remoteid BLOB)")',
+			'c.execute("CREATE TABLE collectiontable (id INTEGER, resourceid INTEGER, remoteid TEXT)")',
 			'c.execute("CREATE TABLE collectionattributetable (collectionid INTEGER, type BLOB, value BLOB)")',
 			'c.executemany("INSERT INTO resourcetable VALUES (?, ?)", [(1, "akonadi_davgroupware_resource_1"), (2, "akonadi_ical_resource_0")])',
-			'c.executemany("INSERT INTO collectiontable VALUES (?, ?, ?)", [(10, 1, b"https://h/cal/a/"), (20, 2, b"/home/x.ics")])',
+			// A remote id with bytes that aren't UTF-8 first: the rows after it still come.
+			'c.execute("INSERT INTO collectiontable VALUES (9, 1, CAST(X\'FF41\' AS TEXT))")',
+			'c.executemany("INSERT INTO collectiontable VALUES (?, ?, ?)", [(10, 1, "https://h/cal/a/"), (20, 2, "/home/x.ics")])',
 			'c.executemany("INSERT INTO collectionattributetable VALUES (?, ?, ?)", [(10, b"collectioncolor", b"#ff3c6dff"), (10, b"ctag", b"x")])',
 			'c.commit()',
 		].join('\n'), db])
 		const cmd = U.akonadiCalendarsCommand()
-		const out = execFileSync(cmd[0], cmd.slice(1), { env: Object.assign({}, process.env, { XDG_CONFIG_HOME: path.join(home, 'config') }) }).toString()
-		assert.deepStrictEqual(out.trim().split('\n'), ['10|#ff3c6dff', 'davcollection|10|https://h/cal/a/'])
+		const run = () => execFileSync(cmd[0], cmd.slice(1), { env: Object.assign({}, process.env, { XDG_CONFIG_HOME: path.join(home, 'config') }) }).toString()
+		const out = run()
+		assert.deepStrictEqual(out.trim().split('\n'), ['10|#ff3c6dff', 'davcollection|9|�A', 'davcollection|10|https://h/cal/a/'])
 		assert.deepStrictEqual(JSON.parse(JSON.stringify(U.parseAkonadiColors(out))), { 10: '#3c6dff' })
 		assert.deepStrictEqual(JSON.parse(JSON.stringify(U.akonadiMirroredCollections(out, {}, ['https://h/cal/a']))), { 10: true })
-		// No Driver line: SQLite is Akonadi's default.
-		fs.writeFileSync(path.join(home, 'config/akonadi/akonadiserverrc'), '[QSQLITE]\nName=' + db + '\n')
-		assert.match(execFileSync(cmd[0], cmd.slice(1), { env: Object.assign({}, process.env, { XDG_CONFIG_HOME: path.join(home, 'config') }) }).toString(), /^10\|#ff3c6dff$/m)
-		// MySQL: nothing (and no error).
-		fs.writeFileSync(path.join(home, 'config/akonadi/akonadiserverrc'), '[%General]\nDriver=QMYSQL\n')
-		assert.strictEqual(execFileSync(cmd[0], cmd.slice(1), { env: Object.assign({}, process.env, { XDG_CONFIG_HOME: path.join(home, 'config') }) }).toString(), '')
+		assert.deepStrictEqual(Object.keys(U.akonadiDavUrlKeys(out)).sort(), ['https://h/cal/a', '�A'])
+		// One python3 run for the three queries.
+		assert.strictEqual((cmd[2].match(/python3 -I/g) || []).length, 1)
+		assert.strictEqual((cmd[2].match(/timeout 5 psql/g) || []).length, 1)
+		// No Driver line (older Akonadi: MySQL), MySQL, or no rc at all: nothing (and no error).
+		for (const text of ['[QSQLITE]\nName=' + db + '\n', '[%General]\nDriver=QMYSQL\n']) {
+			fs.writeFileSync(rc, text)
+			assert.strictEqual(run(), '')
+		}
+		fs.rmSync(rc)
+		assert.strictEqual(run(), '')
 	} finally {
 		fs.rmSync(home, { recursive: true, force: true })
 	}
 }
+
+// URL keys: the path's %-encoding and a user name don't matter.
+assert.strictEqual(U.davUrlKey('https://me%40x.de@Cloud.example.com/dav/calendars/me%40x.de/priv%C3%A9/'),
+	U.davUrlKey('https://cloud.example.com/dav/calendars/me@x.de/privé'))
+assert.strictEqual(U.davUrlKey('https://h/a%zz/'), 'https://h/a%zz', 'a broken escape stays')

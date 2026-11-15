@@ -61,16 +61,16 @@ Item {
 	}
 
 	// From Akonadi's database, in one run (PlasmaCalendarUtils.akonadiCalendarsCommand, as the
-	// widget reads it): the calendars' colors and Akonadi's Google accounts and calendars (listed
-	// first, by email; none when it can't be read).
+	// widget reads it): the calendars' colors, Akonadi's Google accounts and calendars (listed
+	// first, by email; none when it can't be read) and its DAV calendars.
 	ExecUtil { id: databaseReader }
 	property var colors: ({})
-	property string googleCollections: ""
-	readonly property var groups: PlasmaCalendarUtils.pimCalendarGroups(rows, googleCollections)
+	property string databaseOutput: "" // akonadiCalendarsCommand's output
+	readonly property var groups: PlasmaCalendarUtils.pimCalendarGroups(rows, databaseOutput)
 	function readDatabase() {
 		databaseReader.execArgv(PlasmaCalendarUtils.akonadiCalendarsCommand(), function(cmd, exitCode, exitStatus, stdout) {
 			selection.colors = PlasmaCalendarUtils.parseAkonadiColors(stdout)
-			selection.googleCollections = String(stdout || "")
+			selection.databaseOutput = String(stdout || "")
 		})
 	}
 	Timer {
@@ -79,12 +79,16 @@ Item {
 		onTriggered: selection.readDatabase()
 	}
 
-	// Akonadi's copies of calendars shown through a Google account signed in to in the widget (the
-	// setting, so it follows the Google tab): the widget shows their events once, the account's.
+	// Akonadi's copies of calendars shown through a Google account signed in to in the widget, or
+	// one of its CalDAV calendars (the settings, so they follow the Google and CalDAV tabs): the
+	// widget shows their events once, the account's. davCopies: those of CalDAV calendars.
+	readonly property var davCopies: PlasmaCalendarUtils.akonadiDavCopies(databaseOutput,
+		PlasmaCalendarUtils.caldavCalendarUrls(PlasmaCalendarUtils.toArray(SafeConfig.parseBase64Json(configBridge.read("caldavAccounts", ""), []))))
 	readonly property var mirrored: {
 		var accounts = SafeConfig.parseBase64Json(configBridge.read("googleAccounts", ""), [])
-		return PlasmaCalendarUtils.akonadiMirroredCollections(googleCollections,
-			PlasmaCalendarUtils.googleCalendarIdsByAccount(PlasmaCalendarUtils.toArray(accounts)))
+		return PlasmaCalendarUtils.akonadiMirroredCollections(databaseOutput,
+			PlasmaCalendarUtils.googleCalendarIdsByAccount(PlasmaCalendarUtils.toArray(accounts)),
+			PlasmaCalendarUtils.caldavCalendarUrls(PlasmaCalendarUtils.toArray(SafeConfig.parseBase64Json(configBridge.read("caldavAccounts", ""), []))))
 	}
 
 	// The selection as saved: ids Akonadi no longer has (eg: an account set up anew, its calendars
