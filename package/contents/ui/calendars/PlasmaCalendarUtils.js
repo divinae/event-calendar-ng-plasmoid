@@ -412,12 +412,9 @@ function colorCalendars(events, idPrefix) {
 	})
 }
 
-// Akonadi's database, read when it's PostgreSQL (with psql, when installed) or SQLite (with
-// python3's sqlite3, read only), as its akonadiserverrc says (Driver=); nothing otherwise (MySQL,
-// no rc yet). The script lines that run the queries ([{ sql, sqlite }], sqlite: the SELECT for
-// SQLite when it differs) in one psql or python3 run, their rows as "column|column" lines.
-// SQLite: the file of the rc's [QSQLITE] Name (a QSettings value: maybe quoted, \xNNNN escapes),
-// else Akonadi's default one; text that isn't UTF-8 read leniently.
+// Akonadi's database as its akonadiserverrc says: PostgreSQL (psql) or SQLite (python3, read
+// only), nothing for MySQL. The script lines that run the queries ([{ sql, sqlite }]) in one run,
+// rows as "column|column" lines. SQLite's file: the rc's [QSQLITE] Name (a QSettings value).
 var AKONADI_SQLITE_READER = [
 	'import pathlib, sqlite3, sys',
 	'def unescape(text):',
@@ -519,10 +516,8 @@ function googleCalendarIdsByAccount(accounts) {
 	})
 	return calendarIds
 }
-// The collection ids of the calendars that Akonadi syncs and the widget also reads itself:
-// { "collection id": true }. The Google calendars of an account also signed in to in the widget
-// (calendarIds: { "email": ["calendar id", ...] }, the emails in lower case), and the DAV calendars
-// at the URL of one of the widget's CalDAV calendars (caldavUrls: [url], see akonadiDavCopies).
+// The collection ids of the calendars Akonadi syncs that the widget also reads: { "collection id": true }.
+// calendarIds: { "email": ["calendar id", ...] } (lower case emails), caldavUrls: [url].
 function akonadiMirroredCollections(stdout, calendarIds, caldavUrls) {
 	var parsed = parseAkonadiCollections(stdout)
 	var mirrored = akonadiDavCopies(stdout, caldavUrls)
@@ -573,8 +568,8 @@ function davUrlKey(url) {
 	}).join('/')
 	return scheme + '://' + host + path.replace(/\/+$/, '')
 }
-// The selected calendars of the widget's CalDAV accounts as set (caldavAccounts; the settings use
-// it, the widget the ones it could read, CalDAVManager.readUrls): their URLs. Not task lists.
+// The URLs of the selected calendars in caldavAccounts (for the settings; the widget uses
+// CalDAVManager.readUrls). Not task lists.
 function caldavCalendarUrls(accounts) {
 	var urls = []
 	Array.prototype.slice.call(accounts || []).forEach(function(account) {

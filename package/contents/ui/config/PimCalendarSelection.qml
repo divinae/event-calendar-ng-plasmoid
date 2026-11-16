@@ -79,9 +79,8 @@ Item {
 		onTriggered: selection.readDatabase()
 	}
 
-	// Akonadi's copies of calendars shown through a Google account signed in to in the widget, or
-	// one of its CalDAV calendars (the settings, so they follow the Google and CalDAV tabs): the
-	// widget shows their events once, the account's. davCopies: those of CalDAV calendars.
+	// Akonadi's copies of calendars the widget reads itself (a signed-in Google account, a CalDAV
+	// calendar): their events show once, the account's. davCopies: those of CalDAV calendars.
 	readonly property var davCopies: PlasmaCalendarUtils.akonadiDavCopies(databaseOutput,
 		PlasmaCalendarUtils.caldavCalendarUrls(PlasmaCalendarUtils.toArray(SafeConfig.parseBase64Json(configBridge.read("caldavAccounts", ""), []))))
 	readonly property var mirrored: {

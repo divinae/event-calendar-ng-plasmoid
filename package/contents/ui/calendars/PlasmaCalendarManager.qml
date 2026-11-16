@@ -151,9 +151,8 @@ CalendarManager {
 	// (set by EventModel). Akonadi's copies of them (mirroredCollections) are left out: their events
 	// come from the sign-in, and the calendar menu lists them with the account.
 	property var googleCalendarIds: ({})
-	// The same for the widget's CalDAV calendars: the URLs of those it could read (set by
-	// EventModel), Akonadi's DAV copies of them left out. A calendar the widget can't read (eg:
-	// signed out) keeps its Akonadi copy.
+	// The same for the CalDAV calendars the widget could read (set by EventModel); one it can't read
+	// keeps its Akonadi copy.
 	property var caldavCalendarUrls: []
 	// Akonadi's DAV calendars by URL (PlasmaCalendarUtils.davUrlKey): { key: true }.
 	property var akonadiDavUrls: ({})
@@ -484,8 +483,7 @@ CalendarManager {
 
 	onFetchAllCalendars: {
 		var allEvents = getEventsForDuration(dateMin, dateMax)
-		// Akonadi events in a color only Akonadi's copies of calendars read here have: theirs. (A copy
-		// sharing its color with another calendar: its events are left out by EventModel's pimDuplicates.)
+		// Akonadi events in a color only the copies of calendars read here have: theirs.
 		var mirroredKeys = PlasmaCalendarUtils.mirroredColorKeys(
 			PlasmaCalendarUtils.pimCalendarRows(pimCalendarModel(), Qt.UserRole, Qt.DisplayRole), akonadiColors, mirroredCollections)
 		allEvents = allEvents.filter(function(event) {

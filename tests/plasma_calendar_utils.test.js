@@ -223,10 +223,11 @@ console.log('PASS plasma_calendar_utils')
 		{ id: 'a', calendars: [
 			{ href: 'https://cloud.example.com/remote.php/dav/calendars/me/personal', selected: true },
 			{ href: 'https://cloud.example.com/remote.php/dav/calendars/me/work/', selected: false },
+			{ href: 'https://cloud.example.com/remote.php/dav/calendars/me/tasks/', events: false, tasksSelected: true },
 		] },
 		{ id: 'b' },
 	])
-	assert.deepStrictEqual(JSON.parse(JSON.stringify(urls)), ['https://cloud.example.com/remote.php/dav/calendars/me/personal'], 'selected ones only')
+	assert.deepStrictEqual(JSON.parse(JSON.stringify(urls)), ['https://cloud.example.com/remote.php/dav/calendars/me/personal'], 'selected ones only, not task lists')
 	assert.deepStrictEqual(JSON.parse(JSON.stringify(U.akonadiMirroredCollections(stdout, {}, urls))), { 10: true },
 		'the same calendar (host case, default port, trailing slash); not an unselected one, not another path')
 	assert.deepStrictEqual(JSON.parse(JSON.stringify(U.akonadiMirroredCollections(stdout, {}, undefined))), {})
