@@ -163,6 +163,99 @@ class SecretStoreTests(unittest.TestCase):
         self.assertIn("secret-tool", error)
         self.assertIn("kwallet-query", error)
 
+    def use_fake_kwallet(self, kwallet_query_writes=True):
+        """KWallet behind kwallet-query and qdbus6, as on Plasma 6: kwallet-query -w only overwrites an
+        existing entry and exits 0 without writing anything for a new one or a missing folder."""
+        wallet = {}  # folder -> {entry: value}
+        argvs = []
+        store = self.secret_store
+
+        class Proc:
+            def __init__(self, returncode=0, stdout="", stderr=""):
+                self.returncode, self.stdout, self.stderr = returncode, stdout, stderr
+
+        def run(cmd, input=None, text=None, capture_output=None, timeout=None):
+            argvs.append(list(cmd))
+            if cmd[0] == "qdbus6":
+                method, args = cmd[3].rsplit(".", 1)[1], cmd[4:]
+                if method == "open":
+                    return Proc(stdout="7\n")
+                if method == "close":
+                    return Proc(stdout="0\n")
+                folder = args[1]
+                if method == "hasFolder":
+                    return Proc(stdout=("true" if folder in wallet else "false") + "\n")
+                if method == "createFolder":
+                    wallet.setdefault(folder, {})
+                    return Proc(stdout="true\n")
+                if method == "hasEntry":
+                    return Proc(stdout=("true" if args[2] in wallet.get(folder, {}) else "false") + "\n")
+                if method == "writePassword":
+                    wallet[folder][args[2]] = args[3]
+                    return Proc(stdout="0\n")
+                if method == "removeEntry":
+                    found = wallet.get(folder, {}).pop(args[2], None) is not None
+                    return Proc(stdout=("0" if found else "-1") + "\n")
+                raise AssertionError("unexpected D-Bus call " + method)
+            self.assertEqual(cmd[0], "kwallet-query")
+            if "-l" in cmd and "-f" not in cmd:
+                return Proc()
+            folder = cmd[cmd.index("-f") + 1]
+            if "-w" in cmd:
+                entry = cmd[cmd.index("-w") + 1]
+                if kwallet_query_writes and entry in wallet.get(folder, {}):
+                    wallet[folder][entry] = input
+                return Proc()
+            entry = cmd[cmd.index("-r") + 1]
+            if entry not in wallet.get(folder, {}):
+                return Proc(returncode=4, stdout="Failed to read entry\n")
+            return Proc(stdout=wallet[folder][entry] + "\n")
+
+        store.subprocess = argparse.Namespace(run=run, SubprocessError=Exception)
+        store.shutil = argparse.Namespace(which=lambda name: name if name in ("kwallet-query", "qdbus6") else None)
+        return wallet, argvs
+
+    def test_kwallet_store_creates_new_entry_and_keeps_secret_off_argv(self):
+        wallet, argvs = self.use_fake_kwallet()
+        attributes = [("app", "plasma-applet-eventcalendar"), ("scope", "caldav-account"), ("key", "password")]
+
+        self.assertEqual(self.secret_store.store_secret(attributes, "Test", "app-pass-1"), (True, ""))
+        self.assertEqual(self.secret_store.lookup_secret(attributes), (True, "app-pass-1"))
+        self.assertEqual(self.secret_store.store_secret(attributes, "Test", "app-pass-2"), (True, ""))
+        self.assertEqual(self.secret_store.lookup_secret(attributes), (True, "app-pass-2"))
+        self.assertFalse(any("app-pass" in arg for argv in argvs for arg in argv))
+
+        self.assertTrue(self.secret_store.clear_secret(attributes))
+        self.assertEqual(self.secret_store.lookup_secret_detailed(attributes), (False, "", ""))
+        self.assertEqual(wallet["plasma-applet-eventcalendar"], {})
+
+    def test_kwallet_store_reports_a_write_that_did_not_happen(self):
+        wallet, _ = self.use_fake_kwallet(kwallet_query_writes=False)
+        attributes = [("app", "plasma-applet-eventcalendar"), ("scope", "caldav-account"), ("key", "password")]
+
+        ok, error = self.secret_store.store_secret(attributes, "Test", "app-pass")
+
+        self.assertFalse(ok)
+        self.assertIn("kwallet-query", error)
+        self.assertEqual(wallet["plasma-applet-eventcalendar"], {})  # No placeholder left behind
+
+    def test_kwallet_without_qdbus_still_overwrites_existing_entries(self):
+        wallet, argvs = self.use_fake_kwallet()
+        self.secret_store.shutil = argparse.Namespace(which=lambda name: name if name == "kwallet-query" else None)
+        attributes = [("app", "plasma-applet-eventcalendar"), ("scope", "caldav-account"), ("key", "password")]
+        entry = self.secret_store.kwallet_entry_name(attributes)
+
+        ok, error = self.secret_store.store_secret(attributes, "Test", "app-pass")  # New: can't be made
+        self.assertFalse(ok)
+        self.assertIn("qdbus6", error)
+
+        wallet["plasma-applet-eventcalendar"] = {entry: "old"}
+        self.assertEqual(self.secret_store.store_secret(attributes, "Test", "app-pass"), (True, ""))
+        self.assertEqual(wallet["plasma-applet-eventcalendar"][entry], "app-pass")
+        self.assertTrue(self.secret_store.clear_secret(attributes))  # Emptied, as before
+        self.assertEqual(wallet["plasma-applet-eventcalendar"][entry], "")
+        self.assertFalse(any(argv[0] == "qdbus6" for argv in argvs))
+
     def test_scope_allowlist(self):
         parser = self.secret_store.build_parser()
         for scope in ("google-account", "ticktick-account", "caldav-account"):
