@@ -33,9 +33,9 @@ function split(minutes) {
 	return { value: minutes, unit: 'minutes' }
 }
 
-function toMinutes(item) {
+function toMinutes(item, max) {
 	var minutes = Math.round(Number(item.value) || 0) * (UNIT_MINUTES[item.unit] || 1)
-	return Math.max(0, Math.min(MAX_MINUTES, minutes))
+	return Math.max(0, Math.min(max === undefined ? MAX_MINUTES : max, minutes))
 }
 
 // The editor's state for an event: { custom, items: [{ value, unit }], others: [overrides] }.
@@ -95,7 +95,7 @@ function toCalDAV(state) {
 	var seen = {}
 	var overrides = []
 	toList(state.items).forEach(function(item) {
-		var minutes = Math.max(0, Math.round(Number(item.value) || 0) * (UNIT_MINUTES[item.unit] || 1))
+		var minutes = toMinutes(item, Infinity)
 		if (!seen[minutes]) {
 			seen[minutes] = true
 			overrides.push({ method: 'popup', minutes: minutes })

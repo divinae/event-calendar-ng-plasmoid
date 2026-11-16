@@ -185,11 +185,8 @@ CalendarManager {
 	}
 
 	//--- Search
-	// Events matching query in the selected calendars between timeMin and timeMax (Dates): each
-	// calendar read for that range, the helper keeps those with every word in their title,
-	// location or description (as the loaded events are searched). callback(err, items): parsed
-	// like fetched events.
-	// Only with calendars (the manager is always there, an account maybe not).
+	// Events of the selected calendars between timeMin and timeMax with every word of query in their
+	// title, location or description (matched by the helper). callback(err, items)
 	function canSearch() {
 		return getCalendarList().length > 0
 	}
@@ -226,11 +223,11 @@ CalendarManager {
 			return
 		}
 		data.items.forEach(function(event) {
-			// Its own color (COLOR): one of Google's event colors as Google events show them, else
-			// the CSS color as it is.
+			// Its own color (COLOR): one of Google's event colors, else the CSS color as it is.
 			event.colorId = CalDAVColors.colorIdOf(event.icalColor)
 			event.backgroundColor = event.colorId ? eventColor(event.colorId) : (event.icalColor || calendar.backgroundColor)
-			// Its alarms as Google's own reminders too, so a copy (EventCopy, Undo) keeps them.
+			// Its alarms are its own (as Google's reminders), also so a copy (EventCopy, Undo) keeps them.
+			event.reminderOwn = Shared.isList(event.reminderMinutes) && Shared.toArray(event.reminderMinutes).length > 0
 			event.reminders = { useDefault: false, overrides: Shared.toArray(event.reminderMinutes).map(function(minutes) {
 				return { method: 'popup', minutes: minutes }
 			}) }
@@ -269,7 +266,7 @@ CalendarManager {
 	function write(calendar, args, ok, done, failed) {
 		helper(args, calendar, function(err, data) {
 			if (err) {
-				reportError(err.message, failed)
+				reportError(err.message, failed, err.kind)
 			} else if (ok) {
 				ok(data)
 			}
@@ -280,13 +277,13 @@ CalendarManager {
 		})
 	}
 
-	// Shows the error, or hands it to failed(report).
-	function reportError(message, failed) {
+	// Shows the error, or hands it to failed(report, kind).
+	function reportError(message, failed, kind) {
 		var report = function() {
 			caldavManager.error(message, ErrorType.UnknownError)
 		}
 		if (failed) {
-			failed(report)
+			failed(report, kind)
 		} else {
 			report()
 		}
@@ -466,14 +463,15 @@ CalendarManager {
 	}
 
 	// Undo a delete (eventId: the event, the occurrence or the series' UID): the resource put back as
-	// it was. If that fails, copy (Undo.restoreCopy, single events only) is created as a new event.
-	// done(err), always called (refreshed afterwards).
+	// it was, else copy (Undo.restoreCopy) created anew. done(err), always called.
 	function restoreEvent(calendarId, eventId, copy, done) {
 		var calendar = getCalendar(calendarId)
 		var key = calendarId + '\n' + eventId
 		var token = undoTokens[key]
-		var fallback = function(report) {
-			if (copy && calendar) {
+		// The copy as a new event only when there's nothing to restore: after a network error or a
+		// conflict the resource may be back already.
+		var fallback = function(report, kind) {
+			if (copy && calendar && (!kind || kind === 'NOTFOUND')) {
 				createEventFromData(calendarId, copy, done)
 			} else {
 				report()
@@ -490,12 +488,11 @@ CalendarManager {
 		}, done, fallback)
 	}
 
-	// Events moved to another calendar, until it's read again: { "<calendar id>\n<event id>":
-	// { caldavHref, caldavEtag } } (the editor saves its other changes there right after the move).
+	// Events just moved, until read again: { "<calendar id>\n<event id>": { caldavHref, caldavEtag } }.
 	property var movedResources: ({})
 
-	// Move an event, or a series (eventId: its UID), to another calendar of the same account (its
-	// resource, see caldav.py move). done(err, { id }), always called.
+	// Move an event or a series (eventId: its UID) to another calendar of the same account.
+	// done(err, { id }), always called.
 	function moveEvent(calendarId, eventId, destinationCalendarId, done, params) {
 		var calendar = getCalendar(calendarId)
 		var destination = getCalendar(destinationCalendarId)

@@ -1,9 +1,7 @@
 .pragma library
 
-// Event colors on CalDAV calendars: COLOR (RFC 7986), a CSS color name, as Nextcloud's calendar
-// app writes it too. The editor offers Google's 11 event colors (colorId '1'..'11', see
-// GooglePalette.js); each is saved as its nearest CSS name and read back as that colorId. Other
-// names (set elsewhere) are shown as they are, with no colorId.
+// Event colors on CalDAV calendars: COLOR (RFC 7986), a CSS color name, as Nextcloud writes it.
+// Google's 11 event colors are saved as their nearest CSS name and read back as that colorId.
 
 var cssByColorId = {
 	'1': 'cornflowerblue', // Lavender
