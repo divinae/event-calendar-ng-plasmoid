@@ -31,7 +31,9 @@ ColumnLayout {
 						required property var modelData
 						readonly property string calendarColor: list.selection.colors[modelData.id] || ""
 						text: modelData.name
-						description: list.selection.mirrored[modelData.id]
+						description: list.selection.davCopies[modelData.id]
+							? i18n("Its events come from the account in the CalDAV tab.")
+							: list.selection.mirrored[modelData.id]
 							? i18n("Its events come from the account signed in to in the Google Calendar tab.")
 							: ""
 						checked: modelData.checked

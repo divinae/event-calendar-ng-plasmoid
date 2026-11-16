@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 19:16+0100\n"
 "PO-Revision-Date: 2021-07-29 01:08+0200\n"
 "Last-Translator: Ugo Ugowsky <ugowsky@gmail.com>\n"
 "Language-Team: Slovenian <lugos-slo@lugos.si>\n"
@@ -2431,6 +2431,10 @@ msgstr "Mesta ni bilo mogoče najti."
 #: ../contents/ui/config/OpenWeatherMapCityDialog.qml
 msgid "No app id set."
 msgstr "ID aplikacije ni nastavljen."
+
+#: ../contents/ui/config/PimCalendarList.qml
+msgid "Its events come from the account in the CalDAV tab."
+msgstr "Njegovi dogodki prihajajo iz računa na zavihku CalDAV."
 
 #: ../contents/ui/config/PimCalendarList.qml
 msgid ""

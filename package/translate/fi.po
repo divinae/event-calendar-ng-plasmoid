@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 19:16+0100\n"
 "PO-Revision-Date: 2022-03-21 23:40+ZONE\n"
 "Last-Translator: Ilpo Kantonen <ilpo@iki.fi>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2018,6 +2018,10 @@ msgstr "Kaupunkia ei löytynyt."
 #: ../contents/ui/config/OpenWeatherMapCityDialog.qml
 msgid "No app id set."
 msgstr "Sovellustunnistetta ei ole asetettu."
+
+#: ../contents/ui/config/PimCalendarList.qml
+msgid "Its events come from the account in the CalDAV tab."
+msgstr "Sen tapahtumat tulevat CalDAV-välilehden tililtä."
 
 #: ../contents/ui/config/PimCalendarList.qml
 msgid "Its events come from the account signed in to in the Google Calendar tab."

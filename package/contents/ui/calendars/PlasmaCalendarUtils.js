@@ -412,41 +412,91 @@ function colorCalendars(events, idPrefix) {
 	})
 }
 
-// Akonadi's database, read with psql when it's PostgreSQL and psql is
-// installed: the script lines that run one SELECT, its rows as "column|column" lines; nothing
-// otherwise.
-function akonadiPsqlLines(sql) {
+// Akonadi's database as its akonadiserverrc says: PostgreSQL (psql) or SQLite (python3, read
+// only), nothing for MySQL. The script lines that run the queries ([{ sql, sqlite }]) in one run,
+// rows as "column|column" lines. SQLite's file: the rc's [QSQLITE] Name (a QSettings value).
+var AKONADI_SQLITE_READER = [
+	'import pathlib, sqlite3, sys',
+	'def unescape(text):',
+	'	slash, out, i = chr(92), "", 0',
+	'	while i < len(text):',
+	'		if text[i] == slash and i + 1 < len(text):',
+	'			if text[i + 1] == "x":',
+	'				j = i + 2',
+	'				while j < len(text) and j < i + 6 and text[j] in "0123456789abcdefABCDEF":',
+	'					j += 1',
+	'				out += chr(int(text[i + 2:j], 16)) if j > i + 2 else "x"',
+	'				i = j',
+	'				continue',
+	'			out += {"n": chr(10), "t": chr(9)}.get(text[i + 1], text[i + 1])',
+	'			i += 2',
+	'			continue',
+	'		out += text[i]',
+	'		i += 1',
+	'	return out',
+	'section, name = "", ""',
+	'for line in open(sys.argv[1], encoding="utf-8", errors="replace"):',
+	'	line = line.strip()',
+	'	if line.startswith("["):',
+	'		section = line',
+	'	elif section == "[QSQLITE]" and line.startswith("Name="):',
+	'		name = line[5:].strip()',
+	'		name = unescape(name[1:-1] if len(name) > 1 and name[0] == name[-1] == chr(34) else name)',
+	'db = pathlib.Path(name or sys.argv[2] + "/akonadi/akonadi.db")',
+	'if db.is_file():',
+	'	c = sqlite3.connect(db.as_uri() + "?mode=ro", uri=True, timeout=3)',
+	'	c.text_factory = lambda b: b.decode("utf-8", "replace")',
+	'	for sql in sys.argv[3:]:',
+	'		try:',
+	'			for r in c.execute(sql):',
+	'				print("|".join("" if v is None else v.decode("utf-8", "replace") if isinstance(v, bytes) else str(v) for v in r))',
+	'		except sqlite3.Error:',
+	'			pass',
+]
+function akonadiDatabaseLines(queries) {
+	var quote = function(sql) { return '"' + sql + '"' } // The SELECTs have no double quotes, $ or backticks
 	return [
 		'rc="${XDG_CONFIG_HOME:-$HOME/.config}/akonadi/akonadiserverrc"',
 		'if [ -f "$rc" ] && command -v psql >/dev/null && grep -q "^Driver=QPSQL" "$rc"; then',
 		// Host (the socket directory) and the database name of the [QPSQL] section.
 		'host=$(awk -F= \'/^\\[/{s=($0=="[QPSQL]")} s&&$1=="Host"{print substr($0,6);exit}\' "$rc")',
 		'name=$(awk -F= \'/^\\[/{s=($0=="[QPSQL]")} s&&$1=="Name"{print substr($0,6);exit}\' "$rc")',
-		'timeout 5 psql ${host:+-h "$host"} -d "${name:-akonadi}" -At -c "' + sql + '" 2>/dev/null',
+		'timeout 5 psql ${host:+-h "$host"} -d "${name:-akonadi}" -At '
+			+ queries.map(function(q) { return '-c ' + quote(q.sql) }).join(' ') + ' 2>/dev/null',
+		'elif [ -f "$rc" ] && command -v python3 >/dev/null && grep -q "^Driver=QSQLITE" "$rc"; then',
+		'timeout 5 python3 -I -c \'' + AKONADI_SQLITE_READER.join('\n') + '\' "$rc" "${XDG_DATA_HOME:-$HOME/.local/share}" '
+			+ queries.map(function(q) { return quote(q.sqlite || q.sql) }).join(' ') + ' 2>/dev/null',
 		'fi',
 	]
 }
 
-// The Akonadi calendars' colors (the collectioncolor attribute) are only in Akonadi's database
-// (akonadiPsqlLines); without it nothing (the colors and names then come from the events). Lines
-// "collection id|#aarrggbb".
-function akonadiColorsLines() {
-	return akonadiPsqlLines("SELECT collectionid, convert_from(value, 'UTF8') FROM collectionattributetable WHERE convert_from(type, 'UTF8') = 'collectioncolor'")
-}
+// What akonadiCalendarsCommand reads from the database:
+// - the calendars' colors (the collectioncolor attribute, only there; without it the colors and
+//   names come from the events): lines "collection id|#aarrggbb";
+// - the collections of Akonadi's Google resources: "collection|id|resource|remote id" (a calendar's
+//   remote id is its Google calendar id);
+// - those of its DAV resources (eg: Nextcloud): "davcollection|id|remote id" (a calendar's URL).
+var AKONADI_QUERIES = [
+	{
+		sql: "SELECT collectionid, convert_from(value, 'UTF8') FROM collectionattributetable WHERE convert_from(type, 'UTF8') = 'collectioncolor'",
+		sqlite: "SELECT collectionid, CAST(value AS TEXT) FROM collectionattributetable WHERE CAST(type AS TEXT) = 'collectioncolor'",
+	},
+	{ sql: "SELECT 'collection', c.id, r.name, c.remoteid FROM collectiontable c JOIN resourcetable r ON r.id = c.resourceid WHERE r.name LIKE 'akonadi_google_resource_%'" },
+	{ sql: "SELECT 'davcollection', c.id, c.remoteid FROM collectiontable c JOIN resourcetable r ON r.id = c.resourceid WHERE r.name LIKE 'akonadi_davgroupware_resource_%'" },
+]
 
-// The collections of Akonadi's Google resources, with the account of each: lines
-// "account|resource|email" from the resources' settings, "collection|id|resource|remote id" from the
-// database (a calendar's remote id is its Google calendar id).
-function akonadiGoogleCollectionsLines() {
+// The accounts of Akonadi's Google resources, from their settings: lines "account|resource|email".
+function akonadiGoogleAccountsLines() {
 	return [
 		'for f in "${XDG_CONFIG_HOME:-$HOME/.config}"/akonadi_google_resource_*rc; do',
 		'r=${f##*/}; [ -f "$f" ] && sed -n "s/^Account=/account|${r%rc}|/p" "$f"',
 		'done',
-	].concat(akonadiPsqlLines("SELECT 'collection', c.id, r.name, c.remoteid FROM collectiontable c JOIN resourcetable r ON r.id = c.resourceid WHERE r.name LIKE 'akonadi_google_resource_%'"))
+	]
 }
-// Both: the colors' lines and the collections' lines in one output.
+
+// All of it in one output (parseAkonadiColors, parseAkonadiCollections).
 function akonadiCalendarsCommand() {
-	return ['sh', '-c', akonadiColorsLines().concat(akonadiGoogleCollectionsLines(), ['exit 0']).join('\n')]
+	return ['sh', '-c', akonadiGoogleAccountsLines().concat(akonadiDatabaseLines(AKONADI_QUERIES), ['exit 0']).join('\n')]
 }
 // The widget's Google accounts (GoogleAccountsStore.accounts) for akonadiMirroredCollections:
 // { "email": ["calendar id", ...] }, the email being the primary calendar's id, in lower case. Only
@@ -466,12 +516,11 @@ function googleCalendarIdsByAccount(accounts) {
 	})
 	return calendarIds
 }
-// The collection ids of the Google calendars that Akonadi syncs for an account also signed in to
-// in the widget: { "collection id": true }. calendarIds: { "email": ["calendar id", ...] }, the
-// emails in lower case.
-function akonadiMirroredCollections(stdout, calendarIds) {
-	var parsed = parseAkonadiGoogleCollections(stdout)
-	var mirrored = {}
+// The collection ids of the calendars Akonadi syncs that the widget also reads: { "collection id": true }.
+// calendarIds: { "email": ["calendar id", ...] } (lower case emails), caldavUrls: [url].
+function akonadiMirroredCollections(stdout, calendarIds, caldavUrls) {
+	var parsed = parseAkonadiCollections(stdout)
+	var mirrored = akonadiDavCopies(stdout, caldavUrls)
 	parsed.collections.forEach(function(collection) {
 		var ids = (calendarIds || {})[parsed.accounts[collection.resource]]
 		if (ids && ids.indexOf(collection.remoteId) >= 0) {
@@ -480,29 +529,84 @@ function akonadiMirroredCollections(stdout, calendarIds) {
 	})
 	return mirrored
 }
-// akonadiGoogleCollectionsCommand's output: { accounts: { resource: "email" }, collections:
-// [{ id, resource, remoteId }] }, the emails in lower case.
-function parseAkonadiGoogleCollections(stdout) {
+// Akonadi's DAV collections at the URL of one of caldavUrls: { "collection id": true }.
+function akonadiDavCopies(stdout, caldavUrls) {
+	var urls = Array.prototype.slice.call(caldavUrls || []).map(davUrlKey)
+	var copies = {}
+	parseAkonadiCollections(stdout).davCollections.forEach(function(collection) {
+		if (collection.remoteId && urls.indexOf(davUrlKey(collection.remoteId)) >= 0) {
+			copies[collection.id] = true
+		}
+	})
+	return copies
+}
+// The URLs (davUrlKey) of Akonadi's DAV calendars: { key: true }.
+function akonadiDavUrlKeys(stdout) {
+	var keys = {}
+	parseAkonadiCollections(stdout).davCollections.forEach(function(collection) {
+		if (collection.remoteId) {
+			keys[davUrlKey(collection.remoteId)] = true
+		}
+	})
+	return keys
+}
+// A calendar URL to compare: scheme and host in lower case, no user name, no default port, the
+// path decoded (one side may keep the server's %-encoding) and without a trailing slash.
+function davUrlKey(url) {
+	var m = /^([a-z][a-z0-9+.-]*):\/\/([^/?#]*)([^?#]*)/i.exec(String(url || '').trim())
+	if (!m) {
+		return String(url || '').trim()
+	}
+	var scheme = m[1].toLowerCase()
+	var host = m[2].replace(/^.*@/, '').toLowerCase().replace(scheme === 'https' ? /:443$/ : /:80$/, '')
+	var path = m[3].split('/').map(function(segment) {
+		try {
+			return decodeURIComponent(segment)
+		} catch (e) {
+			return segment
+		}
+	}).join('/')
+	return scheme + '://' + host + path.replace(/\/+$/, '')
+}
+// The URLs of the selected calendars in caldavAccounts (for the settings; the widget uses
+// CalDAVManager.readUrls). Not task lists.
+function caldavCalendarUrls(accounts) {
+	var urls = []
+	Array.prototype.slice.call(accounts || []).forEach(function(account) {
+		Array.prototype.slice.call(account && account.calendars || []).forEach(function(calendar) {
+			if (calendar && calendar.href && calendar.selected !== false && calendar.events !== false) {
+				urls.push(String(calendar.href))
+			}
+		})
+	})
+	return urls
+}
+// akonadiCalendarsCommand's output: { accounts: { resource: "email" }, collections (Google's):
+// [{ id, resource, remoteId }], davCollections: [{ id, remoteId }] }, the emails in lower case.
+function parseAkonadiCollections(stdout) {
 	var accounts = {}
 	var collections = []
+	var davCollections = []
 	String(stdout || '').split('\n').forEach(function(line) {
 		var fields = line.trim().split('|')
 		if (fields[0] === 'account' && fields.length >= 3) {
 			accounts[fields[1]] = fields.slice(2).join('|').trim().toLowerCase()
 		} else if (fields[0] === 'collection' && fields.length >= 4) {
 			collections.push({ id: fields[1], resource: fields[2], remoteId: fields.slice(3).join('|') })
+		} else if (fields[0] === 'davcollection' && fields.length >= 3) {
+			davCollections.push({ id: fields[1], remoteId: fields.slice(2).join('|') })
 		}
 	})
-	return { accounts: accounts, collections: collections }
+	return { accounts: accounts, collections: collections, davCollections: davCollections }
 }
 // The Akonadi calendars (pimCalendarRows with the accounts) under their accounts, apart: of
-// Akonadi's Google accounts (by akonadiGoogleCollectionsCommand's output: none without it) and the
+// Akonadi's Google accounts (by akonadiCalendarsCommand's output: none without it) and the
 // others, in that order: [{ name, google, calendars: [row] }], a Google account named by its email; the calendars without an account (a resource of its own, eg: a local
 // calendar file) in one group without a name, the last. Accounts without a calendar are left out.
 // From a tree, by a calendar's accountId; from a flat list (older models), each account before its
 // calendars.
 function pimCalendarGroups(rows, stdout) {
-	var parsed = parseAkonadiGoogleCollections(stdout)
+	var parsed = parseAkonadiCollections(stdout)
 	var googleAccountOf = {}
 	parsed.collections.forEach(function(collection) {
 		googleAccountOf[collection.id] = parsed.accounts[collection.resource] || ''

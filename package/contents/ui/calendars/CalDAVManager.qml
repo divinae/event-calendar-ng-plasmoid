@@ -28,6 +28,25 @@ CalendarManager {
 
 	property string helperPath: ScriptPath.scriptPath("caldav.py") // (A test harness points it elsewhere)
 
+	// The URLs of the calendars whose last read worked (Akonadi's copies of these are left out,
+	// PlasmaCalendarManager.caldavCalendarUrls). A new array only when it changes.
+	property var readUrls: []
+	onAccountsChanged: { // Not shown any more: not read either
+		var shown = getCalendarList().map(function(c) { return c.caldavHref })
+		var kept = readUrls.filter(function(u) { return shown.indexOf(u) >= 0 })
+		if (kept.length !== readUrls.length) {
+			readUrls = kept
+		}
+	}
+	function setRead(url, ok) {
+		var at = readUrls.indexOf(url)
+		if (ok && at < 0) {
+			readUrls = readUrls.concat([url])
+		} else if (!ok && at >= 0) {
+			readUrls = readUrls.filter(function(u) { return u !== url })
+		}
+	}
+
 	// The calendar ids: "caldav-<account>::<calendar url>" (the part before :: is the account).
 	function calendarIdOf(account, calendar) {
 		return "caldav-" + account.id + "::" + calendar.href
@@ -149,6 +168,7 @@ CalendarManager {
 				return // A newer round started meanwhile (its own counts)
 			}
 			try {
+				setRead(calendar.caldavHref, !err)
 				if (err) {
 					restorePreviousCalendar(calendarId) // Keep what was shown
 					if (err.kind === "KEYRING" && keyringRetry.attempts < keyringRetry.maxAttempts) {
