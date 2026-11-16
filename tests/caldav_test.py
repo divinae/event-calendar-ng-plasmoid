@@ -623,6 +623,313 @@ class PutTests(unittest.TestCase):
 		self.assertEqual(client.sent[0][3]["If-Match"], '"e"')
 
 
+# Weekly on Mondays at 10:00 in Berlin from 19 Oct 2026, over the end of summer time (25 Oct): one
+# date skipped (2 Nov, its EXDATE in UTC as Google writes them), one occurrence renamed (26 Oct)
+# and one moved to 15:00 (9 Nov).
+BERLIN = vcal(
+	"BEGIN:VEVENT\r\nUID:berlin-1\r\nDTSTAMP:20261001T000000Z\r\nDTSTART;TZID=Europe/Berlin:20261019T100000\r\n"
+	"DTEND;TZID=Europe/Berlin:20261019T110000\r\nRRULE:FREQ=WEEKLY;COUNT=6\r\nEXDATE:20261102T090000Z\r\n"
+	"SUMMARY:Team\r\nLOCATION:Room 2\r\nSEQUENCE:1\r\n"
+	"BEGIN:VALARM\r\nACTION:DISPLAY\r\nTRIGGER:-PT10M\r\nDESCRIPTION:Team\r\nEND:VALARM\r\nEND:VEVENT\r\n"
+	"BEGIN:VEVENT\r\nUID:berlin-1\r\nDTSTAMP:20261001T000000Z\r\nRECURRENCE-ID;TZID=Europe/Berlin:20261026T100000\r\n"
+	"DTSTART;TZID=Europe/Berlin:20261026T100000\r\nDTEND;TZID=Europe/Berlin:20261026T110000\r\n"
+	"SUMMARY:Team (renamed)\r\nLOCATION:Room 2\r\nEND:VEVENT\r\n"
+	"BEGIN:VEVENT\r\nUID:berlin-1\r\nDTSTAMP:20261001T000000Z\r\nRECURRENCE-ID;TZID=Europe/Berlin:20261109T100000\r\n"
+	"DTSTART;TZID=Europe/Berlin:20261109T150000\r\nDTEND;TZID=Europe/Berlin:20261109T160000\r\n"
+	"SUMMARY:Team\r\nLOCATION:Room 2\r\nEND:VEVENT\r\n")
+
+WEEKLY_ALLDAY = vcal(
+	"BEGIN:VEVENT\r\nUID:allday-weekly\r\nDTSTAMP:20261001T000000Z\r\nDTSTART;VALUE=DATE:20261102\r\n"
+	"DTEND;VALUE=DATE:20261103\r\nRRULE:FREQ=WEEKLY;COUNT=4\r\nSUMMARY:Bins\r\nEND:VEVENT\r\n")
+
+
+def berlin(month, day, hour):
+	"""A recurrence id in 2026 as a query gives it: {"dateTime", "timeZone"}."""
+	moment = datetime.datetime(2026, month, day, hour, tzinfo=caldav_zone("Europe/Berlin"))
+	return caldav.parse_when({"dateTime": moment.isoformat(), "timeZone": "Europe/Berlin"}, "recurrence-id")
+
+
+def caldav_zone(name):
+	import zoneinfo
+	return zoneinfo.ZoneInfo(name)
+
+
+def occurrences(body, start=datetime.datetime(2026, 10, 1), end=datetime.datetime(2026, 12, 31)):
+	"""The resource's occurrences as the widget gets them: {local start: summary}."""
+	items = caldav.resource_items(BASE + "/cal/r.ics", '"e"', body if isinstance(body, str) else body.decode("utf-8"), start, end)
+	out = {}
+	for item in items:
+		when = item["start"].get("dateTime") or item["start"]["date"]
+		if "T" in when:
+			when = datetime.datetime.fromisoformat(when).astimezone(caldav_zone("Europe/Berlin")).strftime("%m-%d %H:%M")
+		out[when] = item["summary"]
+	return out
+
+
+@unittest.skipUnless(HAS_RIE, "recurring-ical-events is not installed")
+@mock.patch.object(caldav, "resolve_host", fake_resolve)
+class RecurringEditTests(unittest.TestCase):
+	stamp = datetime.datetime(2026, 11, 15, 12, 0, tzinfo=datetime.timezone.utc)
+
+	def test_baseline(self):
+		self.assertEqual(occurrences(BERLIN), {
+			"10-19 10:00": "Team", "10-26 10:00": "Team (renamed)", "11-09 15:00": "Team",
+			"11-16 10:00": "Team", "11-23 10:00": "Team",
+		})
+
+	def test_query_gives_each_occurrence_its_recurrence_id(self):
+		items = caldav.resource_items(BASE + "/cal/r.ics", '"e"', BERLIN, datetime.datetime(2026, 11, 1), datetime.datetime(2026, 11, 30))
+		ids = sorted(i["caldavRecurrenceId"]["dateTime"] for i in items)
+		self.assertEqual(ids, ["2026-11-09T10:00:00+01:00", "2026-11-16T10:00:00+01:00", "2026-11-23T10:00:00+01:00"])
+		self.assertTrue(all(i["caldavRecurrenceId"]["timeZone"] == "Europe/Berlin" for i in items))
+		moved = [i for i in items if i["start"]["dateTime"].startswith("2026-11-09")][0]
+		# Round trip: the id from the query finds the override again.
+		rid = caldav.parse_when(moved["caldavRecurrenceId"], "recurrence-id")
+		self.assertIsNotNone(caldav.find_override(Calendar.from_ical(BERLIN), rid))
+		single = caldav.resource_items(BASE + "/cal/s.ics", '"e"', SINGLE, datetime.datetime(2026, 11, 1), datetime.datetime(2026, 11, 30))
+		self.assertNotIn("caldavRecurrenceId", single[0])
+
+	def test_change_one_occurrence_makes_an_override(self):
+		_, body = caldav.build_updated_occurrence(BERLIN, {
+			"summary": "Team (offsite)",
+			"start": {"dateTime": "2026-11-16T14:00:00", "timeZone": "Europe/Berlin"},
+			"end": {"dateTime": "2026-11-16T16:00:00", "timeZone": "Europe/Berlin"},
+		}, berlin(11, 16, 10), stamp=self.stamp)
+		cal = Calendar.from_ical(body)
+		self.assertEqual(len(cal.walk("VEVENT")), 4)
+		override = caldav.find_override(cal, berlin(11, 16, 10))
+		self.assertIn(b"RECURRENCE-ID;TZID=Europe/Berlin:20261116T100000", body)
+		self.assertNotIn("RRULE", override)
+		self.assertNotIn("EXDATE", override)
+		self.assertEqual(str(override["LOCATION"]), "Room 2")  # From the series
+		self.assertEqual(len(override.walk("VALARM")), 1)
+		self.assertEqual(int(override["SEQUENCE"]), 2)
+		self.assertEqual(str(caldav.master_event(cal)["SUMMARY"]), "Team")  # The series unchanged
+		got = occurrences(body)
+		self.assertEqual(got["11-16 14:00"], "Team (offsite)")
+		self.assertNotIn("11-16 10:00", got)
+		self.assertEqual(got["11-23 10:00"], "Team")
+
+	def test_change_one_occurrence_given_in_utc_or_with_only_its_text(self):
+		utc = berlin(11, 16, 10).astimezone(datetime.timezone.utc)
+		_, body = caldav.build_updated_occurrence(BERLIN, {"summary": "Short"}, utc)
+		self.assertIn(b"RECURRENCE-ID;TZID=Europe/Berlin:20261116T100000", body)  # The series' form
+		self.assertEqual(occurrences(body)["11-16 10:00"], "Short")
+
+	def test_change_an_overridden_occurrence_changes_its_override(self):
+		_, body = caldav.build_updated_occurrence(BERLIN, {"location": "Cafe"}, berlin(11, 9, 10))
+		cal = Calendar.from_ical(body)
+		self.assertEqual(len(cal.walk("VEVENT")), 3)
+		override = caldav.find_override(cal, berlin(11, 9, 10))
+		self.assertEqual(str(override["LOCATION"]), "Cafe")
+		self.assertEqual(override["DTSTART"].dt.hour, 15)  # Its own time kept
+
+	def test_one_occurrence_has_no_rule_and_needs_a_series(self):
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.build_updated_occurrence(BERLIN, {"recurrence": ["RRULE:FREQ=DAILY"]}, berlin(11, 16, 10))
+		self.assertEqual(ctx.exception.kind, "INPUT")
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.build_updated_occurrence(SINGLE, {"summary": "x"}, berlin(11, 16, 10))
+		self.assertEqual(ctx.exception.kind, "PROTOCOL")
+
+	def test_delete_one_occurrence(self):
+		body = caldav.build_deleted_occurrence(BERLIN, berlin(11, 16, 10)).decode("utf-8")
+		master = caldav.master_event(Calendar.from_ical(body))
+		self.assertEqual(len(caldav.date_values(master, "EXDATE")), 2)
+		self.assertIn("EXDATE;TZID=Europe/Berlin:20261116T100000", body)
+		self.assertNotIn("11-16 10:00", occurrences(body))
+		# An overridden one: its override goes too.
+		body = caldav.build_deleted_occurrence(body, berlin(11, 9, 10)).decode("utf-8")
+		self.assertEqual(len(Calendar.from_ical(body).walk("VEVENT")), 2)
+		self.assertEqual(sorted(occurrences(body)), ["10-19 10:00", "10-26 10:00", "11-23 10:00"])
+		# Deleted twice: no second EXDATE.
+		again = caldav.build_deleted_occurrence(body, berlin(11, 9, 10))
+		self.assertEqual(len(caldav.date_values(caldav.master_event(Calendar.from_ical(again)), "EXDATE")), 3)
+
+	def test_delete_one_all_day_occurrence(self):
+		body = caldav.build_deleted_occurrence(WEEKLY_ALLDAY, caldav.parse_when({"date": "2026-11-09"}, "rid"))
+		self.assertIn(b"EXDATE;VALUE=DATE:20261109", body)
+		self.assertEqual(sorted(occurrences(body)), ["2026-11-02", "2026-11-16", "2026-11-23"])
+
+	def test_series_moved_takes_its_exdates_and_overrides_along(self):
+		# Every occurrence a day later at 11:00, over the end of summer time.
+		_, body = caldav.build_updated_calendar(BERLIN, {
+			"start": {"dateTime": "2026-10-20T11:00:00", "timeZone": "Europe/Berlin"},
+			"end": {"dateTime": "2026-10-20T12:00:00", "timeZone": "Europe/Berlin"},
+		}, stamp=self.stamp)
+		self.assertEqual(occurrences(body), {
+			"10-20 11:00": "Team",
+			"10-27 11:00": "Team (renamed)",  # Unmoved override: follows the series
+			"11-09 15:00": "Team",  # Moved on its own: keeps its time
+			"11-17 11:00": "Team", "11-24 11:00": "Team",
+		})  # 3 Nov stays skipped
+		cal = Calendar.from_ical(body)
+		self.assertTrue(caldav.find_override(cal, berlin(11, 10, 11)))
+		self.assertTrue(caldav.find_override(cal, berlin(10, 27, 11)))
+
+	def test_series_length_change_reaches_unmoved_overrides(self):
+		_, body = caldav.build_updated_calendar(BERLIN, {
+			"end": {"dateTime": "2026-10-19T12:30:00", "timeZone": "Europe/Berlin"},
+		})
+		cal = Calendar.from_ical(body)
+		renamed = caldav.find_override(cal, berlin(10, 26, 10))
+		moved = caldav.find_override(cal, berlin(11, 9, 10))
+		self.assertEqual(renamed["DTEND"].dt.strftime("%H:%M"), "12:30")
+		self.assertEqual(moved["DTEND"].dt.strftime("%H:%M"), "16:00")
+
+	def test_series_text_reaches_overrides_that_kept_it(self):
+		_, body = caldav.build_updated_calendar(BERLIN, {"summary": "Weekly team", "location": "Room 3"})
+		got = occurrences(body)
+		self.assertEqual(got["11-09 15:00"], "Weekly team")
+		self.assertEqual(got["10-26 10:00"], "Team (renamed)")  # Its own title kept
+		renamed = caldav.find_override(Calendar.from_ical(body), berlin(10, 26, 10))
+		self.assertEqual(str(renamed["LOCATION"]), "Room 3")
+
+	def test_series_to_all_day(self):
+		_, body = caldav.build_updated_calendar(BERLIN, {"start": {"date": "2026-10-19"}, "end": {"date": "2026-10-20"}})
+		got = occurrences(body)
+		# The occurrence moved to 15:00 on its own keeps its time; the rest become whole days.
+		self.assertEqual(sorted(got), ["11-09 15:00", "2026-10-19", "2026-10-26", "2026-11-16", "2026-11-23"])
+		self.assertIn(b"EXDATE;VALUE=DATE:20261102", body)
+		self.assertIn(b"RECURRENCE-ID;VALUE=DATE:20261109", body)
+		self.assertIn(b"RECURRENCE-ID;VALUE=DATE:20261026", body)
+
+	def test_series_moved_keeps_instances_at_other_hours(self):
+		# Daily at 9:00 and 15:00 (BYHOUR); 15:00 on the 5th skipped, 15:00 on the 6th changed.
+		series = vcal(
+			"BEGIN:VEVENT\r\nUID:twice\r\nDTSTART;TZID=Europe/Berlin:20260105T090000\r\nDTEND;TZID=Europe/Berlin:20260105T093000\r\n"
+			"RRULE:FREQ=DAILY;BYHOUR=9,15;COUNT=6\r\nEXDATE;TZID=Europe/Berlin:20260105T150000\r\nSUMMARY:Pills\r\nEND:VEVENT\r\n"
+			"BEGIN:VEVENT\r\nUID:twice\r\nRECURRENCE-ID;TZID=Europe/Berlin:20260106T150000\r\n"
+			"DTSTART;TZID=Europe/Berlin:20260106T150000\r\nDTEND;TZID=Europe/Berlin:20260106T153000\r\nSUMMARY:Pills (with food)\r\nEND:VEVENT\r\n")
+		start, end = datetime.datetime(2026, 1, 1), datetime.datetime(2026, 1, 31)
+		self.assertEqual(occurrences(series, start, end), {
+			"01-05 09:00": "Pills", "01-06 09:00": "Pills", "01-06 15:00": "Pills (with food)",
+			"01-07 09:00": "Pills", "01-07 15:00": "Pills",
+		})
+		# The series a day later, same hours: the skipped and changed 15:00 instances move a day.
+		_, body = caldav.build_updated_calendar(series, {
+			"start": {"dateTime": "2026-01-06T09:00:00", "timeZone": "Europe/Berlin"},
+			"end": {"dateTime": "2026-01-06T09:30:00", "timeZone": "Europe/Berlin"},
+		})
+		self.assertIn(b"EXDATE;TZID=Europe/Berlin:20260106T150000", body)
+		self.assertEqual(occurrences(body, start, end), {
+			"01-06 09:00": "Pills", "01-07 09:00": "Pills", "01-07 15:00": "Pills (with food)",
+			"01-08 09:00": "Pills", "01-08 15:00": "Pills",
+		})
+
+	def test_series_moved_takes_rdates_and_until_along(self):
+		series = vcal(
+			"BEGIN:VEVENT\r\nUID:until\r\nDTSTART;TZID=Europe/Berlin:20260105T090000\r\nDTEND;TZID=Europe/Berlin:20260105T100000\r\n"
+			"RRULE:FREQ=DAILY;UNTIL=20260107T080000Z\r\nRDATE;TZID=Europe/Berlin:20260120T120000\r\nSUMMARY:Daily\r\nEND:VEVENT\r\n"
+			"BEGIN:VEVENT\r\nUID:until\r\nRECURRENCE-ID;TZID=Europe/Berlin:20260120T120000\r\n"
+			"DTSTART;TZID=Europe/Berlin:20260120T120000\r\nDTEND;TZID=Europe/Berlin:20260120T130000\r\nSUMMARY:Extra (changed)\r\nEND:VEVENT\r\n")
+		start, end = datetime.datetime(2026, 1, 1), datetime.datetime(2026, 1, 31)
+		self.assertEqual(occurrences(series, start, end), {
+			"01-05 09:00": "Daily", "01-06 09:00": "Daily", "01-07 09:00": "Daily", "01-20 12:00": "Extra (changed)",
+		})
+		# An hour later: the last day stays (UNTIL moves too), the extra date moves with its change.
+		_, body = caldav.build_updated_calendar(series, {
+			"start": {"dateTime": "2026-01-05T10:00:00", "timeZone": "Europe/Berlin"},
+			"end": {"dateTime": "2026-01-05T11:00:00", "timeZone": "Europe/Berlin"},
+		})
+		self.assertIn(b"UNTIL=20260107T090000Z", body)
+		self.assertEqual(occurrences(body, start, end), {
+			"01-05 10:00": "Daily", "01-06 10:00": "Daily", "01-07 10:00": "Daily", "01-20 13:00": "Extra (changed)",
+		})
+		# A new rule from the editor keeps its own UNTIL.
+		_, body = caldav.build_updated_calendar(series, {
+			"start": {"dateTime": "2026-01-05T10:00:00", "timeZone": "Europe/Berlin"},
+			"end": {"dateTime": "2026-01-05T11:00:00", "timeZone": "Europe/Berlin"},
+			"recurrence": ["RRULE:FREQ=DAILY;UNTIL=20260106T090000Z"],
+		})
+		self.assertIn(b"UNTIL=20260106T090000Z", body)
+
+	def test_series_that_no_longer_repeats_loses_its_overrides(self):
+		_, body = caldav.build_updated_calendar(BERLIN, {"recurrence": []})
+		cal = Calendar.from_ical(body)
+		self.assertEqual(len(cal.walk("VEVENT")), 1)
+		self.assertNotIn("RRULE", cal.walk("VEVENT")[0])
+		items = caldav.resource_items(BASE + "/cal/r.ics", '"e"', body.decode("utf-8"), datetime.datetime(2026, 10, 1), datetime.datetime(2026, 12, 1))
+		self.assertEqual([i["summary"] for i in items], ["Team"])
+		self.assertFalse(items[0]["recurring"])
+
+	def test_new_rule_drops_the_instances_it_doesnt_produce(self):
+		_, body = caldav.build_updated_calendar(BERLIN, {"recurrence": ["RRULE:FREQ=WEEKLY;COUNT=2", "EXDATE:20261102T090000Z"]})
+		cal = Calendar.from_ical(body)
+		self.assertEqual(len(caldav.overrides(cal)), 1)
+		self.assertNotIn("EXDATE", caldav.master_event(cal))
+		self.assertEqual(occurrences(body), {"10-19 10:00": "Team", "10-26 10:00": "Team (renamed)"})
+		# The same rule again: everything stays.
+		_, body = caldav.build_updated_calendar(BERLIN, {"recurrence": ["RRULE:FREQ=WEEKLY;COUNT=6", "EXDATE:20261102T090000Z"]})
+		self.assertEqual(len(caldav.overrides(Calendar.from_ical(body))), 2)
+		self.assertIn(b"EXDATE", body)
+
+	def test_changed_overrides_are_stamped(self):
+		_, body = caldav.build_updated_calendar(BERLIN, {
+			"start": {"dateTime": "2026-10-20T11:00:00", "timeZone": "Europe/Berlin"},
+			"end": {"dateTime": "2026-10-20T12:00:00", "timeZone": "Europe/Berlin"},
+		}, stamp=self.stamp)
+		for override in caldav.overrides(Calendar.from_ical(body)):
+			self.assertEqual(int(override["SEQUENCE"]), 1)
+			self.assertEqual(override["LAST-MODIFIED"].dt, self.stamp)
+
+	def test_overrides_without_their_series_are_read_only(self):
+		invited = vcal(
+			"BEGIN:VEVENT\r\nUID:inv\r\nRECURRENCE-ID:20261103T080000Z\r\nDTSTART:20261103T090000Z\r\n"
+			"DTEND:20261103T100000Z\r\nSUMMARY:Invited once\r\nEND:VEVENT\r\n")
+		items = caldav.resource_items(BASE + "/cal/inv.ics", '"e"', invited, datetime.datetime(2026, 11, 1), datetime.datetime(2026, 11, 30))
+		self.assertEqual(len(items), 1)
+		self.assertTrue(items[0]["caldavReadOnly"])
+		items = caldav.resource_items(BASE + "/cal/r.ics", '"e"', BERLIN, datetime.datetime(2026, 11, 1), datetime.datetime(2026, 11, 30))
+		self.assertFalse(any("caldavReadOnly" in i for i in items))
+
+	def test_get_series(self):
+		client = FakeClient([(200, {"ETag": '"v1"'}, BERLIN)])
+		series = caldav.get_series(client, BASE + "/cal/berlin-1.ics")
+		self.assertEqual(series["id"], "berlin-1")
+		self.assertEqual(series["start"], {"dateTime": "2026-10-19T10:00:00+02:00", "timeZone": "Europe/Berlin"})
+		self.assertEqual(series["recurrence"], ["RRULE:FREQ=WEEKLY;COUNT=6", "EXDATE:20261102T090000Z"])
+		self.assertEqual((series["caldavHref"], series["caldavEtag"]), (BASE + "/cal/berlin-1.ics", '"v1"'))
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.get_series(FakeClient([(200, {"ETag": '"v1"'}, SINGLE)]), BASE + "/cal/single-1.ics")
+		self.assertEqual(ctx.exception.kind, "PROTOCOL")
+
+	def test_occurrence_requests(self):
+		rid = berlin(11, 16, 10)
+		client = FakeClient([(200, {}, BERLIN), (204, {"ETag": '"v2"'}, "")])
+		result = caldav.put_event(client, BASE + "/cal/", {"summary": "x"}, href="/cal/berlin-1.ics", etag='"v1"', recurrence_id=rid)
+		self.assertEqual([s[0] for s in client.sent], ["GET", "PUT"])
+		self.assertEqual(client.sent[1][3]["If-Match"], '"v1"')
+		self.assertEqual(result["etag"], '"v2"')
+		client = FakeClient([(200, {}, BERLIN), (204, {"ETag": '"v3"'}, "")])
+		result = caldav.delete_event(client, BASE + "/cal/berlin-1.ics", '"v2"', rid)
+		self.assertEqual([s[0] for s in client.sent], ["GET", "PUT"])
+		self.assertEqual(client.sent[1][3]["If-Match"], '"v2"')
+		self.assertEqual(result, {"ok": True, "href": BASE + "/cal/berlin-1.ics", "etag": '"v3"'})
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.put_event(FakeClient([]), BASE + "/cal/", {"summary": "x"}, recurrence_id=rid)
+		self.assertEqual(ctx.exception.kind, "INPUT")
+
+	def test_recurrence_id_on_the_command_line(self):
+		sent = []
+
+		class Recorder(FakeClient):
+			def __init__(self, user, password):
+				super().__init__([(200, {}, BERLIN), (204, {"ETag": '"v2"'}, "")])
+				sent.append(self)
+		rid = json.dumps({"dateTime": "2026-11-16T10:00:00+01:00", "timeZone": "Europe/Berlin"})
+		with mock.patch.object(caldav, "Client", Recorder):
+			code = caldav.main(["delete", "--href", BASE + "/cal/berlin-1.ics", "--etag", '"v1"', "--recurrence-id=" + rid,
+				"--user", "u", "--password-stdin"], stdin=io.StringIO("pw\n"), stdout=io.StringIO(), stderr=io.StringIO())
+		self.assertEqual(code, 0)
+		self.assertIn("EXDATE;TZID=Europe/Berlin:20261116T100000", sent[0].sent[1][2].decode("utf-8"))
+		err = io.StringIO()
+		code = caldav.main(["delete", "--href", BASE + "/cal/x.ics", "--etag", "e", "--recurrence-id=nope",
+			"--user", "u", "--password-stdin"], stdin=io.StringIO("pw\n"), stdout=io.StringIO(), stderr=err)
+		self.assertEqual(code, 1)
+		self.assertTrue(err.getvalue().startswith("INPUT: "), err.getvalue())
+
+
 IMPORT_ICS = (
 	"BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:x\r\nMETHOD:PUBLISH\r\n"
 	"BEGIN:VTIMEZONE\r\nTZID:Custom/Zone\r\nBEGIN:STANDARD\r\nDTSTART:19700101T000000\r\nTZOFFSETFROM:+0100\r\n"

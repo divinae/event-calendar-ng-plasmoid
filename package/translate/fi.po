@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 14:39+0100\n"
 "PO-Revision-Date: 2022-03-21 23:40+ZONE\n"
 "Last-Translator: Ilpo Kantonen <ilpo@iki.fi>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -467,8 +467,8 @@ msgid "Plain http works only for a server on your own network; the password isn'
 msgstr "Salaamaton http toimii vain oman verkkosi palvelimen kanssa; salasanaa ei salata matkalla."
 
 #: ../contents/ui/config/CalendarsCalDAV.qml
-msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now."
-msgstr "Nextcloud, Fastmail, iCloud (sovellussalasanalla), Radicale, Baïkal ja muut. Salasana säilytetään järjestelmän avainrenkaassa. Toistuvat tapahtumat näytetään, mutta toistaiseksi niitä voi muuttaa vain omassa sovelluksessaan."
+msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring."
+msgstr "Nextcloud, Fastmail, iCloud (sovellussalasanalla), Radicale, Baïkal ja muut. Salasana säilytetään järjestelmän avainrenkaassa."
 
 #: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Import Events from a File…"
@@ -4410,6 +4410,9 @@ msgstr "Ei enää tapahtumia tänään"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Työskentelypaikka: %1"
+
+#~ msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now."
+#~ msgstr "Nextcloud, Fastmail, iCloud (sovellussalasanalla), Radicale, Baïkal ja muut. Salasana säilytetään järjestelmän avainrenkaassa. Toistuvat tapahtumat näytetään, mutta toistaiseksi niitä voi muuttaa vain omassa sovelluksessaan."
 
 #~ msgctxt "event time on the hour (24 hour clock)"
 #~ msgid "h"

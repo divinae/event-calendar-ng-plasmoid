@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 14:39+0100\n"
 "PO-Revision-Date: 2020-11-12 19:45+0100\n"
 "Last-Translator: Guido Mazzone <guido.mazzone93@outlook.it>\n"
 "Language-Team: Italian <guido.mazzone93@outlook.it>\n"
@@ -464,8 +464,8 @@ msgid "Plain http works only for a server on your own network; the password isn'
 msgstr "Il semplice http funziona solo con un server nella tua rete; la password non viene cifrata durante il tragitto."
 
 #: ../contents/ui/config/CalendarsCalDAV.qml
-msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now."
-msgstr "Nextcloud, Fastmail, iCloud (con una password per le app), Radicale, Baïkal e altri. La password è conservata nel portachiavi di sistema. Gli eventi ricorrenti vengono mostrati, ma per ora si modificano solo nella loro app."
+msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring."
+msgstr "Nextcloud, Fastmail, iCloud (con una password per le app), Radicale, Baïkal e altri. La password è conservata nel portachiavi di sistema."
 
 #: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Import Events from a File…"
@@ -4407,6 +4407,9 @@ msgstr "Nessun altro evento oggi"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Luogo di lavoro: %1"
+
+#~ msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now."
+#~ msgstr "Nextcloud, Fastmail, iCloud (con una password per le app), Radicale, Baïkal e altri. La password è conservata nel portachiavi di sistema. Gli eventi ricorrenti vengono mostrati, ma per ora si modificano solo nella loro app."
 
 #~ msgctxt "event time on the hour (24 hour clock)"
 #~ msgid "h"

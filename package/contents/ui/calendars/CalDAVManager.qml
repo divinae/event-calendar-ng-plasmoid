@@ -12,7 +12,8 @@ import "CalDAVErrors.js" as CalDAVErrors
 // selected calendars of the accounts in caldavAccounts (Settings > Calendars > CalDAV), read for the shown
 // range, and events created, changed, deleted and imported there. The password stays in the
 // keyring (scope caldav-account); the helper reads it there, it's never on a command line.
-// Repeating events are read-only here (whole series edits aren't supported yet).
+// Repeating events: each occurrence is an event (recurringEventId = the series' UID,
+// caldavRecurrenceId = its original start); one occurrence changes with --recurrence-id.
 CalendarManager {
 	id: caldavManager
 
@@ -187,8 +188,8 @@ CalendarManager {
 		}
 		data.items.forEach(function(event) {
 			event.backgroundColor = calendar.backgroundColor
-			// Repeating events: read-only for now (a change would need the whole series).
-			event.canEdit = calendar.accessRole === 'owner' && !event.recurring
+			// caldavReadOnly: occurrences without their series in the resource (see caldav.py).
+			event.canEdit = calendar.accessRole === 'owner' && !event.caldavReadOnly
 		})
 		// What the calendar gave its events: an unchanged calendar (the same tag) with another
 		// color or rights is still shown anew (EventModel's unchanged check compares it).
@@ -196,21 +197,64 @@ CalendarManager {
 	}
 
 	//--- Writing
-	// write(calendar, args, ok(data), done(err message or null)): the helper, then on success ok;
-	// errors are reported. Afterwards everything is read again (the server gives the events their
-	// final form, and a conflict shows the current version).
-	function write(calendar, args, ok, done) {
+	// write(calendar, args, ok(data), done(err), failed(report)): runs the helper, then reads
+	// everything again (the server's final form, or the current version after a conflict).
+	function write(calendar, args, ok, done, failed) {
 		helper(args, calendar, function(err, data) {
 			if (err) {
-				caldavManager.error(err.message, ErrorType.UnknownError)
+				reportError(err.message, failed)
 			} else if (ok) {
 				ok(data)
 			}
 			caldavManager.refresh()
-			if (done) {
+			if (done && !(err && failed)) {
 				done(err ? err.message : null)
 			}
 		})
+	}
+
+	// Shows the error, or hands it to failed(report).
+	function reportError(message, failed) {
+		var report = function() {
+			caldavManager.error(message, ErrorType.UnknownError)
+		}
+		if (failed) {
+			failed(report)
+		} else {
+			report()
+		}
+	}
+
+	// The new etag on every loaded event of the resource: no stale If-Match before the refresh.
+	function adoptEtag(calendarId, href, data) {
+		if (!href || !data || !data.etag) {
+			return
+		}
+		eventItems(calendarId).forEach(function(item) {
+			if (item.caldavHref === href) {
+				item.caldavEtag = data.etag
+			}
+		})
+	}
+
+	// An occurrence of a repeating event (changed or deleted on its own with --recurrence-id).
+	function isOccurrence(event) {
+		return !!(event && event.recurringEventId && event.caldavRecurrenceId)
+	}
+	function recurrenceIdArgs(event) {
+		// With "=": one argument, whatever the JSON holds.
+		return isOccurrence(event) ? ['--recurrence-id=' + JSON.stringify(event.caldavRecurrenceId)] : []
+	}
+
+	// A loaded occurrence of the series with that UID (its resource's href and etag), or null.
+	function seriesOccurrence(calendarId, seriesId) {
+		var items = eventItems(calendarId)
+		for (var i = 0; i < items.length; i++) {
+			if (items[i].recurringEventId === seriesId && items[i].caldavHref) {
+				return items[i]
+			}
+		}
+		return null
 	}
 
 	function createEventFromData(calendarId, eventData, done) {
@@ -252,6 +296,7 @@ CalendarManager {
 		return { calendar: calendar, event: event }
 	}
 
+	// One event, or one occurrence. options: { done(err), failed(report) } (see write).
 	function setEventProperties(calendarId, eventId, args, options) {
 		var done = options && options.done
 		var loaded = loadedEvent(calendarId, eventId, done, 'setEventProperties')
@@ -259,19 +304,54 @@ CalendarManager {
 			return
 		}
 		write(loaded.calendar, ['put', '--url', loaded.calendar.caldavHref, '--href', loaded.event.caldavHref,
-			'--etag', String(loaded.event.caldavEtag || ''), '--event-b64', eventArg(args)], function() {
+			'--etag', String(loaded.event.caldavEtag || ''), '--event-b64', eventArg(args)].concat(recurrenceIdArgs(loaded.event)), function(data) {
+			adoptEtag(calendarId, loaded.event.caldavHref, data)
 			eventUpdated(calendarId, eventId, loaded.event)
-		}, done)
+		}, done, options && options.failed)
 	}
 
-	// The editor's server-side update (buildArgs(serverEvent) -> args): the loaded copy is it here.
-	function updateEventFromServer(calendarId, eventId, buildArgs, done, options) {
+	// The server copy of an event, or of a series' master by its UID. callback(err, event)
+	function fetchEvent(calendarId, eventId, callback) {
 		var event = getEvent(calendarId, eventId)
-		if (!event) {
-			if (done) done('updateEventFromServer: event not loaded')
+		if (event) {
+			callback(null, event)
 			return
 		}
-		setEventProperties(calendarId, eventId, buildArgs(event), { done: done })
+		var calendar = getCalendar(calendarId)
+		var occurrence = seriesOccurrence(calendarId, eventId)
+		if (!calendar || !occurrence) {
+			callback('fetchEvent: event not loaded', null)
+			return
+		}
+		helper(['get', '--href', occurrence.caldavHref], calendar, function(err, series) {
+			if (err) {
+				callback(err.message, null)
+			} else {
+				series.calendarId = calendarId
+				callback(null, series)
+			}
+		})
+	}
+
+	// The editor's update (buildArgs(serverEvent) -> args) of an event, an occurrence or a whole
+	// series (by its UID). Optional failed(report), see write.
+	function updateEventFromServer(calendarId, eventId, buildArgs, done, options, failed) {
+		var event = getEvent(calendarId, eventId)
+		if (event) {
+			setEventProperties(calendarId, eventId, buildArgs(event), { done: done, failed: failed })
+			return
+		}
+		var calendar = getCalendar(calendarId)
+		fetchEvent(calendarId, eventId, function(err, series) {
+			if (err || !series || !calendar) {
+				reportError(err ? String(err) : i18n("CalDAV: %1", i18n("Unknown error")), failed)
+				return
+			}
+			write(calendar, ['put', '--url', calendar.caldavHref, '--href', series.caldavHref,
+				'--etag', String(series.caldavEtag || ''), '--event-b64', eventArg(buildArgs(series))], function(data) {
+				adoptEtag(calendarId, series.caldavHref, data)
+			}, done, failed)
+		})
 	}
 
 	function deleteEvent(calendarId, eventId, done) {
@@ -279,9 +359,31 @@ CalendarManager {
 		if (!loaded) {
 			return
 		}
-		write(loaded.calendar, ['delete', '--href', loaded.event.caldavHref, '--etag', String(loaded.event.caldavEtag || '')], function() {
+		// An occurrence: only it goes (an EXDATE in its series).
+		write(loaded.calendar, ['delete', '--href', loaded.event.caldavHref, '--etag', String(loaded.event.caldavEtag || '')]
+			.concat(recurrenceIdArgs(loaded.event)), function(data) {
+			adoptEtag(calendarId, loaded.event.caldavHref, data) // The series' other occurrences
 			eventDeleted(calendarId, eventId, loaded.event)
 			removeEvent(calendarId, eventId)
+		}, done)
+	}
+
+	// A whole series by its UID. done(err), always called.
+	function deleteSeries(calendarId, seriesId, done) {
+		var calendar = getCalendar(calendarId)
+		var occurrence = seriesOccurrence(calendarId, seriesId)
+		if (!calendar || !occurrence) {
+			logger.log('caldav.deleteSeries', 'series not loaded')
+			if (done) done('deleteSeries: series not loaded')
+			return
+		}
+		write(calendar, ['delete', '--href', occurrence.caldavHref, '--etag', String(occurrence.caldavEtag || '')], function() {
+			eventItems(calendarId).slice().forEach(function(item) {
+				if (item.recurringEventId === seriesId) {
+					removeEvent(calendarId, item.id)
+					eventDeleted(calendarId, item.id, item)
+				}
+			})
 		}, done)
 	}
 
