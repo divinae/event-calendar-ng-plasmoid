@@ -40,4 +40,17 @@ assert.strictEqual(R.sameAs(own, { custom: false }), false)
 assert.deepStrictEqual(plain(R.popupMinutes(own)), [10, 60])
 assert.strictEqual(R.popupMinutes({ custom: false }), null)
 
+// CalDAV: the alarms' minutes, always the event's own list.
+const caldav = R.fromMinutes([60, 10])
+assert.deepStrictEqual(plain(caldav), { custom: true, items: [{ value: 10, unit: 'minutes' }, { value: 1, unit: 'hours' }], others: [] })
+assert.deepStrictEqual(plain(R.fromMinutes(undefined)), { custom: true, items: [], others: [] })
+assert.deepStrictEqual(plain(R.toGoogle(caldav)), { useDefault: false, overrides: [{ method: 'popup', minutes: 10 }, { method: 'popup', minutes: 60 }] })
+
+// CalDAV: as many and as far ahead as the event has (Google: 5, 4 weeks).
+const many = R.fromMinutes([5, 10, 15, 20, 30, 60, 60480])
+assert.deepStrictEqual(plain(R.toCalDAV(many)).overrides.map(o => o.minutes), [5, 10, 15, 20, 30, 60, 60480])
+assert.strictEqual(R.toGoogle(many).overrides.length, 5)
+assert.strictEqual(R.sameForCalDAV(many, R.fromMinutes([60480, 60, 30, 20, 15, 10, 5])), true)
+assert.strictEqual(R.sameForCalDAV(many, R.fromMinutes([5, 10, 15, 20, 30, 60])), false, 'the sixth week counts')
+
 console.log('reminders: ok')

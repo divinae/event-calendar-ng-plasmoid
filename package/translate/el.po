@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 18:52+0100\n"
 "PO-Revision-Date: 2018-06-07 01:37+0300\n"
 "Last-Translator: Chris P <skylin@protonmail.com>\n"
 "Language-Team: Chris P <skylin@protonmail.com>\n"
@@ -101,10 +101,12 @@ msgid "+%1"
 msgstr "+%1"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1 didn't accept the user name or password"
 msgstr "CalDAV: Το %1 δεν αποδέχτηκε το όνομα χρήστη ή τον κωδικό πρόσβασης"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 #: ../contents/ui/calendars/GoogleCalendarManager.qml
 #: ../contents/ui/calendars/GoogleTasksManager.qml
 #: ../contents/ui/calendars/ICalManager.qml
@@ -113,10 +115,12 @@ msgid "Could not connect"
 msgstr "Αδυναμία σύνδεσης"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: the password couldn't be read from the keyring"
 msgstr "CalDAV: ο κωδικός δεν ήταν δυνατό να διαβαστεί από τη θήκη κλειδιών"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid ""
 "CalDAV needs Python modules: install them in Settings > Calendars > CalDAV"
 msgstr ""
@@ -124,19 +128,23 @@ msgstr ""
 "Ημερολόγια > CalDAV"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "The event was changed elsewhere meanwhile; it's loaded again"
 msgstr "Το συμβάν άλλαξε στο μεταξύ από αλλού· φορτώθηκε ξανά"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Unknown error"
 msgstr "Άγνωστο σφάλμα"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1"
 msgstr "CalDAV: %1"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: an unexpected answer"
 msgstr "CalDAV: μια μη αναμενόμενη απάντηση"
 
@@ -537,6 +545,17 @@ msgid "Server's Color"
 msgstr "Χρώμα του διακομιστή"
 
 #: ../contents/ui/config/CalendarsCalDAV.qml
+#: ../contents/ui/config/ConfigTasks.qml
+msgid "Task Lists"
+msgstr "Λίστες εργασιών"
+
+#: ../contents/ui/config/CalendarsCalDAV.qml
+msgid "Refresh the calendars to find this account's task lists too."
+msgstr ""
+"Ανανεώστε τα ημερολόγια για να βρεθούν και οι λίστες εργασιών του "
+"λογαριασμού."
+
+#: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Refresh Calendars"
 msgstr "Ανανέωση ημερολογίων"
 
@@ -583,13 +602,10 @@ msgstr ""
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid ""
 "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
-"others. The password is kept in the system keyring. Repeating events are "
-"shown, but changed only in their own app for now."
+"others. The password is kept in the system keyring."
 msgstr ""
 "Nextcloud, Fastmail, iCloud (με κωδικό εφαρμογής), Radicale, Baïkal και "
-"άλλα. Ο κωδικός πρόσβασης φυλάσσεται στην κλειδοθήκη του συστήματος. Τα "
-"επαναλαμβανόμενα συμβάντα εμφανίζονται, αλλά προς το παρόν αλλάζουν μόνο στη "
-"δική τους εφαρμογή."
+"άλλα. Ο κωδικός πρόσβασης φυλάσσεται στην κλειδοθήκη του συστήματος."
 
 #: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Import Events from a File…"
@@ -970,6 +986,7 @@ msgid "Akonadi"
 msgstr "Akonadi"
 
 #: ../contents/ui/config/ConfigCalendars.qml
+#: ../contents/ui/config/ConfigTasks.qml
 msgid "CalDAV"
 msgstr "CalDAV"
 
@@ -1682,6 +1699,14 @@ msgstr ""
 "τις εκπρόθεσμες εργασίες."
 
 #: ../contents/ui/config/ConfigTasks.qml
+msgid ""
+"The task lists of CalDAV accounts (eg: Nextcloud Tasks) are picked with "
+"their calendars, on the Calendars page under CalDAV."
+msgstr ""
+"Οι λίστες εργασιών των λογαριασμών CalDAV (π.χ. Nextcloud Tasks) επιλέγονται "
+"μαζί με τα ημερολόγιά τους, στη σελίδα Ημερολόγια, στο CalDAV."
+
+#: ../contents/ui/config/ConfigTasks.qml
 msgid "Google Tasks"
 msgstr "Google Tasks"
 
@@ -1692,10 +1717,6 @@ msgid ""
 msgstr ""
 "Συνδεθείτε στη σελίδα Ημερολόγιο Google για να επιλέξετε τις λίστες εργασιών "
 "Google που εμφανίζονται εδώ."
-
-#: ../contents/ui/config/ConfigTasks.qml
-msgid "Task Lists"
-msgstr "Λίστες εργασιών"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid ""
@@ -4299,12 +4320,12 @@ msgid "Show more"
 msgstr "Εμφάνιση περισσότερων"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Αδυναμία αναζήτησης στο Ημερολόγιο Google"
+msgid "Couldn't search the online calendars"
+msgstr "Αδυναμία αναζήτησης στα ηλεκτρονικά ημερολόγια"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Αναζήτηση στο Ημερολόγιο Google…"
+msgid "Searching the online calendars…"
+msgstr "Αναζήτηση στα ηλεκτρονικά ημερολόγια…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4916,6 +4937,22 @@ msgstr "Δεν υπάρχουν άλλα γεγονότα σήμερα"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Τοποθεσία εργασίας: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Αδυναμία αναζήτησης στο Ημερολόγιο Google"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Αναζήτηση στο Ημερολόγιο Google…"
+
+#~ msgid ""
+#~ "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
+#~ "others. The password is kept in the system keyring. Repeating events are "
+#~ "shown, but changed only in their own app for now."
+#~ msgstr ""
+#~ "Nextcloud, Fastmail, iCloud (με κωδικό εφαρμογής), Radicale, Baïkal και "
+#~ "άλλα. Ο κωδικός πρόσβασης φυλάσσεται στην κλειδοθήκη του συστήματος. Τα "
+#~ "επαναλαμβανόμενα συμβάντα εμφανίζονται, αλλά προς το παρόν αλλάζουν μόνο "
+#~ "στη δική τους εφαρμογή."
 
 #~ msgctxt "event time on the hour (24 hour clock)"
 #~ msgid "h"

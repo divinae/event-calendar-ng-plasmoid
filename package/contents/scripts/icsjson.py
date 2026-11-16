@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import re
 import hashlib
 import ipaddress
 import json
@@ -63,33 +64,40 @@ def get_event_bounds(event):
 	return start, end
 
 
+def alarm_minutes(alarm, event, start_date, end_date):
+	"""A display or audio alarm (not email) at or before the event's start: its minutes before the
+	start, else None (also for alarms after the start, and fixed times of repeating events)."""
+	if getattr(alarm, "name", "") != "VALARM":
+		return None
+	action = stringify(alarm.get("ACTION")).strip().upper()
+	if action and action not in ("DISPLAY", "AUDIO"):
+		return None
+	trigger = alarm.get("TRIGGER")
+	value = getattr(trigger, "dt", None)
+	if isinstance(value, datetime.timedelta):
+		related = stringify(trigger.params.get("RELATED") if hasattr(trigger, "params") else "").upper()
+		offset = value
+		if related == "END":
+			offset = value + (ensure_date_time(end_date) - ensure_date_time(start_date))
+		before = -offset
+	elif isinstance(value, datetime.date):
+		if "RRULE" in event or "RDATE" in event or "RECURRENCE-ID" in event:
+			return None  # A fixed time: one occurrence's, not each repeat's
+		before = ensure_date_time(start_date) - ensure_date_time(value)
+	else:
+		return None
+	total = before.total_seconds() / 60
+	return int(round(total)) if total >= 0 else None
+
+
 def reminder_minutes(event, start_date, end_date):
 	"""The event's alarms (VALARM, as set on the server or in the file) as minutes before its start:
 	display and audio alarms (not email), at or before the start, sorted; [] for none."""
 	minutes = set()
 	for alarm in getattr(event, "subcomponents", []):
-		if getattr(alarm, "name", "") != "VALARM":
-			continue
-		action = stringify(alarm.get("ACTION")).strip().upper()
-		if action and action not in ("DISPLAY", "AUDIO"):
-			continue
-		trigger = alarm.get("TRIGGER")
-		value = getattr(trigger, "dt", None)
-		if isinstance(value, datetime.timedelta):
-			related = stringify(trigger.params.get("RELATED") if hasattr(trigger, "params") else "").upper()
-			offset = value
-			if related == "END":
-				offset = value + (ensure_date_time(end_date) - ensure_date_time(start_date))
-			before = -offset
-		elif isinstance(value, datetime.date):
-			if "RRULE" in event or "RDATE" in event or "RECURRENCE-ID" in event:
-				continue  # A fixed time: one occurrence's, not each repeat's
-			before = ensure_date_time(start_date) - ensure_date_time(value)
-		else:
-			continue
-		total = before.total_seconds() / 60
-		if total >= 0:
-			minutes.add(int(round(total)))
+		value = alarm_minutes(alarm, event, start_date, end_date)
+		if value is not None:
+			minutes.add(value)
 	return sorted(minutes)
 
 
@@ -148,6 +156,15 @@ def events_to_json(event_list=None, indent=4):
 			item["location"] = stringify(event.get("LOCATION"))
 		if "DESCRIPTION" in event:
 			item["description"] = stringify(event.get("DESCRIPTION"))
+		transp = stringify(event.get("TRANSP")).strip().upper()
+		if transp == "TRANSPARENT":
+			item["transparency"] = "transparent"  # Free: no conflict, not busy
+		klass = stringify(event.get("CLASS")).strip().lower()
+		if klass in ("public", "private", "confidential"):
+			item["visibility"] = klass
+		color = stringify(event.get("COLOR")).strip().lower()
+		if re.fullmatch(r"[a-z]{3,30}", color):
+			item["icalColor"] = color  # RFC 7986: a CSS color name
 		reminders = reminder_minutes(event, start_date, end_date)
 		if reminders:
 			# Its alarms, as a Google calendar's reminders: used with "Use the reminder times set in

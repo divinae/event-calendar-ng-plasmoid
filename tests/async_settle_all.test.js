@@ -44,4 +44,10 @@ A.settleAll([
 assert.strictEqual(calls, 1)
 assert.deepStrictEqual(plain(got).map(r => r.data), [1, 3])
 
+// joinedLists: all the lists as one; the first error only when nothing came.
+assert.deepStrictEqual(plain(A.joinedLists([{ err: null, data: [1] }, { err: 'x', data: null }, { err: null, data: [2, 3] }])),
+	{ err: null, items: [1, 2, 3] })
+assert.deepStrictEqual(plain(A.joinedLists([{ err: 'first', data: null }, { err: 'second', data: [] }])), { err: 'first', items: [] })
+assert.deepStrictEqual(plain(A.joinedLists([])), { err: null, items: [] })
+
 console.log('PASS async_settle_all')

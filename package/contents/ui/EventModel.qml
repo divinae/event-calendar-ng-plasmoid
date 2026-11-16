@@ -237,6 +237,41 @@ CalendarManager {
 		accounts: appletConfig.caldavAccounts.value || []
 	}
 
+	// The task lists of each CalDAV account (those picked in Settings > Calendars > CalDAV), a
+	// manager per account id: a changed account (also a list made in the Tasks view) keeps its
+	// manager, and everything is fetched again.
+	property var caldavAccountIds: []
+	function updateCaldavAccountIds() {
+		var ids = (appletConfig.caldavAccounts.value || []).map(function(a) { return String(a && a.id) })
+		if (JSON.stringify(ids) !== JSON.stringify(caldavAccountIds)) {
+			caldavAccountIds = ids
+		}
+	}
+	function caldavAccount(id) {
+		return (appletConfig.caldavAccounts.value || []).filter(function(a) { return a && String(a.id) === id })[0] || null
+	}
+	Repeater {
+		id: caldavTasksRepeater
+		model: eventModel.caldavAccountIds
+		Component.onCompleted: eventModel.updateCaldavAccountIds()
+		delegate: Item {
+			CalDAVTasksManager {
+				id: caldavTasksManager
+				account: eventModel.caldavAccount(modelData)
+				accountsConfig: appletConfig.caldavAccounts
+			}
+			Component.onCompleted: eventModel.bindSignals(caldavTasksManager)
+			Component.onDestruction: eventModel.unbindSignals(caldavTasksManager)
+		}
+	}
+	Connections {
+		target: appletConfig.caldavAccounts
+		function onValueChanged() {
+			eventModel.updateCaldavAccountIds()
+			deferredUpdate.restart()
+		}
+	}
+
 	Repeater {
 		id: googleAccountsRepeater
 		model: googleAccountsStore.fetchableAccounts
@@ -572,7 +607,8 @@ CalendarManager {
 					continue
 				}
 				defaultEventParsing(calendarId, items[i])
-				items[i].calendarManagerId = 'GoogleCalendar'
+				// Only Google and CalDAV calendars are cached ("account::calendar" ids).
+				items[i].calendarManagerId = String(calendarId).indexOf('caldav-') === 0 ? 'CalDAV' : 'GoogleCalendar'
 				items[i].description = ''
 			}
 			shown[calendarId] = EventTypes.splitWorkingLocations({ items: items })
@@ -793,22 +829,20 @@ CalendarManager {
 		return !!calendarManager && calendarManager.calendarManagerId === 'GoogleCalendar'
 	}
 
-	// Search the calendars that support it (Google) between timeMin and timeMax.
+	// A manager with calendars to search (Google, CalDAV) beyond the loaded range.
+	function canSearch(calendarManager) {
+		return typeof calendarManager.searchEvents === 'function'
+			&& (typeof calendarManager.canSearch !== 'function' || calendarManager.canSearch())
+	}
+	// Search the calendars that support it (Google, CalDAV) between timeMin and timeMax.
 	// callback(err, items) once all of them answered.
 	function searchEvents(query, timeMin, timeMax, callback) {
-		var managers = calendarManagerList.filter(function(m) {
-			return typeof m.searchEvents === 'function'
-		})
+		var managers = calendarManagerList.filter(canSearch)
 		Async.settleAll(managers.map(function(m) {
 			return m.searchEvents.bind(m, query, timeMin, timeMax)
 		}), function(results) {
-			var found = []
-			var firstError = null
-			results.forEach(function(result) {
-				firstError = firstError || result.err
-				found = found.concat(result.data || [])
-			})
-			callback(found.length ? null : firstError, found)
+			var joined = Async.joinedLists(results)
+			callback(joined.err, joined.items)
 		})
 	}
 
@@ -839,7 +873,7 @@ CalendarManager {
 		}
 	}
 
-	// done(err): optional, called once the server answered (Google). A deleted task's in-progress
+	// done(err): optional, called once the server answered (Google, CalDAV). A deleted task's in-progress
 	// mark goes once it's deleted.
 	function deleteEvent(calendarId, eventId, done) {
 		var calendarManager = managerWith(calendarId, 'deleteEvent')
@@ -860,7 +894,7 @@ CalendarManager {
 		}
 	}
 
-	// Whole recurring series (Google): seriesId is an occurrence's recurringEventId.
+	// Whole recurring series (Google, CalDAV): seriesId is an occurrence's recurringEventId.
 	function deleteSeries(calendarId, seriesId, done) {
 		var calendarManager = managerWith(calendarId, 'deleteSeries')
 		if (calendarManager) {
@@ -873,7 +907,7 @@ CalendarManager {
 		}
 	}
 
-	// Deleted events can be brought back (Google): see restoreEvent.
+	// Deleted events can be brought back (Google, CalDAV): see restoreEvent.
 	function canRestore(calendarId) {
 		return !!managerWith(calendarId, 'restoreEvent')
 	}
@@ -1223,12 +1257,17 @@ CalendarManager {
 		forwardTaskList('clearCompleted', listId, [], done, '', true)
 	}
 
-	// Repeat rules can be edited (Google Calendar).
 	// A Google calendar (its own fields: color, guests, Meet, reminders, event types).
 	function isGoogleCalendar(calendarId) {
 		var calendarManager = getCalendarManager(calendarId)
 		return !!calendarManager && calendarManager.calendarManagerId === 'GoogleCalendar'
 	}
+	// A CalDAV calendar (color, availability and reminders of its own, see caldav.py).
+	function isCalDAVCalendar(calendarId) {
+		var calendarManager = getCalendarManager(calendarId)
+		return !!calendarManager && calendarManager.calendarManagerId === 'CalDAV'
+	}
+	// Repeat rules can be edited (Google, CalDAV).
 	function supportsRecurrence(calendarId) {
 		return !!managerWith(calendarId, 'updateEventFromServer')
 	}
@@ -1253,7 +1292,7 @@ CalendarManager {
 		}
 	}
 
-	// Events can move to another calendar of the same account (Google): see moveEvent.
+	// Events can move to another calendar of the same account (Google, CalDAV): see moveEvent.
 	function supportsMove(calendarId) {
 		return !!managerWith(calendarId, 'moveEvent')
 	}

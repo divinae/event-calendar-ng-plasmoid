@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 18:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -90,36 +90,36 @@ msgctxt "more events not shown in a month day cell"
 msgid "+%1"
 msgstr ""
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1 didn't accept the user name or password"
 msgstr ""
 
-#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/GoogleCalendarManager.qml ../contents/ui/calendars/GoogleTasksManager.qml ../contents/ui/calendars/ICalManager.qml
-#: ../contents/ui/calendars/TickTickTasksManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml ../contents/ui/calendars/GoogleCalendarManager.qml ../contents/ui/calendars/GoogleTasksManager.qml
+#: ../contents/ui/calendars/ICalManager.qml ../contents/ui/calendars/TickTickTasksManager.qml
 msgid "Could not connect"
 msgstr ""
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: the password couldn't be read from the keyring"
 msgstr ""
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV needs Python modules: install them in Settings > Calendars > CalDAV"
 msgstr ""
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "The event was changed elsewhere meanwhile; it's loaded again"
 msgstr ""
 
-#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/config/CalendarsCalDAV.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Unknown error"
 msgstr ""
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1"
 msgstr ""
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: an unexpected answer"
 msgstr ""
 
@@ -432,6 +432,14 @@ msgstr ""
 msgid "Server's Color"
 msgstr ""
 
+#: ../contents/ui/config/CalendarsCalDAV.qml ../contents/ui/config/ConfigTasks.qml
+msgid "Task Lists"
+msgstr ""
+
+#: ../contents/ui/config/CalendarsCalDAV.qml
+msgid "Refresh the calendars to find this account's task lists too."
+msgstr ""
+
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Refresh Calendars"
 msgstr ""
@@ -469,8 +477,7 @@ msgid "Plain http works only for a server on your own network; the password isn'
 msgstr ""
 
 #: ../contents/ui/config/CalendarsCalDAV.qml
-msgid ""
-"Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now."
+msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring."
 msgstr ""
 
 #: ../contents/ui/config/CalendarsGeneral.qml
@@ -766,7 +773,7 @@ msgstr ""
 msgid "Akonadi"
 msgstr ""
 
-#: ../contents/ui/config/ConfigCalendars.qml
+#: ../contents/ui/config/ConfigCalendars.qml ../contents/ui/config/ConfigTasks.qml
 msgid "CalDAV"
 msgstr ""
 
@@ -1361,15 +1368,15 @@ msgid "The daily agenda notification also lists today's and overdue tasks."
 msgstr ""
 
 #: ../contents/ui/config/ConfigTasks.qml
+msgid "The task lists of CalDAV accounts (eg: Nextcloud Tasks) are picked with their calendars, on the Calendars page under CalDAV."
+msgstr ""
+
+#: ../contents/ui/config/ConfigTasks.qml
 msgid "Google Tasks"
 msgstr ""
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid "Sign in on the Google Calendar page to choose the Google task lists shown here."
-msgstr ""
-
-#: ../contents/ui/config/ConfigTasks.qml
-msgid "Task Lists"
 msgstr ""
 
 #: ../contents/ui/config/ConfigTasks.qml
@@ -3822,11 +3829,11 @@ msgid "Show more"
 msgstr ""
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
+msgid "Couldn't search the online calendars"
 msgstr ""
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
+msgid "Searching the online calendars…"
 msgstr ""
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml

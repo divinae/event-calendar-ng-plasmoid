@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 18:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: yamato kobayashi <Kb_yamato@protonmail.com>\n"
 "Language-Team: \n"
@@ -88,35 +88,35 @@ msgctxt "more events not shown in a month day cell"
 msgid "+%1"
 msgstr "+%1"
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1 didn't accept the user name or password"
 msgstr "CalDAV: %1 がユーザー名またはパスワードを受け付けませんでした"
 
-#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/GoogleCalendarManager.qml ../contents/ui/calendars/GoogleTasksManager.qml ../contents/ui/calendars/ICalManager.qml ../contents/ui/calendars/TickTickTasksManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml ../contents/ui/calendars/GoogleCalendarManager.qml ../contents/ui/calendars/GoogleTasksManager.qml ../contents/ui/calendars/ICalManager.qml ../contents/ui/calendars/TickTickTasksManager.qml
 msgid "Could not connect"
 msgstr "接続できませんでした"
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: the password couldn't be read from the keyring"
 msgstr "CalDAV: キーリングからパスワードを読み取れませんでした"
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV needs Python modules: install them in Settings > Calendars > CalDAV"
 msgstr "CalDAV には Python モジュールが必要です: 設定 > カレンダー > CalDAV でインストールしてください"
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "The event was changed elsewhere meanwhile; it's loaded again"
 msgstr "この予定はその間に別の場所で変更されたため、再読み込みしました"
 
-#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/config/CalendarsCalDAV.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Unknown error"
 msgstr "不明なエラー"
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1"
 msgstr "CalDAV: %1"
 
-#: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVManager.qml ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: an unexpected answer"
 msgstr "CalDAV: 予期しない応答"
 
@@ -422,6 +422,14 @@ msgstr "読み取り専用"
 msgid "Server's Color"
 msgstr "サーバーの色"
 
+#: ../contents/ui/config/CalendarsCalDAV.qml ../contents/ui/config/ConfigTasks.qml
+msgid "Task Lists"
+msgstr "タスクリスト"
+
+#: ../contents/ui/config/CalendarsCalDAV.qml
+msgid "Refresh the calendars to find this account's task lists too."
+msgstr "カレンダーを更新すると、このアカウントのタスクリストも見つかります。"
+
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Refresh Calendars"
 msgstr "カレンダーを更新"
@@ -459,8 +467,8 @@ msgid "Plain http works only for a server on your own network; the password isn'
 msgstr "暗号化されていない http は自分のネットワーク内のサーバーでのみ使えます。パスワードは途中で暗号化されません。"
 
 #: ../contents/ui/config/CalendarsCalDAV.qml
-msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now."
-msgstr "Nextcloud、Fastmail、iCloud (アプリ用パスワードを使用)、Radicale、Baïkal など。パスワードはシステムのキーリングに保存されます。繰り返しの予定は表示されますが、今のところ変更はそれぞれのアプリでのみ行えます。"
+msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring."
+msgstr "Nextcloud、Fastmail、iCloud (アプリ用パスワードを使用)、Radicale、Baïkal など。パスワードはシステムのキーリングに保存されます。"
 
 #: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Import Events from a File…"
@@ -745,7 +753,7 @@ msgstr "Google Calendar"
 msgid "Akonadi"
 msgstr "Akonadi"
 
-#: ../contents/ui/config/ConfigCalendars.qml
+#: ../contents/ui/config/ConfigCalendars.qml ../contents/ui/config/ConfigTasks.qml
 msgid "CalDAV"
 msgstr "CalDAV"
 
@@ -1333,16 +1341,16 @@ msgid "The daily agenda notification also lists today's and overdue tasks."
 msgstr "毎日の予定の通知に、今日のタスクと期限切れのタスクも表示します。"
 
 #: ../contents/ui/config/ConfigTasks.qml
+msgid "The task lists of CalDAV accounts (eg: Nextcloud Tasks) are picked with their calendars, on the Calendars page under CalDAV."
+msgstr "CalDAV アカウントのタスクリスト（例: Nextcloud Tasks）は、カレンダーページの CalDAV でカレンダーと一緒に選びます。"
+
+#: ../contents/ui/config/ConfigTasks.qml
 msgid "Google Tasks"
 msgstr "Google Tasks"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid "Sign in on the Google Calendar page to choose the Google task lists shown here."
 msgstr "ここに表示する Google のタスクリストを選択するには、Google Calendar のページでサインインしてください。"
-
-#: ../contents/ui/config/ConfigTasks.qml
-msgid "Task Lists"
-msgstr "タスクリスト"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid "No task lists loaded yet. Reload the account on the Google Calendar page."
@@ -3755,12 +3763,12 @@ msgid "Show more"
 msgstr "さらに表示"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Google Calendar を検索できませんでした"
+msgid "Couldn't search the online calendars"
+msgstr "オンラインカレンダーを検索できませんでした"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Google Calendar を検索中…"
+msgid "Searching the online calendars…"
+msgstr "オンラインカレンダーを検索中…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4357,6 +4365,15 @@ msgstr "今日はこれ以上予定がありません"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "勤務場所: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Google Calendar を検索できませんでした"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Google Calendar を検索中…"
+
+#~ msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now."
+#~ msgstr "Nextcloud、Fastmail、iCloud (アプリ用パスワードを使用)、Radicale、Baïkal など。パスワードはシステムのキーリングに保存されます。繰り返しの予定は表示されますが、今のところ変更はそれぞれのアプリでのみ行えます。"
 
 #~ msgctxt "event time on the hour (24 hour clock)"
 #~ msgid "h"

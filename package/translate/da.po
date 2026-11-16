@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 18:52+0100\n"
 "PO-Revision-Date: 2019-05-04 00:48-0400\n"
 "Last-Translator: Chris Darnell <chris@cedeel.com>\n"
 "Language-Team: Chris Darnell <chris@cedeel.com>\n"
@@ -101,10 +101,12 @@ msgid "+%1"
 msgstr "+%1"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1 didn't accept the user name or password"
 msgstr "CalDAV: %1 accepterede ikke brugernavnet eller adgangskoden"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 #: ../contents/ui/calendars/GoogleCalendarManager.qml
 #: ../contents/ui/calendars/GoogleTasksManager.qml
 #: ../contents/ui/calendars/ICalManager.qml
@@ -113,10 +115,12 @@ msgid "Could not connect"
 msgstr "Kunne ikke forbinde"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: the password couldn't be read from the keyring"
 msgstr "CalDAV: adgangskoden kunne ikke læses fra nøgleringen"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid ""
 "CalDAV needs Python modules: install them in Settings > Calendars > CalDAV"
 msgstr ""
@@ -124,20 +128,24 @@ msgstr ""
 "CalDAV"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "The event was changed elsewhere meanwhile; it's loaded again"
 msgstr ""
 "Begivenheden blev ændret et andet sted i mellemtiden; den er indlæst igen"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Unknown error"
 msgstr "Ukendt fejl"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1"
 msgstr "CalDAV: %1"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: an unexpected answer"
 msgstr "CalDAV: et uventet svar"
 
@@ -522,6 +530,15 @@ msgid "Server's Color"
 msgstr "Serverens farve"
 
 #: ../contents/ui/config/CalendarsCalDAV.qml
+#: ../contents/ui/config/ConfigTasks.qml
+msgid "Task Lists"
+msgstr "Opgavelister"
+
+#: ../contents/ui/config/CalendarsCalDAV.qml
+msgid "Refresh the calendars to find this account's task lists too."
+msgstr "Opdatér kalenderne for også at finde kontoens opgavelister."
+
+#: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Refresh Calendars"
 msgstr "Genindlæs kalendere"
 
@@ -568,12 +585,10 @@ msgstr ""
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid ""
 "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
-"others. The password is kept in the system keyring. Repeating events are "
-"shown, but changed only in their own app for now."
+"others. The password is kept in the system keyring."
 msgstr ""
 "Nextcloud, Fastmail, iCloud (med en app-adgangskode), Radicale, Baïkal og "
-"andre. Adgangskoden opbevares i systemets nøglering. Gentagne begivenheder "
-"vises, men kan indtil videre kun ændres i deres egen app."
+"andre. Adgangskoden opbevares i systemets nøglering."
 
 #: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Import Events from a File…"
@@ -944,6 +959,7 @@ msgid "Akonadi"
 msgstr "Akonadi"
 
 #: ../contents/ui/config/ConfigCalendars.qml
+#: ../contents/ui/config/ConfigTasks.qml
 msgid "CalDAV"
 msgstr "CalDAV"
 
@@ -1643,6 +1659,14 @@ msgstr ""
 "Notifikationen for den daglige agenda viser også dagens og forfaldne opgaver."
 
 #: ../contents/ui/config/ConfigTasks.qml
+msgid ""
+"The task lists of CalDAV accounts (eg: Nextcloud Tasks) are picked with "
+"their calendars, on the Calendars page under CalDAV."
+msgstr ""
+"Opgavelisterne fra CalDAV-konti (fx Nextcloud Tasks) vælges sammen med deres "
+"kalendere på siden Kalendere under CalDAV."
+
+#: ../contents/ui/config/ConfigTasks.qml
 msgid "Google Tasks"
 msgstr "Google Tasks"
 
@@ -1653,10 +1677,6 @@ msgid ""
 msgstr ""
 "Log ind på siden Google Kalender for at vælge de Google-opgavelister, der "
 "vises her."
-
-#: ../contents/ui/config/ConfigTasks.qml
-msgid "Task Lists"
-msgstr "Opgavelister"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid ""
@@ -4236,12 +4256,12 @@ msgid "Show more"
 msgstr "Vis mere"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Kunne ikke søge i Google Kalender"
+msgid "Couldn't search the online calendars"
+msgstr "Kunne ikke søge i onlinekalenderne"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Søger i Google Kalender…"
+msgid "Searching the online calendars…"
+msgstr "Søger i onlinekalenderne…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4849,6 +4869,21 @@ msgstr "Ikke flere begivenheder i dag"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Arbejdssted: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Kunne ikke søge i Google Kalender"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Søger i Google Kalender…"
+
+#~ msgid ""
+#~ "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
+#~ "others. The password is kept in the system keyring. Repeating events are "
+#~ "shown, but changed only in their own app for now."
+#~ msgstr ""
+#~ "Nextcloud, Fastmail, iCloud (med en app-adgangskode), Radicale, Baïkal og "
+#~ "andre. Adgangskoden opbevares i systemets nøglering. Gentagne "
+#~ "begivenheder vises, men kan indtil videre kun ændres i deres egen app."
 
 #~ msgctxt "event time on the hour (24 hour clock)"
 #~ msgid "h"

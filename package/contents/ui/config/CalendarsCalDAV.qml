@@ -11,8 +11,10 @@ import "../calendars/CalDAVErrors.js" as CalDAVErrors
 
 // CalDAV accounts (Nextcloud, Fastmail, iCloud, Radicale, …): server, user name and password (the
 // password goes to the keyring, scope caldav-account), then the account's calendars to show. Kept
-// in caldavAccounts: [{ id, label, url, username, calendars: [{ href, name, color, writable,
-// selected, userColor }] }]. The widget reads them through calendars/CalDAVManager.qml.
+// in caldavAccounts: [{ id, label, url, username, home, calendars: [{ href, name, color, writable,
+// selected, userColor, events, tasks, tasksSelected }] }]: events / tasks, what the calendar holds
+// (VEVENT, VTODO); selected: its events shown (CalDAVManager.qml), tasksSelected: a task list in the
+// Tasks view (CalDAVTasksManager.qml).
 ConfigSection {
 	id: page
 
@@ -85,7 +87,8 @@ ConfigSection {
 		return parsed.text || i18n("Unknown error")
 	}
 
-	// The account's calendars from the server; selected ones stay selected (new ones are).
+	// The account's calendars from the server; what was set here stays. New ones: calendars for
+	// events are selected, those only for tasks are picked as task lists.
 	function discover(account, done) {
 		executable.execArgv(['python3', helperPath, 'discover', '--url', account.url, '--account', account.id,
 			'--user', account.username], function(cmd, exitCode, exitStatus, stdout, stderr) {
@@ -98,14 +101,22 @@ ConfigSection {
 				var data = JSON.parse(stdout)
 				var previous = {} // href -> the calendar as it was: what was set here is kept
 				;(account.calendars || []).forEach(function(c) { previous[c.href] = c })
+				if (data.home) {
+					account.home = data.home // Where new task lists go
+				}
 				var calendars = (data.calendars || []).map(function(c) {
 					var before = previous[c.href]
+					var events = c.events !== false
+					var tasks = c.tasks === true
 					var calendar = {
 						href: c.href,
 						name: c.name || c.href,
 						color: c.color || "",
 						writable: c.writable !== false,
-						selected: before ? before.selected !== false : true,
+						selected: before ? before.selected !== false : events,
+						events: events,
+						tasks: tasks,
+						tasksSelected: tasks && (before && before.tasks !== undefined ? before.tasksSelected === true : !events),
 					}
 					if (before && before.userColor) {
 						calendar.userColor = before.userColor // Picked here: kept over the server's
@@ -146,7 +157,8 @@ ConfigSection {
 				account.calendars = calendars
 				saveAccounts(page.accounts.concat([account]))
 				passwordField.text = ""
-				setStatus(calendars.length ? i18np("Connected: %1 calendar", "Connected: %1 calendars", calendars.length)
+				var eventCalendars = calendars.filter(function(c) { return c.events }).length
+				setStatus(eventCalendars ? i18np("Connected: %1 calendar", "Connected: %1 calendars", eventCalendars)
 					: i18n("Connected, but the account has no calendars for events."), false)
 			})
 		})
@@ -193,6 +205,9 @@ ConfigSection {
 	function setSelected(accountIndex, href, selected) {
 		setCalendarProperty(accountIndex, href, 'selected', selected)
 	}
+	function setTasksSelected(accountIndex, href, selected) {
+		setCalendarProperty(accountIndex, href, 'tasksSelected', selected)
+	}
 	// Its color in the widget; "" goes back to the server's.
 	function setUserColor(accountIndex, href, color) {
 		setCalendarProperty(accountIndex, href, 'userColor', color || undefined)
@@ -237,6 +252,7 @@ ConfigSection {
 				id: accountBlock
 				readonly property var account: modelData
 				readonly property int accountIndex: index
+				readonly property var taskLists: (account.calendars || []).filter(function(c) { return c.tasks === true })
 				Layout.fillWidth: true
 				spacing: 0
 				FormCard.FormHeader {
@@ -244,7 +260,7 @@ ConfigSection {
 				}
 				FormCard.FormCard {
 					Repeater {
-						model: accountBlock.account.calendars || []
+						model: (accountBlock.account.calendars || []).filter(function(c) { return c.events !== false })
 						FormCard.FormCheckDelegate {
 							text: modelData.name
 							description: modelData.writable === false ? i18n("Read-only") : ""
@@ -256,6 +272,31 @@ ConfigSection {
 								onColorChosen: function(color) { page.setUserColor(accountBlock.accountIndex, modelData.href, color) }
 							}
 						}
+					}
+					// Its calendars for tasks (VTODO): task lists in the Tasks view.
+					FormCard.FormSectionText {
+						visible: accountBlock.taskLists.length > 0
+						text: i18n("Task Lists")
+						font.bold: true
+					}
+					Repeater {
+						model: accountBlock.taskLists
+						FormCard.FormCheckDelegate {
+							text: modelData.name
+							description: modelData.writable === false ? i18n("Read-only") : ""
+							checked: modelData.tasksSelected === true
+							onToggled: page.setTasksSelected(accountBlock.accountIndex, modelData.href, checked)
+							leading: CalendarColorButton {
+								shownColor: modelData.userColor || modelData.color || Kirigami.Theme.highlightColor
+								resetText: modelData.userColor ? i18n("Server's Color") : ""
+								onColorChosen: function(color) { page.setUserColor(accountBlock.accountIndex, modelData.href, color) }
+							}
+						}
+					}
+					// Added before task lists were read: they show after a refresh.
+					FormCard.FormSectionText {
+						visible: (accountBlock.account.calendars || []).some(function(c) { return c.tasks === undefined })
+						text: i18n("Refresh the calendars to find this account's task lists too.")
 					}
 					FormCard.FormDelegateSeparator {}
 					FormCard.AbstractFormDelegate {
@@ -353,7 +394,7 @@ ConfigSection {
 			}
 		}
 		FormCard.FormSectionText {
-			text: i18n("Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now.")
+			text: i18n("Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring.")
 		}
 	}
 }

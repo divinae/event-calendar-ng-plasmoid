@@ -86,6 +86,15 @@ s = S.shiftedTimes({ start: { dateTime: '2026-09-04T07:45:00Z' }, end: { dateTim
 	{ dateTime: new Date(2026, 9, 16, 9, 45).toISOString() },
 	{ dateTime: new Date(2026, 9, 16, 10, 0).toISOString() }, 'America/New_York')
 assert.strictEqual(s.start.timeZone, 'America/New_York')
+// No zone at all (a CalDAV series in floating time, its calendar without one): stays floating,
+// the local wall clock without offset, also across the end of summer time (25 October).
+s = S.shiftedTimes({ start: { dateTime: '2026-09-04T09:45:00' }, end: { dateTime: '2026-09-04T10:00:00' } },
+	new Date(2026, 9, 30, 9, 45),
+	{ dateTime: new Date(2026, 9, 31, 11, 0).toISOString() },
+	{ dateTime: new Date(2026, 9, 31, 11, 15).toISOString() }, '')
+assert.deepStrictEqual(JSON.parse(JSON.stringify(s)), {
+	start: { dateTime: '2026-09-05T11:00:00' }, end: { dateTime: '2026-09-05T11:15:00' },
+})
 // All-day: dates only.
 s = S.shiftedTimes({ start: { date: '2026-09-04' }, end: { date: '2026-09-05' } },
 	new Date(2026, 9, 16), { date: '2026-10-17' }, { date: '2026-10-18' }, 'UTC')

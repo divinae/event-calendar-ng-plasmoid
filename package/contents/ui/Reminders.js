@@ -33,9 +33,9 @@ function split(minutes) {
 	return { value: minutes, unit: 'minutes' }
 }
 
-function toMinutes(item) {
+function toMinutes(item, max) {
 	var minutes = Math.round(Number(item.value) || 0) * (UNIT_MINUTES[item.unit] || 1)
-	return Math.max(0, Math.min(MAX_MINUTES, minutes))
+	return Math.max(0, Math.min(max === undefined ? MAX_MINUTES : max, minutes))
 }
 
 // The editor's state for an event: { custom, items: [{ value, unit }], others: [overrides] }.
@@ -56,6 +56,14 @@ function fromEvent(eventItem) {
 	})
 	items.sort(function(a, b) { return toMinutes(a) - toMinutes(b) })
 	return { custom: true, items: items, others: others }
+}
+
+// The editor's state from a CalDAV event's alarms (reminderMinutes): always its own list (no
+// calendar defaults there).
+function fromMinutes(minutes) {
+	var items = toList(minutes).map(function(m) { return split(m) })
+	items.sort(function(a, b) { return toMinutes(a) - toMinutes(b) })
+	return { custom: true, items: items, others: [] }
 }
 
 // The reminders value to send to Google.
@@ -79,6 +87,25 @@ function toGoogle(state) {
 
 function sameAs(a, b) {
 	return JSON.stringify(toGoogle(a)) === JSON.stringify(toGoogle(b))
+}
+
+// The reminders value to send to a CalDAV calendar: its alarms, as many and as far ahead as they
+// are (set in other apps too), not Google's 5 and 4 weeks.
+function toCalDAV(state) {
+	var seen = {}
+	var overrides = []
+	toList(state.items).forEach(function(item) {
+		var minutes = toMinutes(item, Infinity)
+		if (!seen[minutes]) {
+			seen[minutes] = true
+			overrides.push({ method: 'popup', minutes: minutes })
+		}
+	})
+	overrides.sort(function(a, b) { return a.minutes - b.minutes })
+	return { useDefault: false, overrides: overrides }
+}
+function sameForCalDAV(a, b) {
+	return JSON.stringify(toCalDAV(a)) === JSON.stringify(toCalDAV(b))
 }
 
 // The notification minutes, as the widget reads them from a parsed event (reminderMinutes).
