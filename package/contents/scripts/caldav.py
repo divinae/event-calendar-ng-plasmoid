@@ -737,10 +737,8 @@ TEXT_FIELDS = (("summary", "SUMMARY"), ("location", "LOCATION"), ("description",
 
 
 def build_updated_calendar(existing, data, stamp=None):
-	"""The whole event changed: for a repeating one, its series (the master VEVENT). When the series
-	starts at another day or time, its EXDATEs, RDATEs, UNTIL and overrides move with it (see
-	shift_instances), and overrides that kept the series' title, place or notes get the new ones too.
-	A series that no longer repeats loses its overrides."""
+	"""The whole event or series changed (the master VEVENT). Its instances move with a new start
+	(shift_instances), and overrides that kept the old title, place or notes get the new ones."""
 	cal = parse_existing(existing)
 	event = master_event(cal)
 	if event is None:
@@ -764,6 +762,16 @@ def build_updated_calendar(existing, data, stamp=None):
 	if None not in old_bounds and None not in new_bounds and old_bounds != new_bounds:
 		# A new rule from the editor (recurrence given) has the end the user chose: UNTIL stays.
 		changed |= shift_instances(cal, event, old_bounds, new_bounds, shift_until=data.get("recurrence") is None)
+	if data.get("recurrence") is not None and is_recurring_component(event):
+		# A new rule: overrides and EXDATEs of instances it doesn't produce would stay as stray events.
+		exdates = date_values(event, "EXDATE")
+		kept = rule_instances(event, exdates)
+		if len(kept) != len(exdates):
+			set_date_values(event, "EXDATE", kept)
+		for override in overrides(cal):
+			rid = icsjson.get_event_date(override, "RECURRENCE-ID")
+			if not rule_instances(event, [rid]):
+				cal.subcomponents.remove(override)
 	for override in overrides(cal):
 		if id(override) in changed:
 			touch(override, stamp)
@@ -819,11 +827,8 @@ def wall_clock(value, zone):
 
 
 def moved_instance(value, old_start, new_start):
-	"""An instance of a series that now starts at new_start instead of old_start, in the new start's
-	form. Times move by as much as the start moved on the wall clock of the series' zone, so a
-	daylight saving change between them doesn't shift the hour, and instances at other times of the
-	day (BYHOUR, an RDATE) keep their distance to the start. With whole days on either side: as many
-	days later, at the new start's time of day."""
+	"""An instance moved as the series' start moved from old_start to new_start, by wall clock in
+	the series' zone (a daylight saving change doesn't shift the hour); whole days by days."""
 	old_zone = getattr(old_start, "tzinfo", None)
 	new_zone = getattr(new_start, "tzinfo", None)
 	if is_all_day(old_start) or is_all_day(new_start) or is_all_day(value):
@@ -874,10 +879,8 @@ def set_date_values(event, key, values):
 
 
 def shift_instances(cal, master, old_bounds, new_bounds, shift_until=True):
-	"""The series' times changed from old_bounds to new_bounds ((start, end)). A new start moves its
-	EXDATEs, RDATEs, its rule's UNTIL (with shift_until) and the RECURRENCE-IDs of its overrides
-	along. An override still at its instance's original times follows the series (start and length);
-	one moved on its own keeps its times. Returns the ids of the overrides changed."""
+	"""The series' (start, end) changed: EXDATEs, RDATEs, UNTIL (with shift_until) and RECURRENCE-IDs
+	move along; overrides not moved on their own follow. Returns the ids of the overrides changed."""
 	old_start, old_end = old_bounds
 	new_start, new_end = new_bounds
 	moves = old_start != new_start
@@ -906,6 +909,28 @@ def shift_instances(cal, master, old_bounds, new_bounds, shift_until=True):
 			set_date(override, "DTEND", new_id + (new_end - new_start))
 			changed.add(id(override))
 	return changed
+
+
+def rule_instances(master, values):
+	"""The values (RECURRENCE-IDs, EXDATEs) that are instances of the master's rule; all of them
+	when that can't be told."""
+	if icsjson.recurring_ical_events is None or Calendar is None or not values:
+		return list(values)
+	only = Calendar()
+	rule = copy.deepcopy(master)
+	rule.pop("EXDATE", None)
+	only.add_component(rule)
+	kept = []
+	for value in values:
+		step = datetime.timedelta(days=1) if is_all_day(value) else datetime.timedelta(seconds=1)
+		try:
+			found = icsjson.recurring_ical_events.of(only).between(value, value + step)
+		except Exception:
+			kept.append(value)
+			continue
+		if any(same_instance(icsjson.get_event_date(o, "DTSTART"), value) for o in found):
+			kept.append(value)
+	return kept
 
 
 def parse_recurrence_id(text):
@@ -1048,8 +1073,7 @@ def delete_event(client, href, etag, recurrence_id=None):
 
 
 def get_series(client, href):
-	"""A repeating event's series as the editor wants it (Google style, like an import: start / end
-	with their time zone, recurrence lines), with the resource's href and etag."""
+	"""A repeating event's series in Google style (as the editor takes it), with href and etag."""
 	href = check_url(href)
 	_, headers, existing, href = client.request("GET", href, ok=(200,))
 	master, _ = series_parts(parse_existing(existing))

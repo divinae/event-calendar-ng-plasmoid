@@ -853,6 +853,17 @@ class RecurringEditTests(unittest.TestCase):
 		self.assertEqual([i["summary"] for i in items], ["Team"])
 		self.assertFalse(items[0]["recurring"])
 
+	def test_new_rule_drops_the_instances_it_doesnt_produce(self):
+		_, body = caldav.build_updated_calendar(BERLIN, {"recurrence": ["RRULE:FREQ=WEEKLY;COUNT=2", "EXDATE:20261102T090000Z"]})
+		cal = Calendar.from_ical(body)
+		self.assertEqual(len(caldav.overrides(cal)), 1)
+		self.assertNotIn("EXDATE", caldav.master_event(cal))
+		self.assertEqual(occurrences(body), {"10-19 10:00": "Team", "10-26 10:00": "Team (renamed)"})
+		# The same rule again: everything stays.
+		_, body = caldav.build_updated_calendar(BERLIN, {"recurrence": ["RRULE:FREQ=WEEKLY;COUNT=6", "EXDATE:20261102T090000Z"]})
+		self.assertEqual(len(caldav.overrides(Calendar.from_ical(body))), 2)
+		self.assertIn(b"EXDATE", body)
+
 	def test_changed_overrides_are_stamped(self):
 		_, body = caldav.build_updated_calendar(BERLIN, {
 			"start": {"dateTime": "2026-10-20T11:00:00", "timeZone": "Europe/Berlin"},

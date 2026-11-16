@@ -12,10 +12,8 @@ import "CalDAVErrors.js" as CalDAVErrors
 // selected calendars of the accounts in caldavAccounts (Settings > Calendars > CalDAV), read for the shown
 // range, and events created, changed, deleted and imported there. The password stays in the
 // keyring (scope caldav-account); the helper reads it there, it's never on a command line.
-// Repeating events: each occurrence is an event of its own here (recurringEventId = the series'
-// UID, caldavRecurrenceId = its original start). One occurrence is changed or deleted with
-// --recurrence-id (an override or an EXDATE in the series' resource); the series by its UID
-// (fetchEvent / updateEventFromServer / deleteSeries), as with Google.
+// Repeating events: each occurrence is an event (recurringEventId = the series' UID,
+// caldavRecurrenceId = its original start); one occurrence changes with --recurrence-id.
 CalendarManager {
 	id: caldavManager
 
@@ -199,10 +197,8 @@ CalendarManager {
 	}
 
 	//--- Writing
-	// write(calendar, args, ok(data), done(err message or null), failed(report)): the helper, then on
-	// success ok; errors are reported, or handed to failed (report() shows it) when given. Afterwards
-	// everything is read again (the server gives the events their final form, and a conflict shows
-	// the current version).
+	// write(calendar, args, ok(data), done(err), failed(report)): runs the helper, then reads
+	// everything again (the server's final form, or the current version after a conflict).
 	function write(calendar, args, ok, done, failed) {
 		helper(args, calendar, function(err, data) {
 			if (err) {
@@ -217,7 +213,7 @@ CalendarManager {
 		})
 	}
 
-	// An error shown, or handed to failed(report) when given (report() shows it).
+	// Shows the error, or hands it to failed(report).
 	function reportError(message, failed) {
 		var report = function() {
 			caldavManager.error(message, ErrorType.UnknownError)
@@ -229,8 +225,7 @@ CalendarManager {
 		}
 	}
 
-	// The resource's new etag after a write, on every loaded event from it (the occurrences of a
-	// series share one): a second change before the refresh doesn't send a stale If-Match.
+	// The new etag on every loaded event of the resource: no stale If-Match before the refresh.
 	function adoptEtag(calendarId, href, data) {
 		if (!href || !data || !data.etag) {
 			return
@@ -301,8 +296,7 @@ CalendarManager {
 		return { calendar: calendar, event: event }
 	}
 
-	// One event, or one occurrence of a repeating event (only that one changes).
-	// options: optional { done(err), failed(report) } (see write).
+	// One event, or one occurrence. options: { done(err), failed(report) } (see write).
 	function setEventProperties(calendarId, eventId, args, options) {
 		var done = options && options.done
 		var loaded = loadedEvent(calendarId, eventId, done, 'setEventProperties')
@@ -316,9 +310,7 @@ CalendarManager {
 		}, done, options && options.failed)
 	}
 
-	// The server copy of an event: for a series (eventId = an occurrence's recurringEventId) its
-	// master as the helper's get gives it (start / end with their zone, recurrence lines, href,
-	// etag); a loaded event is its own copy. callback(err, event)
+	// The server copy of an event, or of a series' master by its UID. callback(err, event)
 	function fetchEvent(calendarId, eventId, callback) {
 		var event = getEvent(calendarId, eventId)
 		if (event) {
@@ -341,9 +333,8 @@ CalendarManager {
 		})
 	}
 
-	// The editor's server-side update (buildArgs(serverEvent) -> args), for an event or occurrence
-	// (its loaded copy) or a whole series (by its UID: fetched first, then its master changed).
-	// Optional failed(report): called instead of showing the error; report() shows it.
+	// The editor's update (buildArgs(serverEvent) -> args) of an event, an occurrence or a whole
+	// series (by its UID). Optional failed(report), see write.
 	function updateEventFromServer(calendarId, eventId, buildArgs, done, options, failed) {
 		var event = getEvent(calendarId, eventId)
 		if (event) {
@@ -353,7 +344,6 @@ CalendarManager {
 		var calendar = getCalendar(calendarId)
 		fetchEvent(calendarId, eventId, function(err, series) {
 			if (err || !series || !calendar) {
-				// err: the helper's message, already "CalDAV: …"
 				reportError(err ? String(err) : i18n("CalDAV: %1", i18n("Unknown error")), failed)
 				return
 			}
@@ -378,8 +368,7 @@ CalendarManager {
 		}, done)
 	}
 
-	// A whole repeating series by its UID (an occurrence's recurringEventId): its resource is
-	// deleted, its loaded occurrences removed. done(err), always called.
+	// A whole series by its UID. done(err), always called.
 	function deleteSeries(calendarId, seriesId, done) {
 		var calendar = getCalendar(calendarId)
 		var occurrence = seriesOccurrence(calendarId, seriesId)
