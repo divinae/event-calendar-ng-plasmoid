@@ -11,14 +11,9 @@ import "../lib/Base64Compat.js" as Base64Compat
 import "CalDAVErrors.js" as CalDAVErrors
 
 // The task lists of one CalDAV account (Nextcloud Tasks, …): its calendars for tasks (VTODO) picked
-// in Settings > Calendars > CalDAV (tasksSelected), through scripts/caldav.py (tasks, put-task and
-// the list commands; see scripts/vtodo.py for the fields). Same contract as TickTickTasksManager:
-// lists are task lists with ids "caldavtasks-<account>::<list url>", tasks event-shaped items (kind
-// 'tasks#task') with the Google fields the UI reads and the provider-neutral ones (dueTime,
-// reminders, priority, parentId; Tasks.capabilities('CalDAVTasks')), plus caldavHref / caldavEtag
-// to change them. Changes come in Google shape (Tasks.editBody, toggleBody, restoreBody).
-// The open tasks and those done in the last 30 days are loaded, each list skipped while its change
-// tag is the same. A deleted task can be brought back (the helper keeps it, see restoreEvent).
+// in Settings > Calendars > CalDAV, through scripts/caldav.py (fields: scripts/vtodo.py). Same
+// contract as TickTickTasksManager: list ids "caldavtasks-<account>::<list url>", event-shaped
+// tasks plus caldavHref / caldavEtag. Open tasks and those done in the last 30 days are loaded.
 CalendarManager {
 	id: caldavTasksManager
 
@@ -111,9 +106,7 @@ CalendarManager {
 		caldavTasksManager.error(err.message, err.kind === "NETWORK" ? ErrorType.NetworkError : ErrorType.UnknownError)
 	}
 
-	// A task's changes as the helper takes them (Tasks.editBody's Google shape), base64 JSON. A
-	// timed due is in the system's zone (the helper reads its name; TimeZone.guessLocal only guesses
-	// one with the same offsets).
+	// A task's changes (Tasks.editBody's Google shape) as base64 JSON; a timed due in the system's zone.
 	function taskArg(body) {
 		var out = {}
 		;['title', 'notes', 'due', 'dueTime', 'status', 'completed', 'priority', 'reminders', 'parentId', 'repeatRule'].forEach(function(key) {
@@ -169,19 +162,6 @@ CalendarManager {
 		})
 	}
 
-	// A sort order (a number, may be negative) as a position string like Google's.
-	function positionOf(sortOrder) {
-		var n = Number(sortOrder)
-		if (sortOrder === undefined || sortOrder === null || !isFinite(n)) {
-			return undefined
-		}
-		var s = String(Math.max(0, Math.round(n + 9007199254740992)))
-		while (s.length < 20) {
-			s = '0' + s
-		}
-		return s
-	}
-
 	// The helper's task as an event-shaped item (placed by placeTask).
 	function taskItem(raw) {
 		var item = {}
@@ -192,7 +172,7 @@ CalendarManager {
 		item.summary = item.title
 		item.description = item.notes
 		item.htmlLink = ''
-		var position = positionOf(raw.sortOrder)
+		var position = Tasks.sortOrderPosition(raw.sortOrder)
 		if (position) {
 			item.position = position
 		}
@@ -218,8 +198,7 @@ CalendarManager {
 		item.end = { date: Tasks.addDays(day, 1) }
 	}
 
-	// Every task gets its list's color and rights; placed again (today may have changed since an
-	// unchanged list's tasks were read).
+	// Every task gets its list's color and rights, and is placed again (today may have changed).
 	function parseCalendarData(calendarId, data) {
 		var list = getCalendar(calendarId)
 		data.items.forEach(function(item) {

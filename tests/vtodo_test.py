@@ -152,9 +152,24 @@ class WriteTests(unittest.TestCase):
 		todo = todo_of(body)
 		self.assertEqual(todo["DUE"].dt, datetime.date(2026, 11, 20))
 		self.assertNotIn("DTSTART", todo)
-		# No due: none, and its reminders are left for the next due.
+		# No due: none, and no alarms relative to it (RFC 5545).
 		_, body = vtodo.build_updated_task(FULL, {"due": None}, STAMP)
 		self.assertNotIn("DUE", todo_of(body))
+		self.assertEqual(todo_of(body).walk("VALARM"), [])
+
+	def test_repeating_task_done_moves_on(self):
+		weekly = FULL.replace("STATUS:NEEDS-ACTION\r\n", "STATUS:NEEDS-ACTION\r\nRRULE:FREQ=WEEKLY;COUNT=3\r\n")
+		_, body = vtodo.build_updated_task(weekly, {"status": "completed"}, STAMP)
+		todo = todo_of(body)
+		self.assertEqual(str(todo["STATUS"]), "NEEDS-ACTION")
+		self.assertNotIn("COMPLETED", todo)
+		self.assertEqual(todo["DUE"].dt.isoformat(), "2026-11-27T17:00:00+01:00")
+		self.assertEqual(todo["DTSTART"].dt.isoformat(), "2026-11-25T09:00:00+01:00")
+		self.assertEqual(todo["RRULE"]["COUNT"], [2])
+		# Its last instance: done.
+		last = FULL.replace("STATUS:NEEDS-ACTION\r\n", "STATUS:NEEDS-ACTION\r\nRRULE:FREQ=WEEKLY;COUNT=1\r\n")
+		_, body = vtodo.build_updated_task(last, {"status": "completed"}, STAMP)
+		self.assertEqual(str(todo_of(body)["STATUS"]), "COMPLETED")
 
 	def test_reminders_replace_only_their_alarms(self):
 		_, body = vtodo.build_updated_task(FULL, {"reminders": [10]}, STAMP)
@@ -229,6 +244,11 @@ class RequestTests(unittest.TestCase):
 		item = caldav.put_task(client, BASE + "/l/", {"status": "completed"}, href="/l/t-1.ics", etag='"v1"')
 		self.assertEqual(client.sent[1][3]["If-Match"], '"v1"')
 		self.assertEqual((item["status"], item["caldavHref"], item["caldavEtag"]), ("completed", BASE + "/l/t-1.ics", '"v2"'))
+		# Cancelled elsewhere meanwhile: saved, the item still given.
+		cancelled = FULL.replace("STATUS:NEEDS-ACTION", "STATUS:CANCELLED")
+		item = caldav.put_task(FakeClient([(200, {}, cancelled), (204, {"ETag": '"v3"'}, "")]), BASE + "/l/", {"title": "Renamed"},
+			href="/l/t-1.ics", etag='"v2"')
+		self.assertEqual((item["title"], item["caldavEtag"]), ("Renamed", '"v3"'))
 		with self.assertRaises(caldav.CalDavError) as ctx:
 			caldav.put_task(FakeClient([]), BASE + "/l/", {"notes": "x"})
 		self.assertEqual(ctx.exception.kind, "INPUT")

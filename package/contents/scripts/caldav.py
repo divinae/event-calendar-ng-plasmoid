@@ -1336,6 +1336,8 @@ def put_task(client, list_url, data, href=None, etag=None):
 	except vtodo.TaskInputError as error:
 		raise CalDavError("INPUT", str(error))
 	item = vtodo.resource_task(body, completed_days=36500)
+	if item is None:  # Cancelled elsewhere meanwhile: saved all the same, gone at the next read
+		item = vtodo.todo_to_item(vtodo.master_todo(Calendar.from_ical(body)))
 	item["caldavHref"] = final_url
 	item["caldavEtag"] = new_etag
 	return item

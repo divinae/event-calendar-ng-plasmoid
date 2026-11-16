@@ -9,6 +9,7 @@ Apple's Reminders keep the order). Changes come in the same shape (Tasks.editBod
 given change, the rest of the VTODO stays as it was.
 """
 
+import copy
 import datetime
 import os
 import re
@@ -241,6 +242,8 @@ def set_due(todo, data):
 		time = parse_time(current_time) if current_time else None
 	todo.pop("DUE", None)
 	if day is None:
+		# Alarms relative to the due (RELATED=END) need one (RFC 5545).
+		todo.subcomponents = [c for c in todo.subcomponents if not due_related(c)]
 		return
 	if time is None:
 		due = day
@@ -256,6 +259,35 @@ def set_due(todo, data):
 			todo.pop("DTSTART", None)
 
 
+def due_related(alarm):
+	trigger = alarm.get("TRIGGER") if getattr(alarm, "name", "") == "VALARM" else None
+	params = getattr(trigger, "params", None) or {}
+	return trigger is not None and icsjson.stringify(params.get("RELATED", "")).upper() == "END"
+
+
+def next_instance(todo):
+	"""A repeating task's next instance after its current one: (DTSTART, DUE), each maybe None; None
+	when the series ends (or can't be expanded)."""
+	rie = icsjson.recurring_ical_events
+	start = icsjson.get_event_date(todo, "DTSTART")
+	base = start if start is not None else icsjson.get_event_date(todo, "DUE")
+	if todo.get("RRULE") is None or rie is None or base is None:
+		return None
+	cal = Calendar()
+	cal.add_component(copy.deepcopy(todo))
+	step = datetime.timedelta(seconds=1) if isinstance(base, datetime.datetime) else datetime.timedelta(days=1)
+	try:
+		found = list(rie.of(cal, components=["VTODO"]).between(base + step, base + datetime.timedelta(days=3660)))
+	except Exception:
+		return None
+	key = lambda o: icsjson.ensure_date_time(icsjson.get_event_date(o, "DTSTART") or icsjson.get_event_date(o, "DUE"))
+	later = [o for o in found if key(o) > icsjson.ensure_date_time(base)]
+	if not later:
+		return None
+	first = min(later, key=key)
+	return icsjson.get_event_date(first, "DTSTART"), icsjson.get_event_date(first, "DUE")
+
+
 def set_status(todo, data, stamp):
 	status = data.get("status")
 	if status is None:
@@ -264,6 +296,18 @@ def set_status(todo, data, stamp):
 		raise TaskInputError("status must be completed or needsAction")
 	for key in ("STATUS", "COMPLETED", "PERCENT-COMPLETE"):
 		todo.pop(key, None)
+	following = next_instance(todo) if status == "completed" else None
+	if following is not None:
+		# A repeating task done: on to its next instance (as Apple's Reminders and Thunderbird do).
+		for key, value in zip(("DTSTART", "DUE"), following):
+			if value is not None and todo.get(key) is not None:
+				todo.pop(key)
+				todo.add(key, value)
+		rule = todo.get("RRULE")
+		if rule is not None and rule.get("COUNT"):
+			rule["COUNT"] = [int(rule["COUNT"][0]) - 1]
+		todo.add("STATUS", "NEEDS-ACTION")
+		return
 	if status == "completed":
 		when = stamp
 		if data.get("completed"):

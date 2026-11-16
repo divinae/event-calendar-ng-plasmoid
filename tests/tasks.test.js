@@ -13,7 +13,7 @@ const names = ['isTask', 'isDone', 'dueDay', 'completedDay', 'isOverdue', 'place
 	'fromTickTick', 'toTickTick', 'withoutTasks', 'sortOpenTasks', 'sortDoneTasks', 'dueInfo', 'firstLine', 'taskRows', 'dayTasks',
 	'nextWeekStart', 'dateSections', 'dateRows', 'completedRows', 'cardRows', 'collapseRows', 'sectionDueDay', 'listAccount', 'listDrop', 'quickAddBody', 'quickAddList',
 	'flatRows', 'progressKey', 'isInProgress', 'withProgress', 'stampInProgress', 'pruneProgress', 'filterListId', 'validFilter', 'filterTasks', 'filterLists', 'filterCounts', 'filterEntries', 'filterQuickAdd',
-	'priorityOf', 'editorChanges', 'priorityKey', 'dueTimeOf', 'subtaskProgress', 'capabilities', 'dayTaskRows', 'dayAllTaskSections', 'reorderPrevious', 'subtaskTree', 'googleBody', 'parseTickTickReminder', 'formatTickTickReminder', 'tickTickItems', 'isClearedTask', 'withoutCleared', 'clearedAt', 'mergeTaskPages']
+	'priorityOf', 'editorChanges', 'priorityKey', 'dueTimeOf', 'subtaskProgress', 'capabilities', 'dayTaskRows', 'dayAllTaskSections', 'reorderPrevious', 'subtaskTree', 'googleBody', 'parseTickTickReminder', 'formatTickTickReminder', 'tickTickItems', 'isClearedTask', 'withoutCleared', 'clearedAt', 'mergeTaskPages', 'sortOrderPosition']
 const T = {}
 const plain = o => JSON.parse(JSON.stringify(o))
 const same = (a, b, msg) => assert.deepStrictEqual(plain(a), b, msg)
@@ -764,3 +764,13 @@ same(T.capabilities('GoogleTasks'), { dueTime: false, priority: false, repeat: f
 }
 
 console.log('PASS tasks')
+
+// sortOrderPosition: neighbouring sort orders stay apart and in order, negative ones too.
+{
+	const positions = [-5, -1, 0, 1, 2, 3, 4, 5, 700000000].map(T.sortOrderPosition)
+	assert.deepStrictEqual(positions.slice().sort(), positions)
+	assert.strictEqual(new Set(positions).size, positions.length)
+	assert.strictEqual(T.sortOrderPosition(undefined), undefined)
+	assert.strictEqual(T.sortOrderPosition('x'), undefined)
+	assert.strictEqual(T.sortOrderPosition(0), '1000000000000000')
+}
