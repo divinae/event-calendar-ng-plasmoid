@@ -178,8 +178,13 @@ Rectangle {
 	readonly property bool supportsRecurrence: !taskMode && !!calendarSelector.selectedCalendarId
 		&& eventModel.supportsRecurrence(calendarSelector.selectedCalendarId)
 	// Google Calendar's own fields (color, availability, guests, Meet, reminders, event types, Find a
-	// time): not for CalDAV calendars, which repeat (supportsRecurrence) but have none of these here.
+	// time). CalDAV calendars (caldavFeatures) have color, availability and reminders too.
 	readonly property bool googleFeatures: !taskMode && eventModel.isGoogleCalendar(calendarSelector.selectedCalendarId)
+	readonly property bool caldavFeatures: !taskMode && eventModel.isCalDAVCalendar(calendarSelector.selectedCalendarId)
+	readonly property bool canSetColor: googleFeatures || caldavFeatures
+	readonly property bool canSetAvailability: googleFeatures || caldavFeatures
+	// The reminders are always the event's own list (no calendar defaults): a task's, a CalDAV event's.
+	readonly property bool remindersOwnList: taskMode || caldavFeatures
 	readonly property bool canEditRepeat: taskMode ? showTaskRepeat : supportsRecurrence && !seriesLoading && (!isOccurrence || editSeries)
 	// The repeat rows: an event's (Google), or a task's (TickTick).
 	readonly property bool showRepeat: supportsRecurrence || showTaskRepeat
@@ -359,9 +364,9 @@ Rectangle {
 		logic.update()
 	}
 
-	//--- Calendar (Google): an existing event can move to another calendar of its account that we
-	// can write to (Google events.move). An occurrence only with its whole series.
-	// "account::" of the event's calendar, or '' (not a Google account calendar).
+	//--- Calendar (Google, CalDAV): an existing event can move to another calendar of its account
+	// that we can write to (Google events.move, a CalDAV MOVE). An occurrence only with its whole series.
+	// "account::" of the event's calendar, or '' (not an account's calendar).
 	readonly property string accountPrefix: {
 		var id = !isNew && eventItem.calendarId ? String(eventItem.calendarId) : ''
 		var i = id.indexOf('::')
@@ -422,19 +427,20 @@ Rectangle {
 			var calendar = calendarSelector.selectedCalendar
 			return appletConfig.eventColor(calendar && calendar.backgroundColor || "")
 		}
-		if (plasmoid.configuration.googleColorPalette === 'classic') {
-			var classic = ColorIdMap.colorIdMap.event[id]
-			return appletConfig.eventColor(classic ? classic.background : "")
-		}
-		return appletConfig.eventColor(GooglePalette.eventColor(id))
+		return appletConfig.eventColor(GooglePalette.eventColorFor(id, plasmoid.configuration.googleColorPalette, ColorIdMap.colorIdMap.event) || "")
 	}
 	//--- Reminders (Google): the calendar's defaults, or the event's own notification times
 	property bool remindersCustom: false
 	property var reminderItems: [] // [{ value, unit }]
 	property var reminderOthers: [] // Other kinds (email), kept as they are
 	property var initialReminders: ({ custom: false, items: [], others: [] })
-	readonly property var reminderState: ({ custom: remindersCustom, items: reminderItems, others: reminderOthers })
-	readonly property bool remindersChanged: !Reminders.sameAs(reminderState, initialReminders)
+	readonly property var reminderState: ({ custom: remindersCustom || caldavFeatures, items: reminderItems, others: reminderOthers })
+	readonly property bool remindersChanged: caldavFeatures ? !Reminders.sameForCalDAV(reminderState, initialReminders)
+		: !Reminders.sameAs(reminderState, initialReminders)
+	// What to send: CalDAV's alarms as they are (Reminders.toCalDAV), Google's within its limits.
+	function remindersBody() {
+		return caldavFeatures ? Reminders.toCalDAV(reminderState) : Reminders.toGoogle(reminderState)
+	}
 	readonly property bool canAddReminder: reminderItems.length + reminderOthers.length < Reminders.MAX_OVERRIDES
 	function addReminder() {
 		var used = reminderItems.map(Reminders.toMinutes)
@@ -452,7 +458,9 @@ Rectangle {
 		reminderItems = items
 	}
 	function fillReminders(item, asCopy) {
-		var state = Reminders.fromEvent(item)
+		// CalDAV: its alarms (reminderMinutes, also of a cached copy), there are no calendar defaults.
+		var caldav = !!item && String(item.calendarId || '').indexOf('caldav-') === 0
+		var state = caldav ? Reminders.fromMinutes(item.reminderMinutes) : Reminders.fromEvent(item)
 		remindersCustom = state.custom
 		reminderItems = state.items
 		reminderOthers = state.others
@@ -477,7 +485,7 @@ Rectangle {
 		}
 	}
 	function addAvailabilityArgs(args) {
-		if (!googleFeatures) {
+		if (!canSetAvailability) {
 			return
 		}
 		if (transparency !== initialTransparency) {
@@ -692,8 +700,9 @@ Rectangle {
 
 	// The color changed: set its colorId, or undefined (removed from the update) for the calendar color.
 	function addColorArgs(args) {
-		if (googleFeatures && colorId !== initialColorId) {
-			args.colorId = colorId || undefined
+		if (canSetColor && colorId !== initialColorId) {
+			// CalDAV: null removes its COLOR (an update there keeps what isn't given).
+			args.colorId = colorId || (caldavFeatures ? null : undefined)
 		}
 	}
 
@@ -743,8 +752,8 @@ Rectangle {
 		addAvailabilityArgs(args)
 		addConferenceArgs(args)
 		addTypePropertiesArgs(args)
-		if (googleFeatures && remindersChanged) {
-			args.reminders = Reminders.toGoogle(reminderState)
+		if ((googleFeatures || caldavFeatures) && remindersChanged) {
+			args.reminders = remindersBody()
 		}
 		return args
 	}
@@ -773,11 +782,11 @@ Rectangle {
 				location: locationField.text,
 				description: descriptionField.text,
 			})
-			if (googleFeatures && colorId) {
+			if (canSetColor && colorId) {
 				data.colorId = colorId
 			}
-			if (googleFeatures && remindersCustom) {
-				data.reminders = Reminders.toGoogle(reminderState)
+			if ((googleFeatures && remindersCustom) || (caldavFeatures && reminderItems.length)) {
+				data.reminders = remindersBody()
 			}
 			addAvailabilityArgs(data)
 			if (googleFeatures) {
@@ -1263,10 +1272,10 @@ Rectangle {
 					}
 				}
 
-				// Event color (Google): the calendar's color or one of Google's 11 event colors.
+				// Event color (Google, CalDAV): the calendar's color or one of Google's 11 event colors.
 				Flow {
 					id: colorRow
-					visible: form.googleFeatures
+					visible: form.canSetColor
 					Layout.fillWidth: true
 					spacing: Kirigami.Units.smallSpacing
 					readonly property int swatchSize: Math.round(Kirigami.Units.gridUnit * 1.2)
@@ -1624,9 +1633,9 @@ Rectangle {
 					}
 				}
 
-				// Show as busy / free, and who sees the details (Google).
+				// Show as busy / free, and who sees the details (Google, CalDAV).
 				RowLayout {
-					visible: form.googleFeatures
+					visible: form.canSetAvailability
 					Layout.fillWidth: true
 					RowIcon {
 						source: "view-calendar-day"
@@ -1666,9 +1675,10 @@ Rectangle {
 				}
 
 				// Reminders: the calendar's defaults, or this event's own notification times. A task
-				// (TickTick): its own list, and those after the due time kept as they are.
+				// (TickTick): its own list, and those after the due time kept as they are. A CalDAV
+				// event: its own list (its alarms; others, eg: email, are kept as they are).
 				ColumnLayout {
-					visible: form.googleFeatures || form.showTaskReminders
+					visible: form.googleFeatures || form.showTaskReminders || form.caldavFeatures
 					Layout.fillWidth: true
 					spacing: Kirigami.Units.smallSpacing
 
@@ -1681,11 +1691,11 @@ Rectangle {
 							text: i18n("Reminders")
 						}
 						Item {
-							visible: form.taskMode
+							visible: form.remindersOwnList
 							Layout.fillWidth: true
 						}
 						KeyComboBox {
-							visible: !form.taskMode
+							visible: !form.remindersOwnList
 							Layout.fillWidth: true
 							model: [
 								{ key: 'default', text: i18n("Calendar's default") },
@@ -1702,7 +1712,7 @@ Rectangle {
 					}
 					Repeater {
 						// A task: always its own list (no calendar default).
-						model: form.remindersCustom || form.taskMode ? form.reminderItems : []
+						model: form.remindersCustom || form.remindersOwnList ? form.reminderItems : []
 						RowLayout {
 							Layout.fillWidth: true
 							Layout.leftMargin: form.indent
@@ -1757,13 +1767,13 @@ Rectangle {
 						}
 					}
 					PlasmaComponents3.Label {
-						visible: (form.remindersCustom || form.taskMode) && form.reminderItems.length === 0 && (!form.taskMode || form.taskRemindersAfter.length === 0)
+						visible: (form.remindersCustom || form.remindersOwnList) && form.reminderItems.length === 0 && (!form.taskMode || form.taskRemindersAfter.length === 0)
 						Layout.leftMargin: form.indent
 						text: i18n("No notification reminders")
 						opacity: 0.7
 					}
 					PlasmaComponents3.ToolButton {
-						visible: form.remindersCustom || form.taskMode
+						visible: form.remindersCustom || form.remindersOwnList
 						enabled: form.canAddReminder
 						Layout.leftMargin: Kirigami.Units.iconSizes.small
 						icon.name: "list-add"

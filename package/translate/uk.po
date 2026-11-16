@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: 2017-10-31 20:08+0200\n"
 "Last-Translator: Serhii Golovko <cappelikan@gmail.com>\n"
 "Language-Team: \n"
@@ -581,12 +581,10 @@ msgstr ""
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid ""
 "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
-"others. The password is kept in the system keyring. Repeating events are "
-"shown, but changed only in their own app for now."
+"others. The password is kept in the system keyring."
 msgstr ""
 "Nextcloud, Fastmail, iCloud (з паролем програми), Radicale, Baïkal та інші. "
-"Пароль зберігається в системному сховищі ключів. Повторювані події "
-"показуються, але поки що змінюються лише у власній програмі."
+"Пароль зберігається в системному сховищі ключів."
 
 #: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Import Events from a File…"
@@ -4301,12 +4299,12 @@ msgid "Show more"
 msgstr "Показати більше"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Не вдалося виконати пошук у Календарі Google"
+msgid "Couldn't search the online calendars"
+msgstr "Не вдалося виконати пошук в онлайн-календарях"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Пошук у Календарі Google…"
+msgid "Searching the online calendars…"
+msgstr "Пошук в онлайн-календарях…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4925,6 +4923,21 @@ msgstr "Сьогодні подій більше немає"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Місце роботи: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Не вдалося виконати пошук у Календарі Google"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Пошук у Календарі Google…"
+
+#~ msgid ""
+#~ "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
+#~ "others. The password is kept in the system keyring. Repeating events are "
+#~ "shown, but changed only in their own app for now."
+#~ msgstr ""
+#~ "Nextcloud, Fastmail, iCloud (з паролем програми), Radicale, Baïkal та "
+#~ "інші. Пароль зберігається в системному сховищі ключів. Повторювані події "
+#~ "показуються, але поки що змінюються лише у власній програмі."
 
 #~ msgctxt "event time on the hour (24 hour clock)"
 #~ msgid "h"

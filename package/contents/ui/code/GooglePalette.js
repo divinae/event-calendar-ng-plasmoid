@@ -117,6 +117,16 @@ function eventColor(colorId) {
 	return eventColors[String(colorId)] || null
 }
 
+// An event colorId's color with the googleColorPalette setting `palette`: the current one, or with
+// 'classic' the API's (classicEvents: ColorIdMap.colorIdMap.event); null for none.
+function eventColorFor(colorId, palette, classicEvents) {
+	if (palette === 'classic') {
+		var classic = classicEvents && classicEvents[String(colorId)]
+		return classic ? classic.background : null
+	}
+	return eventColor(colorId)
+}
+
 // The first picker color not in `used` (colors in any case), so a new calendar looks different
 // from the others; when all are used, they come round again.
 function nextUnusedColor(used) {

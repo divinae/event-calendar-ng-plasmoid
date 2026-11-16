@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: 2021-07-29 01:08+0200\n"
 "Last-Translator: Ugo Ugowsky <ugowsky@gmail.com>\n"
 "Language-Team: Slovenian <lugos-slo@lugos.si>\n"
@@ -586,13 +586,10 @@ msgstr ""
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid ""
 "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
-"others. The password is kept in the system keyring. Repeating events are "
-"shown, but changed only in their own app for now."
+"others. The password is kept in the system keyring."
 msgstr ""
 "Nextcloud, Fastmail, iCloud (z geslom za aplikacijo), Radicale, Baïkal in "
-"drugi. Geslo je shranjeno v sistemski shrambi ključev. Ponavljajoči se "
-"dogodki so prikazani, vendar jih je zaenkrat mogoče spreminjati le v njihovi "
-"lastni aplikaciji."
+"drugi. Geslo je shranjeno v sistemski shrambi ključev."
 
 #: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Import Events from a File…"
@@ -4335,12 +4332,12 @@ msgid "Show more"
 msgstr "Pokaži več"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Iskanje v Googlovem koledarju ni uspelo"
+msgid "Couldn't search the online calendars"
+msgstr "Iskanje v spletnih koledarjih ni uspelo"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Iskanje v Googlovem koledarju…"
+msgid "Searching the online calendars…"
+msgstr "Iskanje v spletnih koledarjih…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4970,6 +4967,22 @@ msgstr "Danes ni več dogodkov"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Delovna lokacija: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Iskanje v Googlovem koledarju ni uspelo"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Iskanje v Googlovem koledarju…"
+
+#~ msgid ""
+#~ "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
+#~ "others. The password is kept in the system keyring. Repeating events are "
+#~ "shown, but changed only in their own app for now."
+#~ msgstr ""
+#~ "Nextcloud, Fastmail, iCloud (z geslom za aplikacijo), Radicale, Baïkal in "
+#~ "drugi. Geslo je shranjeno v sistemski shrambi ključev. Ponavljajoči se "
+#~ "dogodki so prikazani, vendar jih je zaenkrat mogoče spreminjati le v "
+#~ "njihovi lastni aplikaciji."
 
 #~ msgctxt "event time on the hour (24 hour clock)"
 #~ msgid "h"

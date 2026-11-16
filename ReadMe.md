@@ -100,8 +100,8 @@ so it replaces an existing Event Calendar and keeps its settings.
   System Settings > Notifications > Event Calendar NG. Clicking one opens the event in the widget.
 - **CalDAV** (Nextcloud, Fastmail, iCloud with an app password, Radicale, Baïkal…): add an account in
   Settings > Calendars > CalDAV and choose its calendars; create, edit, move and delete events there, import
-  .ics files into them. The password stays in the system keyring. Repeating events are shown, and
-  changed in their own app for now. Pick each calendar's color, or keep the server's.
+  .ics files into them; a repeating event's occurrence on its own, or its whole series. The password stays
+  in the system keyring. Pick each calendar's color, or keep the server's.
 - **iCalendar** (.ics) files and links as calendars, read-only and offline too, in the color you pick:
   Settings > Calendars > iCalendar.
 - **Settings backup:** export the widget's settings to a file and import them again (Settings > Views),

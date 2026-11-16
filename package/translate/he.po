@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: 2022-04-05 00:34+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -576,12 +576,10 @@ msgstr "http רגיל עובד רק עם שרת ברשת שלך; הסיסמה ל
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid ""
 "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
-"others. The password is kept in the system keyring. Repeating events are "
-"shown, but changed only in their own app for now."
+"others. The password is kept in the system keyring."
 msgstr ""
 "Nextcloud,‏ Fastmail,‏ iCloud (עם סיסמת יישום), Radicale,‏ Baïkal ואחרים. "
-"הסיסמה נשמרת במחזיק המפתחות של המערכת. אירועים חוזרים מוצגים, אך בינתיים "
-"ניתן לשנות אותם רק ביישום שלהם."
+"הסיסמה נשמרת במחזיק המפתחות של המערכת."
 
 #: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Import Events from a File…"
@@ -4278,12 +4276,12 @@ msgid "Show more"
 msgstr "הצג עוד"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "לא ניתן לחפש ב־Google Calendar"
+msgid "Couldn't search the online calendars"
+msgstr "לא ניתן לחפש ביומנים המקוונים"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "מחפש ב־Google Calendar…"
+msgid "Searching the online calendars…"
+msgstr "מחפש ביומנים המקוונים…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4911,6 +4909,21 @@ msgstr "אין עוד אירועים היום"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "מיקום עבודה: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "לא ניתן לחפש ב־Google Calendar"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "מחפש ב־Google Calendar…"
+
+#~ msgid ""
+#~ "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
+#~ "others. The password is kept in the system keyring. Repeating events are "
+#~ "shown, but changed only in their own app for now."
+#~ msgstr ""
+#~ "Nextcloud,‏ Fastmail,‏ iCloud (עם סיסמת יישום), Radicale,‏ Baïkal ואחרים. "
+#~ "הסיסמה נשמרת במחזיק המפתחות של המערכת. אירועים חוזרים מוצגים, אך בינתיים "
+#~ "ניתן לשנות אותם רק ביישום שלהם."
 
 #~ msgctxt "event time on the hour (24 hour clock)"
 #~ msgid "h"

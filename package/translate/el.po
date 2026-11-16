@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: 2018-06-07 01:37+0300\n"
 "Last-Translator: Chris P <skylin@protonmail.com>\n"
 "Language-Team: Chris P <skylin@protonmail.com>\n"
@@ -583,13 +583,10 @@ msgstr ""
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid ""
 "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
-"others. The password is kept in the system keyring. Repeating events are "
-"shown, but changed only in their own app for now."
+"others. The password is kept in the system keyring."
 msgstr ""
 "Nextcloud, Fastmail, iCloud (με κωδικό εφαρμογής), Radicale, Baïkal και "
-"άλλα. Ο κωδικός πρόσβασης φυλάσσεται στην κλειδοθήκη του συστήματος. Τα "
-"επαναλαμβανόμενα συμβάντα εμφανίζονται, αλλά προς το παρόν αλλάζουν μόνο στη "
-"δική τους εφαρμογή."
+"άλλα. Ο κωδικός πρόσβασης φυλάσσεται στην κλειδοθήκη του συστήματος."
 
 #: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Import Events from a File…"
@@ -4299,12 +4296,12 @@ msgid "Show more"
 msgstr "Εμφάνιση περισσότερων"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Αδυναμία αναζήτησης στο Ημερολόγιο Google"
+msgid "Couldn't search the online calendars"
+msgstr "Αδυναμία αναζήτησης στα ηλεκτρονικά ημερολόγια"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Αναζήτηση στο Ημερολόγιο Google…"
+msgid "Searching the online calendars…"
+msgstr "Αναζήτηση στα ηλεκτρονικά ημερολόγια…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4916,6 +4913,22 @@ msgstr "Δεν υπάρχουν άλλα γεγονότα σήμερα"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Τοποθεσία εργασίας: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Αδυναμία αναζήτησης στο Ημερολόγιο Google"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Αναζήτηση στο Ημερολόγιο Google…"
+
+#~ msgid ""
+#~ "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
+#~ "others. The password is kept in the system keyring. Repeating events are "
+#~ "shown, but changed only in their own app for now."
+#~ msgstr ""
+#~ "Nextcloud, Fastmail, iCloud (με κωδικό εφαρμογής), Radicale, Baïkal και "
+#~ "άλλα. Ο κωδικός πρόσβασης φυλάσσεται στην κλειδοθήκη του συστήματος. Τα "
+#~ "επαναλαμβανόμενα συμβάντα εμφανίζονται, αλλά προς το παρόν αλλάζουν μόνο "
+#~ "στη δική τους εφαρμογή."
 
 #~ msgctxt "event time on the hour (24 hour clock)"
 #~ msgid "h"

@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-"
 "eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: 2022-04-05 13:49+0200\n"
 "Last-Translator: Heimen Stoffels <vistausss@fastmail.com>\n"
 "Language-Team: Dutch <>\n"
@@ -578,13 +578,10 @@ msgstr ""
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid ""
 "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
-"others. The password is kept in the system keyring. Repeating events are "
-"shown, but changed only in their own app for now."
+"others. The password is kept in the system keyring."
 msgstr ""
 "Nextcloud, Fastmail, iCloud (met een app-wachtwoord), Radicale, Baïkal en "
-"andere. Het wachtwoord wordt bewaard in de systeemsleutelbos. Herhaalde "
-"afspraken worden getoond, maar kunnen voorlopig alleen in hun eigen app "
-"worden gewijzigd."
+"andere. Het wachtwoord wordt bewaard in de systeemsleutelbos."
 
 #: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Import Events from a File…"
@@ -4281,12 +4278,12 @@ msgid "Show more"
 msgstr "Meer tonen"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Kan niet zoeken in Google Agenda"
+msgid "Couldn't search the online calendars"
+msgstr "Kan niet zoeken in de online agenda's"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Zoeken in Google Agenda…"
+msgid "Searching the online calendars…"
+msgstr "Zoeken in de online agenda's…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4898,6 +4895,22 @@ msgstr "Vandaag geen afspraken meer"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Werklocatie: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Kan niet zoeken in Google Agenda"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Zoeken in Google Agenda…"
+
+#~ msgid ""
+#~ "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
+#~ "others. The password is kept in the system keyring. Repeating events are "
+#~ "shown, but changed only in their own app for now."
+#~ msgstr ""
+#~ "Nextcloud, Fastmail, iCloud (met een app-wachtwoord), Radicale, Baïkal en "
+#~ "andere. Het wachtwoord wordt bewaard in de systeemsleutelbos. Herhaalde "
+#~ "afspraken worden getoond, maar kunnen voorlopig alleen in hun eigen app "
+#~ "worden gewijzigd."
 
 #~ msgctxt "event time on the hour (24 hour clock)"
 #~ msgid "h"

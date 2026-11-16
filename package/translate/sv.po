@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
-"POT-Creation-Date: 2026-11-12 12:32+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Mathias <EMAIL@ADDRESS>\n"
 "Language-Team: Swedish <LL@li.org>\n"
@@ -464,8 +464,8 @@ msgid "Plain http works only for a server on your own network; the password isn'
 msgstr "Okrypterad http fungerar bara med en server i ditt eget nätverk; lösenordet krypteras inte på vägen."
 
 #: ../contents/ui/config/CalendarsCalDAV.qml
-msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now."
-msgstr "Nextcloud, Fastmail, iCloud (med ett applösenord), Radicale, Baïkal med flera. Lösenordet förvaras i systemets nyckelring. Återkommande händelser visas, men kan tills vidare bara ändras i sin egen app."
+msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring."
+msgstr "Nextcloud, Fastmail, iCloud (med ett applösenord), Radicale, Baïkal med flera. Lösenordet förvaras i systemets nyckelring."
 
 #: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Import Events from a File…"
@@ -3795,12 +3795,12 @@ msgid "Show more"
 msgstr "Visa mer"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Kunde inte söka i Google Kalender"
+msgid "Couldn't search the online calendars"
+msgstr "Kunde inte söka i onlinekalendrarna"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Söker i Google Kalender…"
+msgid "Searching the online calendars…"
+msgstr "Söker i onlinekalendrarna…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4407,6 +4407,15 @@ msgstr "Inga fler händelser i dag"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Arbetsplats: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Kunde inte söka i Google Kalender"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Söker i Google Kalender…"
+
+#~ msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now."
+#~ msgstr "Nextcloud, Fastmail, iCloud (med ett applösenord), Radicale, Baïkal med flera. Lösenordet förvaras i systemets nyckelring. Återkommande händelser visas, men kan tills vidare bara ändras i sin egen app."
 
 #~ msgctxt "event time on the hour (24 hour clock)"
 #~ msgid "h"
