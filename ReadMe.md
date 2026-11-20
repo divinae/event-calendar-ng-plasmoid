@@ -250,6 +250,10 @@ and for a problem the logs below.
 See [CONTRIBUTING.md](CONTRIBUTING.md). Tests: `for t in tests/*.test.js; do node "$t"; done`
 and `python3 tests/*_test.py`. Translations live in `package/translate/` (see its ReadMe).
 
+## AI assistance
+
+Made with AI: the changes in this fork are mostly written with Claude, Anthropic's AI assistant. I decide what goes in and review every change before a release.
+
 ## License
 
 GPL-2.0-or-later, like the original widget. The Yr weather icons (`package/contents/icons/weather`)

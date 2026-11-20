@@ -88,6 +88,7 @@ Requires Plasma 6 and python3; secret-tool or KWallet for sign-ins. CalDAV and .
 Bugs and ideas: https://github.com/divinae/event-calendar-ng-plasmoid/issues
 
 Support: https://ko-fi.com/divinae4535
+Made with AI: the changes in this fork are mostly written with Claude, Anthropic's AI assistant. I decide what goes in and review every change before a release.
 ```
 
 **Changelog (1.23.1)**
