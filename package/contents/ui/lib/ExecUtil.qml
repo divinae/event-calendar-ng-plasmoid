@@ -16,8 +16,8 @@ Plasma5Support.DataSource {
 		var exitStatus = data["exit status"]
 		var stdout = data["stdout"]
 		var stderr = data["stderr"]
-		var listener = listeners[cmd]
-		delete listeners[cmd]
+		var listener = listeners.get(cmd)
+		listeners.delete(cmd)
 		disconnectSource(sourceName) // clean up the completed run before callbacks can restart it
 		if (listener) {
 			listener(cmd, exitCode, exitStatus, stdout, stderr)
@@ -31,7 +31,10 @@ Plasma5Support.DataSource {
 		return stdout.replace(/\n/g, ' ').trim()
 	}
 
-	property var listeners: ({}) // Empty Map
+	// A Map, not a plain object: every command line is a new key, added and deleted again. On a plain
+	// object each new key is a new property layout, and that churn crashed plasmashell (Qt 6.10, a
+	// segfault in QV4::Object::insertMember when a listener was stored).
+	property var listeners: new Map()
 	property string argvRunnerPath: ScriptPath.scriptPath("run_argv.py")
 
 	// Note that this has not gone under a security audit.
@@ -120,11 +123,11 @@ Plasma5Support.DataSource {
 	function runCommand(cmd, callback) {
 		// A command may be restarted after a suspended process never completed.
 		// Remove both its stale callback and source before registering the new run.
-		delete listeners[cmd]
+		listeners.delete(cmd)
 		disconnectSource(cmd)
 		if (typeof callback === 'function') {
 			var listener = execCallback.bind(executable, callback)
-			listeners[cmd] = listener
+			listeners.set(cmd, listener)
 		}
 		// console.log('cmd', cmd)
 		connectSource(cmd)
