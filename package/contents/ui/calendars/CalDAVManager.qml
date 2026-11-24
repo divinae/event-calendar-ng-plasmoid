@@ -253,8 +253,9 @@ CalendarManager {
 			event.reminders = { useDefault: false, overrides: Shared.toArray(event.reminderMinutes).map(function(minutes) {
 				return { method: 'popup', minutes: minutes }
 			}) }
-			// caldavReadOnly: occurrences without their series in the resource (see caldav.py).
-			event.canEdit = calendar.accessRole === 'owner' && !event.caldavReadOnly
+			// caldavReadOnly: occurrences without their series in the resource (see caldav.py). An
+			// occurrence without its original start can't be changed alone (see loadedEvent).
+			event.canEdit = calendar.accessRole === 'owner' && !event.caldavReadOnly && !isOccurrenceWithoutId(event)
 		})
 		// What the calendar gave its events: an unchanged calendar (the same tag) with another
 		// color, rights or palette is still shown anew (EventModel's unchanged check compares it).
@@ -327,6 +328,11 @@ CalendarManager {
 	function isOccurrence(event) {
 		return !!(event && event.recurringEventId && event.caldavRecurrenceId)
 	}
+	// An occurrence without its original start (caldav.py gives every one an id): with no
+	// --recurrence-id the helper would change or delete the whole series, so it's refused.
+	function isOccurrenceWithoutId(event) {
+		return !!(event && event.recurringEventId && !event.caldavRecurrenceId)
+	}
 	function recurrenceIdArgs(event) {
 		// With "=": one argument, whatever the JSON holds.
 		return isOccurrence(event) ? ['--recurrence-id=' + JSON.stringify(event.caldavRecurrenceId)] : []
@@ -377,6 +383,11 @@ CalendarManager {
 		if (!calendar || !event || !event.caldavHref) {
 			logger.log('caldav.' + what, 'event not loaded')
 			if (done) done(what + ': event not loaded')
+			return null
+		}
+		if (isOccurrenceWithoutId(event)) {
+			logger.log('caldav.' + what, 'occurrence without recurrence id')
+			if (done) done(what + ': occurrence without recurrence id')
 			return null
 		}
 		return { calendar: calendar, event: event }

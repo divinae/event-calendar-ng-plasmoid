@@ -508,8 +508,12 @@ def resource_items(href, etag, calendar_data, start, end):
 			item["recurring"] = recurring
 			if recurring:
 				item["recurringEventId"] = item["caldavUid"]
-				# The occurrence's original start: what put / delete --recurrence-id take.
+				# The occurrence's original start: what put / delete --recurrence-id take. Older
+				# recurring-ical-events give no RECURRENCE-ID on an occurrence that wasn't changed:
+				# there its start is the original one. Without an id it would change the whole series.
 				recurrence_id = icsjson.get_event_date(occurrence, "RECURRENCE-ID")
+				if recurrence_id is None:
+					recurrence_id = icsjson.get_event_date(occurrence, "DTSTART")
 				if recurrence_id is not None:
 					item["caldavRecurrenceId"] = icsjson.raw_date_to_json(recurrence_id)
 				if no_series:

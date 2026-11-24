@@ -867,6 +867,22 @@ class RecurringEditTests(unittest.TestCase):
 		single = caldav.resource_items(BASE + "/cal/s.ics", '"e"', SINGLE, datetime.datetime(2026, 11, 1), datetime.datetime(2026, 11, 30))
 		self.assertNotIn("caldavRecurrenceId", single[0])
 
+	def test_occurrence_without_recurrence_id_gets_its_start(self):
+		# Older recurring-ical-events: no RECURRENCE-ID on an unchanged occurrence. Without an id
+		# the widget would change or delete the whole series.
+		real = caldav.resource_occurrences
+
+		def without_ids(cal, start, end):
+			found = real(cal, start, end)
+			for occurrence in found:
+				if occurrence.get("SUMMARY") == "Team" and occurrence["DTSTART"].dt.hour == 10:
+					occurrence.pop("RECURRENCE-ID", None)
+			return found
+		with mock.patch.object(caldav, "resource_occurrences", without_ids):
+			items = caldav.resource_items(BASE + "/cal/r.ics", '"e"', BERLIN, datetime.datetime(2026, 11, 1), datetime.datetime(2026, 11, 30))
+		ids = sorted(i["caldavRecurrenceId"]["dateTime"] for i in items)
+		self.assertEqual(ids, ["2026-11-09T10:00:00+01:00", "2026-11-16T10:00:00+01:00", "2026-11-23T10:00:00+01:00"])
+
 	def test_change_one_occurrence_makes_an_override(self):
 		_, body = caldav.build_updated_occurrence(BERLIN, {
 			"summary": "Team (offsite)",
