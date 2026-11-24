@@ -81,13 +81,13 @@ Item {
 
 	// Akonadi's copies of calendars the widget reads itself (a signed-in Google account, a CalDAV
 	// calendar): their events show once, the account's. davCopies: those of CalDAV calendars.
-	readonly property var davCopies: PlasmaCalendarUtils.akonadiDavCopies(databaseOutput,
-		PlasmaCalendarUtils.caldavCalendarUrls(PlasmaCalendarUtils.toArray(SafeConfig.parseBase64Json(configBridge.read("caldavAccounts", ""), []))))
+	readonly property var caldavUrls: PlasmaCalendarUtils.caldavCalendarUrls(
+		PlasmaCalendarUtils.toArray(SafeConfig.parseBase64Json(configBridge.read("caldavAccounts", ""), [])))
+	readonly property var davCopies: PlasmaCalendarUtils.akonadiDavCopies(databaseOutput, caldavUrls)
 	readonly property var mirrored: {
 		var accounts = SafeConfig.parseBase64Json(configBridge.read("googleAccounts", ""), [])
 		return PlasmaCalendarUtils.akonadiMirroredCollections(databaseOutput,
-			PlasmaCalendarUtils.googleCalendarIdsByAccount(PlasmaCalendarUtils.toArray(accounts)),
-			PlasmaCalendarUtils.caldavCalendarUrls(PlasmaCalendarUtils.toArray(SafeConfig.parseBase64Json(configBridge.read("caldavAccounts", ""), []))))
+			PlasmaCalendarUtils.googleCalendarIdsByAccount(PlasmaCalendarUtils.toArray(accounts)), caldavUrls)
 	}
 
 	// The selection as saved: ids Akonadi no longer has (eg: an account set up anew, its calendars

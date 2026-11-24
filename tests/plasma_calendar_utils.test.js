@@ -224,10 +224,11 @@ console.log('PASS plasma_calendar_utils')
 			{ href: 'https://cloud.example.com/remote.php/dav/calendars/me/personal', selected: true },
 			{ href: 'https://cloud.example.com/remote.php/dav/calendars/me/work/', selected: false },
 			{ href: 'https://cloud.example.com/remote.php/dav/calendars/me/tasks/', events: false, tasksSelected: true },
+			{ href: 'https://cloud.example.com/remote.php/dav/calendars/me/both/', events: true, tasks: true, tasksSelected: true },
 		] },
 		{ id: 'b' },
 	])
-	assert.deepStrictEqual(JSON.parse(JSON.stringify(urls)), ['https://cloud.example.com/remote.php/dav/calendars/me/personal'], 'selected ones only, not task lists')
+	assert.deepStrictEqual(JSON.parse(JSON.stringify(urls)), ['https://cloud.example.com/remote.php/dav/calendars/me/personal', 'https://cloud.example.com/remote.php/dav/calendars/me/both/'], 'selected ones only, not task lists (a calendar with tasks too counts)')
 	assert.deepStrictEqual(JSON.parse(JSON.stringify(U.akonadiMirroredCollections(stdout, {}, urls))), { 10: true },
 		'the same calendar (host case, default port, trailing slash); not an unselected one, not another path')
 	assert.deepStrictEqual(JSON.parse(JSON.stringify(U.akonadiMirroredCollections(stdout, {}, undefined))), {})
@@ -268,7 +269,7 @@ console.log('PASS plasma_calendar_utils')
 		assert.deepStrictEqual(out.trim().split('\n'), ['10|#ff3c6dff', 'davcollection|9|�A', 'davcollection|10|https://h/cal/a/'])
 		assert.deepStrictEqual(JSON.parse(JSON.stringify(U.parseAkonadiColors(out))), { 10: '#3c6dff' })
 		assert.deepStrictEqual(JSON.parse(JSON.stringify(U.akonadiMirroredCollections(out, {}, ['https://h/cal/a']))), { 10: true })
-		assert.deepStrictEqual(Object.keys(U.akonadiDavUrlKeys(out)).sort(), ['https://h/cal/a', '�A'])
+		assert.deepStrictEqual(JSON.parse(JSON.stringify(U.parseAkonadiCollections(out).davCollections.map(c => c.remoteId))), ['�A', 'https://h/cal/a/'])
 		// One python3 run for the three queries.
 		assert.strictEqual((cmd[2].match(/python3 -I/g) || []).length, 1)
 		assert.strictEqual((cmd[2].match(/timeout 5 psql/g) || []).length, 1)

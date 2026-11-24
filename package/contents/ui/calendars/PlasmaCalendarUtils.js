@@ -540,16 +540,6 @@ function akonadiDavCopies(stdout, caldavUrls) {
 	})
 	return copies
 }
-// The URLs (davUrlKey) of Akonadi's DAV calendars: { key: true }.
-function akonadiDavUrlKeys(stdout) {
-	var keys = {}
-	parseAkonadiCollections(stdout).davCollections.forEach(function(collection) {
-		if (collection.remoteId) {
-			keys[davUrlKey(collection.remoteId)] = true
-		}
-	})
-	return keys
-}
 // A calendar URL to compare: scheme and host in lower case, no user name, no default port, the
 // path decoded (one side may keep the server's %-encoding) and without a trailing slash.
 function davUrlKey(url) {
@@ -569,7 +559,8 @@ function davUrlKey(url) {
 	return scheme + '://' + host + path.replace(/\/+$/, '')
 }
 // The URLs of the selected calendars in caldavAccounts (for the settings; the widget uses
-// CalDAVManager.readUrls). Not task lists.
+// CalDAVManager.readUrls). The calendars CalDAVManager.getCalendarList reads: not task lists
+// (events: false, PR #51's lists only for the Tasks tab, whatever their tasksSelected).
 function caldavCalendarUrls(accounts) {
 	var urls = []
 	Array.prototype.slice.call(accounts || []).forEach(function(account) {

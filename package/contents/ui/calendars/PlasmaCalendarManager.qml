@@ -141,7 +141,6 @@ CalendarManager {
 			var changed = JSON.stringify(colors) !== JSON.stringify(akonadiColors)
 			akonadiColors = colors
 			akonadiDatabase = String(stdout || "")
-			akonadiDavUrls = PlasmaCalendarUtils.akonadiDavUrlKeys(stdout)
 			if (updateMirroredCollections() || changed) {
 				refresh() // The calendars named anew (the reading is throttled: no loop)
 			}
@@ -154,15 +153,6 @@ CalendarManager {
 	// The same for the CalDAV calendars the widget could read (set by EventModel); one it can't read
 	// keeps its Akonadi copy.
 	property var caldavCalendarUrls: []
-	// Akonadi's DAV calendars by URL (PlasmaCalendarUtils.davUrlKey): { key: true }.
-	property var akonadiDavUrls: ({})
-	// A CalDAV event of a calendar Akonadi syncs too (its id "caldav-<account>::<url>"): its
-	// Akonadi copy is the same calendar's, whatever its color (EventModel's pimDuplicates).
-	function isAkonadiCopyOf(eventItem) {
-		var id = String(eventItem && eventItem.calendarId || "")
-		var at = id.indexOf("::")
-		return id.indexOf("caldav-") === 0 && at > 0 && !!akonadiDavUrls[PlasmaCalendarUtils.davUrlKey(id.slice(at + 2))]
-	}
 	property var mirroredCollections: ({})
 	function updateMirroredCollections() {
 		var mirrored = PlasmaCalendarUtils.akonadiMirroredCollections(akonadiDatabase, googleCalendarIds, caldavCalendarUrls)
@@ -177,9 +167,12 @@ CalendarManager {
 			refresh()
 		}
 	}
+	// It changes with each CalDAV calendar's first read, and back and forth when a server comes and
+	// goes: only the Akonadi events are read again (pluginDataTimer, which also takes several
+	// calendars at once), not every calendar (refresh: Google's and the others' requests too).
 	onCaldavCalendarUrlsChanged: {
 		if (updateMirroredCollections()) {
-			refresh()
+			pluginDataTimer.restart()
 		}
 	}
 	// "Akonadi: <calendar names>", to tell them from the Google calendars of the same name.
@@ -486,9 +479,9 @@ CalendarManager {
 		// Akonadi events in a color only the copies of calendars read here have: theirs.
 		var mirroredKeys = PlasmaCalendarUtils.mirroredColorKeys(
 			PlasmaCalendarUtils.pimCalendarRows(pimCalendarModel(), Qt.UserRole, Qt.DisplayRole), akonadiColors, mirroredCollections)
+		var colorPrefix = calendarManagerId + "_EventsColor_"
 		allEvents = allEvents.filter(function(event) {
-			var prefix = calendarManagerId + "_EventsColor_"
-			return event.calendarId.indexOf(prefix) !== 0 || !mirroredKeys[event.calendarId.slice(prefix.length)]
+			return event.calendarId.indexOf(colorPrefix) !== 0 || !mirroredKeys[event.calendarId.slice(colorPrefix.length)]
 		})
 
 		// Filter events into seperate calendars
@@ -517,6 +510,11 @@ CalendarManager {
 				"items": calendarEvents
 			})
 		}
+		// Those colors empty: a fetch of ours alone (pluginDataTimer) doesn't empty EventModel's
+		// calendars, so a copy shown before would stay until the next refresh.
+		Object.keys(mirroredKeys).forEach(function(key) {
+			setCalendarData(colorPrefix + key, { "items": [] })
+		})
 
 		// Register calendars we didn't fetch so we can create events with them
 		var calendarList = getCalendarList()

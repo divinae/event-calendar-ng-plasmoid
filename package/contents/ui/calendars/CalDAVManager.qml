@@ -62,7 +62,8 @@ CalendarManager {
 		var out = []
 		;(accounts || []).forEach(function(account) {
 			;(account.calendars || []).forEach(function(calendar) {
-				// events: false, a task list only (CalDAVTasksManager)
+				// events: false, a task list only (CalDAVTasksManager). The same rule as the settings'
+				// PlasmaCalendarUtils.caldavCalendarUrls (Akonadi's copies left out).
 				if (calendar.selected === false || calendar.events === false) {
 					return
 				}

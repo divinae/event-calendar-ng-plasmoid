@@ -779,9 +779,9 @@ CalendarManager {
 				&& !Shared.isHiddenCalendar(eventItem.calendarId, hiddenCalendars)
 		}))
 		// A calendar both synced by Akonadi and signed in to directly: only the direct copy.
-		// A calendar Akonadi syncs too (CalDAV) counts even when it's read-only: the copy is its own.
+		// (Akonadi's copy of a read-only one is left out by its color: PlasmaCalendarManager's mirroredCollections.)
 		var pimDuplicates = PlasmaCalendarEventState.pimDuplicates(all, function(eventItem) {
-			return !!eventItem.canEdit || !!Shared.myResponse(eventItem) || plasmaCalendarManager.isAkonadiCopyOf(eventItem)
+			return !!eventItem.canEdit || !!Shared.myResponse(eventItem)
 		})
 		var shown = []
 		for (var i = 0; i < all.length; i++) {
