@@ -52,6 +52,8 @@ CalendarManager {
 				accessRole: calendar.writable === false ? 'reader' : 'owner',
 				isTasklist: true,
 				caldavHref: calendar.href,
+				// Tasks only (no VEVENT): a calendar for events too is no list to delete, rename or recolor.
+				taskOnly: calendar.events === false,
 			}
 		})
 	}
@@ -396,7 +398,7 @@ CalendarManager {
 	// (a new list is picked; a deleted one goes). done(err, …) is optional and always called.
 	function taskListCapabilities(calendarId) {
 		var list = getCalendar(calendarId)
-		return TaskLists.capabilities(calendarManagerId, calendarId, list ? list.accessRole : 'none')
+		return TaskLists.capabilities(calendarManagerId, calendarId, list ? list.accessRole : 'none', !!list && list.taskOnly === true)
 	}
 
 	// The account in caldavAccounts changed by change(account) (a copy), then stored.

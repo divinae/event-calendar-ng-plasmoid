@@ -213,6 +213,13 @@ def xml_escape(text):
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+def components(*names):
+	"""A PROPFIND answer for /l/ with these supported components (none: no component set)."""
+	found = "".join('<c:comp name="{}"/>'.format(name) for name in names)
+	prop = "<c:supported-calendar-component-set>{}</c:supported-calendar-component-set>".format(found) if names else ""
+	return ms("<d:response><d:href>/l/</d:href><d:propstat><d:prop>{}</d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response>".format(prop))
+
+
 def task_resource(href, etag, body):
 	return "<d:response><d:href>{}</d:href><d:propstat><d:prop><d:getetag>{}</d:getetag><c:calendar-data>{}</c:calendar-data></d:prop>" \
 		"<d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response>".format(href, etag, xml_escape(body))
@@ -280,18 +287,32 @@ class RequestTests(unittest.TestCase):
 		self.assertIn(b"<ical:calendar-color>#ff0000</ical:calendar-color>", body)
 		self.assertEqual((made["href"], made["name"], made["tasks"], made["events"]), (url, "Shopping & more", True, False))
 		ok = ms("<d:response><d:href>/l/</d:href><d:propstat><d:prop><d:displayname/></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response>")
-		client = FakeClient([(207, {}, ok)])
+		client = FakeClient([(207, {}, components("VTODO")), (207, {}, ok)])
 		self.assertEqual(caldav.set_list(client, BASE + "/l/", name="Renamed"), {"ok": True})
-		self.assertEqual(client.sent[0][0], "PROPPATCH")
+		self.assertEqual([sent[0] for sent in client.sent], ["PROPFIND", "PROPPATCH"])
+		self.assertEqual(client.sent[0][3]["Depth"], "0")
+		self.assertIn(b"supported-calendar-component-set", client.sent[0][2])
 		refused = ok.replace("200 OK", "403 Forbidden")
 		with self.assertRaises(caldav.CalDavError):
-			caldav.set_list(FakeClient([(207, {}, refused)]), BASE + "/l/", color="#00ff00")
+			caldav.set_list(FakeClient([(207, {}, components("VTODO")), (207, {}, refused)]), BASE + "/l/", color="#00ff00")
 		for name, color in ((" ", None), (None, "red"), (None, None)):
 			with self.assertRaises(caldav.CalDavError):
 				caldav.set_list(FakeClient([]), BASE + "/l/", name=name, color=color)
-		client = FakeClient([(204, {}, "")])
+		client = FakeClient([(207, {}, components("VTODO")), (204, {}, "")])
 		self.assertEqual(caldav.remove_list(client, BASE + "/l/"), {"ok": True})
-		self.assertEqual(client.sent[0][:2], ("DELETE", BASE + "/l/"))
+		self.assertEqual(client.sent[1][:2], ("DELETE", BASE + "/l/"))
+
+	def test_lists_with_events_are_left_alone(self):
+		# A calendar for events and tasks (Nextcloud's "Personal"), or one without a component set
+		# (all components): never renamed, recolored or deleted as a task list.
+		for found in (components("VEVENT", "VTODO"), components()):
+			for change in (lambda c: caldav.remove_list(c, BASE + "/l/"), lambda c: caldav.set_list(c, BASE + "/l/", name="X"),
+					lambda c: caldav.set_list(c, BASE + "/l/", color="#00ff00")):
+				client = FakeClient([(207, {}, found)])
+				with self.assertRaises(caldav.CalDavError) as ctx:
+					change(client)
+				self.assertEqual(ctx.exception.kind, "INPUT")
+				self.assertEqual([sent[0] for sent in client.sent], ["PROPFIND"], "no PROPPATCH or DELETE")
 
 
 if __name__ == "__main__":

@@ -375,11 +375,8 @@ def privileges_writable(element):
 	return False
 
 
-def calendar_from_response(entry):
-	props = entry["props"]
-	resourcetype = props.get(tag(NS_DAV, "resourcetype"))
-	if resourcetype is None or resourcetype.find(tag(NS_CALDAV, "calendar")) is None:
-		return None
+def component_names(props):
+	"""The names in a calendar's supported-calendar-component-set ([] when it has none: all)."""
 	components = []
 	component_set = props.get(tag(NS_CALDAV, "supported-calendar-component-set"))
 	if component_set is not None:
@@ -387,6 +384,15 @@ def calendar_from_response(entry):
 			name = (comp.get("name") or "").strip().upper()
 			if name:
 				components.append(name)
+	return components
+
+
+def calendar_from_response(entry):
+	props = entry["props"]
+	resourcetype = props.get(tag(NS_DAV, "resourcetype"))
+	if resourcetype is None or resourcetype.find(tag(NS_CALDAV, "calendar")) is None:
+		return None
+	components = component_names(props)
 	if components and "VEVENT" not in components and "VTODO" not in components:
 		return None
 	name = prop_text(props, tag(NS_DAV, "displayname"))
@@ -1403,15 +1409,27 @@ def make_list(client, home, name, color=None):
 		"components": ["VTODO"], "events": False, "tasks": True}
 
 
+def require_task_only(client, url):
+	"""Refuse (INPUT) a calendar that may hold events: one whose component set has VEVENT, or has no
+	set at all (all components). Renaming, recoloring or deleting it as a "task list" would change
+	or delete the user's event calendar (eg: Nextcloud's "Personal", VEVENT and VTODO)."""
+	entries, _ = client.propfind(url, [(NS_CALDAV, "supported-calendar-component-set")], 0)
+	components = component_names(entries[0]["props"]) if entries else []
+	if not components or "VEVENT" in components:
+		raise CalDavError("INPUT", "This calendar holds events too, it's not changed as a task list")
+
+
 def set_list(client, url, name=None, color=None):
-	"""Rename or recolor a list (PROPPATCH)."""
+	"""Rename or recolor a list (PROPPATCH), a calendar for tasks only."""
 	if name is None and color is None:
 		raise CalDavError("INPUT", "Nothing to change")
 	check_list_fields(name, color)
+	url = check_url(url)
+	require_task_only(client, url)
 	body = (
 		'<?xml version="1.0" encoding="utf-8"?>\n<d:propertyupdate {}><d:set><d:prop>{}</d:prop></d:set></d:propertyupdate>'
 	).format(xml_namespaces(), list_props_xml(name.strip() if name is not None else None, color))
-	_, _, data, final_url = client.request("PROPPATCH", check_url(url), body,
+	_, _, data, final_url = client.request("PROPPATCH", url, body,
 		{"Content-Type": "application/xml; charset=utf-8"}, ok=(207,))
 	# A 207 can still refuse a property (eg: 403 for it): then nothing changed.
 	root = parse_xml(data)
@@ -1422,7 +1440,11 @@ def set_list(client, url, name=None, color=None):
 
 
 def remove_list(client, url):
-	client.request("DELETE", check_url(url), None, {}, ok=(200, 202, 204))
+	"""Delete a list with its tasks: a calendar for tasks only, never one with events (a DELETE of
+	the collection would take its events too)."""
+	url = check_url(url)
+	require_task_only(client, url)
+	client.request("DELETE", url, None, {}, ok=(200, 202, 204))
 	return {"ok": True}
 
 

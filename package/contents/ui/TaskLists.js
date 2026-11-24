@@ -15,7 +15,10 @@ function isEditableRole(accessRole) {
 // provider: the manager's calendarManagerId ('GoogleTasks', 'TickTick', 'CalDAVTasks'). rawId: the list's id
 // without the account prefix. The TickTick Inbox can't be renamed, recolored or deleted, and its
 // API lists open tasks only, so it has no "clear completed".
-function capabilities(provider, rawId, accessRole) {
+// taskOnly (CalDAV): the calendar holds tasks only (its events flag is false). A calendar for events
+// and tasks (Nextcloud's "Personal") is the user's event calendar too: deleting the "list" would
+// delete its events, renaming or recoloring it would change the event calendar, so none of that.
+function capabilities(provider, rawId, accessRole, taskOnly) {
 	var none = { rename: false, delete: false, color: false, clearCompleted: false }
 	if (!isEditableRole(accessRole)) {
 		return none
@@ -24,7 +27,7 @@ function capabilities(provider, rawId, accessRole) {
 		return { rename: true, delete: true, color: false, clearCompleted: true }
 	}
 	if (provider === 'CalDAVTasks') {
-		return { rename: true, delete: true, color: true, clearCompleted: false }
+		return taskOnly === true ? { rename: true, delete: true, color: true, clearCompleted: false } : none
 	}
 	if (provider === 'TickTick') {
 		if (String(rawId || '').indexOf('inbox') === 0) {
