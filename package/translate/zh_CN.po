@@ -11,6 +11,7 @@ msgstr ""
 "POT-Creation-Date: 2026-11-15 19:16+0100\n"
 "POT-Creation-Date: 2026-11-15 14:39+0100\n"
 "POT-Creation-Date: 2026-11-15 18:26+0100\n"
+"POT-Creation-Date: 2026-11-15 18:52+0100\n"
 "PO-Revision-Date: 2019-04-17 16:43+0800\n"
 "Last-Translator: Core小睿 <i@coreja.com>\n"
 "Language-Team: \n"
@@ -103,10 +104,12 @@ msgid "+%1"
 msgstr "+%1"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1 didn't accept the user name or password"
 msgstr "CalDAV：%1 不接受该用户名或密码"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 #: ../contents/ui/calendars/GoogleCalendarManager.qml
 #: ../contents/ui/calendars/GoogleTasksManager.qml
 #: ../contents/ui/calendars/ICalManager.qml
@@ -115,28 +118,34 @@ msgid "Could not connect"
 msgstr "无法连接"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: the password couldn't be read from the keyring"
 msgstr "CalDAV：无法从密钥环读取密码"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid ""
 "CalDAV needs Python modules: install them in Settings > Calendars > CalDAV"
 msgstr "CalDAV 需要 Python 模块：请在 设置 > 日历 > CalDAV 中安装"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "The event was changed elsewhere meanwhile; it's loaded again"
 msgstr "该事件在此期间已在别处更改；已重新加载"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Unknown error"
 msgstr "未知错误"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1"
 msgstr "CalDAV：%1"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: an unexpected answer"
 msgstr "CalDAV：意外的响应"
 
@@ -503,6 +512,15 @@ msgstr "只读"
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Server's Color"
 msgstr "服务器的颜色"
+
+#: ../contents/ui/config/CalendarsCalDAV.qml
+#: ../contents/ui/config/ConfigTasks.qml
+msgid "Task Lists"
+msgstr "任务列表"
+
+#: ../contents/ui/config/CalendarsCalDAV.qml
+msgid "Refresh the calendars to find this account's task lists too."
+msgstr "刷新日历，以同时找到此账户的任务列表。"
 
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Refresh Calendars"
@@ -906,6 +924,7 @@ msgid "Akonadi"
 msgstr "Akonadi"
 
 #: ../contents/ui/config/ConfigCalendars.qml
+#: ../contents/ui/config/ConfigTasks.qml
 msgid "CalDAV"
 msgstr "CalDAV"
 
@@ -1571,6 +1590,14 @@ msgid "The daily agenda notification also lists today's and overdue tasks."
 msgstr "每日日程通知中也会列出今天的任务和逾期任务。"
 
 #: ../contents/ui/config/ConfigTasks.qml
+msgid ""
+"The task lists of CalDAV accounts (eg: Nextcloud Tasks) are picked with "
+"their calendars, on the Calendars page under CalDAV."
+msgstr ""
+"CalDAV 账户的任务列表（例如 Nextcloud Tasks）与其日历一起，在“日历”页面的 "
+"CalDAV 下选择。"
+
+#: ../contents/ui/config/ConfigTasks.qml
 msgid "Google Tasks"
 msgstr "Google 任务"
 
@@ -1579,10 +1606,6 @@ msgid ""
 "Sign in on the Google Calendar page to choose the Google task lists shown "
 "here."
 msgstr "请在 Google 日历页面登录，以选择此处显示的 Google 任务列表。"
-
-#: ../contents/ui/config/ConfigTasks.qml
-msgid "Task Lists"
-msgstr "任务列表"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid ""

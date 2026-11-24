@@ -243,11 +243,13 @@ function subtaskProgress(item) {
 	}
 }
 
-// What the editor can set on a task of a provider ('TickTick', 'GoogleTasks', …): { dueTime,
-// priority, repeat, reminders, subtasks }. Google Tasks has none of them.
+// What the editor can set on a task of a provider ('TickTick', 'GoogleTasks', 'CalDAVTasks', …):
+// { dueTime, priority, repeat, reminders, subtasks }. Google Tasks has none of them; CalDAV
+// (VTODO) all but a repeat and a checklist (its subtasks are tasks, as Google's).
 function capabilities(provider) {
 	var all = provider === 'TickTick'
-	return { dueTime: all, priority: all, repeat: all, reminders: all, subtasks: all }
+	var caldav = provider === 'CalDAVTasks'
+	return { dueTime: all || caldav, priority: all || caldav, repeat: all, reminders: all || caldav, subtasks: all }
 }
 
 // The tasks of one list in subtask order: each task followed by its subtasks (parentId, or
@@ -763,6 +765,20 @@ function tickTickItems(subtasks, current) {
 }
 
 //--- Tasks view: task lists as sections
+
+// A sort order (an integer, maybe negative, eg: X-APPLE-SORT-ORDER) as a position string like
+// Google's. The offset stays far below 2^53, so neighbouring orders keep apart.
+function sortOrderPosition(sortOrder) {
+	var n = Number(sortOrder)
+	if (sortOrder === undefined || sortOrder === null || sortOrder === '' || !isFinite(n)) {
+		return undefined
+	}
+	var s = String(Math.max(0, Math.min(2e15, Math.round(n) + 1e15)))
+	while (s.length < 16) {
+		s = '0' + s
+	}
+	return s
+}
 
 // Google's order within a list (position strings), tasks without one first, then by title.
 function comparePosition(a, b) {

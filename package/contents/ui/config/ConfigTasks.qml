@@ -436,6 +436,14 @@ ConfigPage {
 			}
 		}
 
+		//--- CalDAV: its task lists are picked with the account's calendars.
+		FormCard.FormHeader {
+			title: i18n("CalDAV")
+		}
+		FormCard.FormSectionText {
+			text: i18n("The task lists of CalDAV accounts (eg: Nextcloud Tasks) are picked with their calendars, on the Calendars page under CalDAV.")
+		}
+
 		//--- Google Tasks
 		FormCard.FormHeader {
 			title: i18n("Google Tasks")

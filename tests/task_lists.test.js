@@ -23,6 +23,8 @@ same(L.capabilities('TickTick', 'inbox1234', 'owner'), none, 'the Inbox by its r
 same(L.capabilities('TickTick', 'p1', 'reader'), none, 'read-only')
 same(L.capabilities('GoogleTasks', 'abc', 'freeBusyReader'), none)
 same(L.capabilities('ICal', 'x', 'owner'), none)
+same(L.capabilities('CalDAVTasks', 'caldavtasks-a::https://h/l/', 'owner'), { rename: true, delete: true, color: true, clearCompleted: false })
+same(L.capabilities('CalDAVTasks', 'caldavtasks-a::https://h/l/', 'reader'), none, 'read-only CalDAV list')
 assert.strictEqual(L.hasAny(none), false)
 assert.strictEqual(L.hasAny(null), false)
 assert.strictEqual(L.hasAny({ clearCompleted: true }), true)

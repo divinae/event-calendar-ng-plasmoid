@@ -267,18 +267,23 @@ class DiscoveryTests(unittest.TestCase):
 		self.assertEqual(client.sent[-1][3]["Depth"], "1")
 		self.assertEqual(client.sent[3][3]["Depth"], "0")
 		cals = result["calendars"]
-		self.assertEqual([c["name"] for c in cals], ["Personal", "Bob's"])
+		# Task lists (VTODO only) too, marked: events no, tasks yes.
+		self.assertEqual([c["name"] for c in cals], ["Personal", "Tasks", "Bob's"])
 		self.assertEqual(cals[0], {
 			"href": BASE + "/remote.php/dav/calendars/user/personal/",
 			"name": "Personal",
 			"color": "#0082c9",
 			"writable": True,
 			"components": ["VEVENT", "VTODO"],
+			"events": True,
+			"tasks": True,
 			"ctag": "http://sabre.io/ns/sync/42",
 		})
-		self.assertFalse(cals[1]["writable"])
-		self.assertEqual(cals[1]["color"], "#ff0000")
-		self.assertEqual(cals[1]["components"], [])
+		self.assertEqual((cals[1]["events"], cals[1]["tasks"]), (False, True))
+		self.assertFalse(cals[2]["writable"])
+		self.assertEqual(cals[2]["color"], "#ff0000")
+		self.assertEqual(cals[2]["components"], [])
+		self.assertEqual((cals[2]["events"], cals[2]["tasks"]), (True, False), "no component set: events")
 
 	def test_radicale_like_discovery_on_entered_url(self):
 		client = FakeClient([

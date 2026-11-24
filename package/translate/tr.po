@@ -11,6 +11,7 @@ msgstr ""
 "POT-Creation-Date: 2026-11-15 19:16+0100\n"
 "POT-Creation-Date: 2026-11-15 14:39+0100\n"
 "POT-Creation-Date: 2026-11-15 18:26+0100\n"
+"POT-Creation-Date: 2026-11-15 18:52+0100\n"
 "PO-Revision-Date: 2019-06-02 22:28+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -103,10 +104,12 @@ msgid "+%1"
 msgstr "+%1"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1 didn't accept the user name or password"
 msgstr "CalDAV: %1 kullanıcı adını veya parolayı kabul etmedi"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 #: ../contents/ui/calendars/GoogleCalendarManager.qml
 #: ../contents/ui/calendars/GoogleTasksManager.qml
 #: ../contents/ui/calendars/ICalManager.qml
@@ -115,10 +118,12 @@ msgid "Could not connect"
 msgstr "Bağlanılamadı"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: the password couldn't be read from the keyring"
 msgstr "CalDAV: parola anahtarlıktan okunamadı"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid ""
 "CalDAV needs Python modules: install them in Settings > Calendars > CalDAV"
 msgstr ""
@@ -126,19 +131,23 @@ msgstr ""
 "bölümünden kurun"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "The event was changed elsewhere meanwhile; it's loaded again"
 msgstr "Etkinlik bu arada başka bir yerde değiştirildi; yeniden yüklendi"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Unknown error"
 msgstr "Bilinmeyen hata"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: %1"
 msgstr "CalDAV: %1"
 
 #: ../contents/ui/calendars/CalDAVManager.qml
+#: ../contents/ui/calendars/CalDAVTasksManager.qml
 msgid "CalDAV: an unexpected answer"
 msgstr "CalDAV: beklenmeyen bir yanıt"
 
@@ -526,6 +535,15 @@ msgstr "Salt okunur"
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Server's Color"
 msgstr "Sunucunun rengi"
+
+#: ../contents/ui/config/CalendarsCalDAV.qml
+#: ../contents/ui/config/ConfigTasks.qml
+msgid "Task Lists"
+msgstr "Görev Listeleri"
+
+#: ../contents/ui/config/CalendarsCalDAV.qml
+msgid "Refresh the calendars to find this account's task lists too."
+msgstr "Hesabın görev listelerini de bulmak için takvimleri yenileyin."
 
 #: ../contents/ui/config/CalendarsCalDAV.qml
 msgid "Refresh Calendars"
@@ -950,6 +968,7 @@ msgid "Akonadi"
 msgstr "Akonadi"
 
 #: ../contents/ui/config/ConfigCalendars.qml
+#: ../contents/ui/config/ConfigTasks.qml
 msgid "CalDAV"
 msgstr "CalDAV"
 
@@ -1645,6 +1664,14 @@ msgid "The daily agenda notification also lists today's and overdue tasks."
 msgstr "Günlük ajanda bildirimi bugünün ve gecikmiş görevleri de listeler."
 
 #: ../contents/ui/config/ConfigTasks.qml
+msgid ""
+"The task lists of CalDAV accounts (eg: Nextcloud Tasks) are picked with "
+"their calendars, on the Calendars page under CalDAV."
+msgstr ""
+"CalDAV hesaplarının görev listeleri (ör. Nextcloud Tasks), Takvimler "
+"sayfasında CalDAV altında takvimleriyle birlikte seçilir."
+
+#: ../contents/ui/config/ConfigTasks.qml
 msgid "Google Tasks"
 msgstr "Google Görevler"
 
@@ -1655,10 +1682,6 @@ msgid ""
 msgstr ""
 "Burada gösterilecek Google görev listelerini seçmek için Google Takvim "
 "sayfasında oturum açın."
-
-#: ../contents/ui/config/ConfigTasks.qml
-msgid "Task Lists"
-msgstr "Görev Listeleri"
 
 #: ../contents/ui/config/ConfigTasks.qml
 msgid ""

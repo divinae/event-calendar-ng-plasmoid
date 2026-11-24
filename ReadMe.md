@@ -20,7 +20,7 @@ again.
   button.
 - 🎥 **One-click Join** for Google Meet, Zoom, Teams, Webex, Slack huddles and about 35 more,
   straight from the agenda, the clock or the notification.
-- ✅ **Your tasks too.** Google Tasks and TickTick in their own tab, with smart lists (Today,
+- ✅ **Your tasks too.** Google Tasks, TickTick and CalDAV task lists (Nextcloud Tasks…) in their own tab, with smart lists (Today,
   Overdue, Next 7 days…), priorities, subtasks and drag and drop. Type "Call mom tomorrow 17:00
   !high" and it knows the day, the time and the priority.
 - ✍️ **Plan without leaving the panel.** Create, edit, move and answer events right in the widget;
@@ -65,11 +65,11 @@ so it replaces an existing Event Calendar and keeps its settings.
   focus time and working locations, attachments, Email Guests, Find a time (free slots for you and
   the guests), import .ics files. An event in several calendars (yours and a shared one) shows once.
   Tokens are kept in the system keyring.
-- **Tasks** from Google Tasks and **TickTick** (or Dida365) in their own tab: smart filters (All,
+- **Tasks** from Google Tasks, **TickTick** (or Dida365) and **CalDAV** task lists (eg: Nextcloud Tasks) in their own tab: smart filters (All,
   Today, Tomorrow, Next 7 days, Overdue, No date, each list), grouped by date or by list, sorted by
   due date, title, list or priority. **Add a task…** recognizes "tomorrow 17:00 !high #Work every
   week" as the day, time, priority, list and repeat. Priorities, due times, repeats, reminders,
-  checklists (TickTick) and subtasks (Google); a ticket's link in a task's name shows as a link
+  checklists (TickTick) and subtasks (Google, CalDAV); a ticket's link in a task's name shows as a link
   named after it (Jira "CSS-2175", Linear, GitHub, GitLab); mark tasks in progress; set the priority and due
   date from the right-click menu; drag tasks between days, lists and accounts; undo,
   keyboard, search. Manage lists (rename, color, clear completed, delete, hide from the smart
@@ -100,8 +100,9 @@ so it replaces an existing Event Calendar and keeps its settings.
   System Settings > Notifications > Event Calendar NG. Clicking one opens the event in the widget.
 - **CalDAV** (Nextcloud, Fastmail, iCloud with an app password, Radicale, Baïkal…): add an account in
   Settings > Calendars > CalDAV and choose its calendars; create, edit, move and delete events there, import
-  .ics files into them; a repeating event's occurrence on its own, or its whole series. The password stays
-  in the system keyring. Pick each calendar's color, or keep the server's.
+  .ics files into them; a repeating event's occurrence on its own, or its whole series. The account's task
+  lists show in the Tasks tab. The password stays in the system keyring. Pick each calendar's color, or keep
+  the server's.
 - **iCalendar** (.ics) files and links as calendars, read-only and offline too, in the color you pick:
   Settings > Calendars > iCalendar.
 - **Settings backup:** export the widget's settings to a file and import them again (Settings > Views),
@@ -197,7 +198,8 @@ Optional:
 3. **Tasks**: choose the Google task lists to show. For **TickTick**, create an API token on the
    TickTick website (Settings > Account > API Token; dida365.com for Dida365), pick the server,
    paste the token and Connect, then choose the projects to show. TickTick's Open API only lists
-   open tasks: a task you check off goes away at the next refresh.
+   open tasks: a task you check off goes away at the next refresh. A CalDAV account's task lists are picked
+   with its calendars (Calendars > CalDAV).
 4. **Weather**: search for your city (Open-Meteo).
 5. **Views**: choose the default view, the popup size and the hours shown in the week view.
 

@@ -12,7 +12,7 @@ function isEditableRole(accessRole) {
 }
 
 // What can be done with a list: { rename, delete, color, clearCompleted }.
-// provider: the manager's calendarManagerId ('GoogleTasks', 'TickTick'). rawId: the list's id
+// provider: the manager's calendarManagerId ('GoogleTasks', 'TickTick', 'CalDAVTasks'). rawId: the list's id
 // without the account prefix. The TickTick Inbox can't be renamed, recolored or deleted, and its
 // API lists open tasks only, so it has no "clear completed".
 function capabilities(provider, rawId, accessRole) {
@@ -22,6 +22,9 @@ function capabilities(provider, rawId, accessRole) {
 	}
 	if (provider === 'GoogleTasks') {
 		return { rename: true, delete: true, color: false, clearCompleted: true }
+	}
+	if (provider === 'CalDAVTasks') {
+		return { rename: true, delete: true, color: true, clearCompleted: false }
 	}
 	if (provider === 'TickTick') {
 		if (String(rawId || '').indexOf('inbox') === 0) {

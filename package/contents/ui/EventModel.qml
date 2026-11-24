@@ -237,6 +237,41 @@ CalendarManager {
 		accounts: appletConfig.caldavAccounts.value || []
 	}
 
+	// The task lists of each CalDAV account (those picked in Settings > Calendars > CalDAV), a
+	// manager per account id: a changed account (also a list made in the Tasks view) keeps its
+	// manager, and everything is fetched again.
+	property var caldavAccountIds: []
+	function updateCaldavAccountIds() {
+		var ids = (appletConfig.caldavAccounts.value || []).map(function(a) { return String(a && a.id) })
+		if (JSON.stringify(ids) !== JSON.stringify(caldavAccountIds)) {
+			caldavAccountIds = ids
+		}
+	}
+	function caldavAccount(id) {
+		return (appletConfig.caldavAccounts.value || []).filter(function(a) { return a && String(a.id) === id })[0] || null
+	}
+	Repeater {
+		id: caldavTasksRepeater
+		model: eventModel.caldavAccountIds
+		Component.onCompleted: eventModel.updateCaldavAccountIds()
+		delegate: Item {
+			CalDAVTasksManager {
+				id: caldavTasksManager
+				account: eventModel.caldavAccount(modelData)
+				accountsConfig: appletConfig.caldavAccounts
+			}
+			Component.onCompleted: eventModel.bindSignals(caldavTasksManager)
+			Component.onDestruction: eventModel.unbindSignals(caldavTasksManager)
+		}
+	}
+	Connections {
+		target: appletConfig.caldavAccounts
+		function onValueChanged() {
+			eventModel.updateCaldavAccountIds()
+			deferredUpdate.restart()
+		}
+	}
+
 	Repeater {
 		id: googleAccountsRepeater
 		model: googleAccountsStore.fetchableAccounts
