@@ -727,7 +727,12 @@ class PutTests(unittest.TestCase):
 		method, url, body, headers = client.sent[0]
 		self.assertEqual((method, url), ("PUT", BASE + "/cal/x.ics"))
 		self.assertEqual(headers["If-None-Match"], "*")
-		self.assertEqual(body.decode("utf-8"), self.EXISTING)
+		# As it was, but newer than the cancel the delete sent to the guests: SEQUENCE above the
+		# deleted version's (2), DTSTAMP now.
+		restored = Calendar.from_ical(body)
+		self.assertEqual(str(restored.walk("VEVENT")[0]["DESCRIPTION"]), "Keep me")
+		self.assertEqual([int(e["SEQUENCE"]) for e in restored.walk("VEVENT")], [3, 3])
+		self.assertNotIn(b"DTSTAMP:20261001T000000Z", body)
 		self.assertFalse(os.path.exists(undo_file))
 		with self.assertRaises(caldav.CalDavError) as ctx:
 			caldav.restore_event(FakeClient([]), token)
@@ -800,6 +805,22 @@ class PutTests(unittest.TestCase):
 		os.utime(undo_file, (old, old))
 		caldav.save_undo({"href": BASE + "/cal/y.ics", "body": "", "etag": ""})
 		self.assertFalse(os.path.exists(undo_file))
+		# A restore prunes them too.
+		token = caldav.save_undo({"href": BASE + "/cal/x.ics", "body": "", "etag": ""})
+		undo_file = os.path.join(caldav.undo_dir(), token + ".json")
+		os.utime(undo_file, (old, old))
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.restore_event(FakeClient([]), "0" * 32)
+		self.assertEqual(ctx.exception.kind, "NOTFOUND")
+		self.assertFalse(os.path.exists(undo_file))
+
+	def test_restore_keeps_the_exact_bytes_of_other_charsets(self):
+		latin = vcal("BEGIN:VEVENT\r\nUID:l-1\r\nDTSTART:20261102T080000Z\r\nSUMMARY:Caf\xe9\r\nEND:VEVENT\r\n").encode("latin-1")
+		client = FakeClient([(200, {}, latin), (204, {}, "")])
+		token = caldav.delete_event(client, BASE + "/cal/l.ics", '"e"')["undo"]
+		client = FakeClient([(201, {"ETag": '"back"'}, "")])
+		caldav.restore_event(client, token)
+		self.assertIn(b"SUMMARY:Caf\xe9", client.sent[0][2])  # Not "Caf\ufffd"
 
 
 # Weekly on Mondays at 10:00 in Berlin from 19 Oct 2026, over the end of summer time (25 Oct): one
@@ -1161,7 +1182,10 @@ class RecurringEditTests(unittest.TestCase):
 		self.assertEqual(caldav.restore_event(client, token)["etag"], '"v4"')
 		self.assertEqual(client.sent[0][3]["If-Match"], '"v3"')
 		self.assertNotIn("If-None-Match", client.sent[0][3])
-		self.assertEqual(client.sent[0][2].decode("utf-8"), BERLIN)
+		# The series as it was (the occurrence back), its SEQUENCE above the delete's (1 + 1).
+		restored = Calendar.from_ical(client.sent[0][2])
+		self.assertIn("11-16 10:00", occurrences(client.sent[0][2]))
+		self.assertEqual(int(caldav.master_event(restored)["SEQUENCE"]), 3)
 		with self.assertRaises(caldav.CalDavError) as ctx:
 			caldav.put_event(FakeClient([]), BASE + "/cal/", {"summary": "x"}, recurrence_id=rid)
 		self.assertEqual(ctx.exception.kind, "INPUT")

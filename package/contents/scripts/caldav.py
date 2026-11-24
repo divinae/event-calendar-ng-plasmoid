@@ -892,15 +892,19 @@ def parse_existing(existing):
 		raise CalDavError("PROTOCOL", "Invalid calendar data on the server: {}".format(error))
 
 
-def touch(event, stamp):
-	"""A changed VEVENT: new DTSTAMP / LAST-MODIFIED, SEQUENCE one up."""
+def sequence_of(event):
+	try:
+		return int(str(event.get("SEQUENCE", 0)))
+	except ValueError:
+		return 0
+
+
+def touch(event, stamp, above=0):
+	"""A changed VEVENT: new DTSTAMP / LAST-MODIFIED, SEQUENCE one up (and above `above`)."""
 	for key in ("DTSTAMP", "LAST-MODIFIED"):
 		event.pop(key, None)
 		event.add(key, stamp)
-	try:
-		sequence = int(str(event.get("SEQUENCE", 0)))
-	except ValueError:
-		sequence = 0
+	sequence = max(sequence_of(event), above)
 	event.pop("SEQUENCE", None)
 	event.add("SEQUENCE", sequence + 1)
 
@@ -1250,10 +1254,10 @@ def delete_event(client, href, etag, recurrence_id=None):
 	_, _, existing, href = client.request("GET", href, ok=(200,))
 	if recurrence_id is None:
 		client.request("DELETE", href, None, {"If-Match": match}, ok=(200, 202, 204))
-		return {"ok": True, "undo": save_undo({"href": href, "body": existing.decode("utf-8", "replace"), "etag": ""})}
-	final_url, new_etag = put_calendar(client, href, build_deleted_occurrence(existing, recurrence_id), {"If-Match": match})
-	undo = save_undo({"href": final_url, "body": existing.decode("utf-8", "replace"), "etag": new_etag})
-	return {"ok": True, "href": final_url, "etag": new_etag, "undo": undo}
+		return {"ok": True, "undo": save_undo(undo_entry(href, existing, "", existing))}
+	changed = build_deleted_occurrence(existing, recurrence_id)
+	final_url, new_etag = put_calendar(client, href, changed, {"If-Match": match})
+	return {"ok": True, "href": final_url, "etag": new_etag, "undo": save_undo(undo_entry(final_url, existing, new_etag, changed))}
 
 
 def move_event(client, href, etag, to_url):
@@ -1441,6 +1445,32 @@ def prune_undo(path, now):
 			pass
 
 
+def undo_entry(href, existing, etag, left):
+	"""What restore_event needs: the resource as it was (its exact bytes), its href, the etag the
+	delete left (none: it's gone) and the highest SEQUENCE of what the delete left, which the restore
+	has to beat (else attendees' clients ignore it after the cancel)."""
+	try:
+		above = max([sequence_of(event) for event in Calendar.from_ical(left).walk("VEVENT")] or [0])
+	except Exception:
+		above = 0
+	return {"href": href, "body64": base64.b64encode(existing).decode("ascii"), "etag": etag, "sequence": above}
+
+
+def restored_body(body, above, stamp=None):
+	"""The saved resource with every VEVENT stamped now and its SEQUENCE above `above`: a change
+	the server sends to attendees as newer than the cancel. Not UTF-8 (parsing would change its
+	bytes) or unreadable: as it was."""
+	try:
+		body.decode("utf-8")
+		cal = Calendar.from_ical(body)
+	except Exception:
+		return body
+	stamp = stamp or now_utc()
+	for event in cal.walk("VEVENT"):
+		touch(event, stamp, above)
+	return cal.to_ical()
+
+
 def save_undo(entry):
 	"""The token, or "" when it can't be kept (no undo then, the delete still counts)."""
 	try:
@@ -1460,15 +1490,18 @@ def restore_event(client, token):
 	deleted occurrence by the series before its EXDATE (If-Match: unless it changed since)."""
 	if not UNDO_TOKEN.fullmatch(token or ""):
 		raise CalDavError("INPUT", "Not an undo token")
-	file_path = os.path.join(undo_dir(), token + ".json")
+	path = undo_dir()
+	prune_undo(path, time.time())  # So old files don't stay when nothing is deleted any more
+	file_path = os.path.join(path, token + ".json")
 	try:
 		with open(file_path, encoding="utf-8") as source:
 			entry = json.load(source)
-	except (OSError, ValueError):
+		body = base64.b64decode(entry["body64"]) if "body64" in entry else entry["body"].encode("utf-8")
+	except (OSError, ValueError, KeyError, TypeError):
 		raise CalDavError("NOTFOUND", "Nothing to undo (too old, or already undone)")
 	href = check_url(entry["href"])
 	headers = {"If-Match": quote_etag(entry["etag"])} if entry.get("etag") else {"If-None-Match": "*"}
-	final_url, etag = put_calendar(client, href, entry["body"], headers)
+	final_url, etag = put_calendar(client, href, restored_body(body, int(entry.get("sequence") or 0)), headers)
 	try:
 		os.remove(file_path)
 	except OSError:
