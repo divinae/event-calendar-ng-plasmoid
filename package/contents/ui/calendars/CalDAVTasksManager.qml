@@ -22,6 +22,9 @@ CalendarManager {
 	readonly property string accountId: account ? "caldavtasks-" + account.id : ""
 	readonly property string accountLabel: account ? String(account.label || account.username || "") : ""
 	property string helperPath: ScriptPath.scriptPath("caldav.py")
+	// The CalDAV calendars and lists fetched again (EventModel.refreshCalDAV), not every source as
+	// refresh() does (Google's quota is shared by every user of the built-in client).
+	signal refreshCalDAV()
 
 	Logger {
 		id: logger
@@ -258,7 +261,7 @@ CalendarManager {
 			if (err) {
 				report(err)
 				if (err.kind === "CONFLICT") {
-					caldavTasksManager.refresh() // Changed elsewhere: the current version
+					caldavTasksManager.refreshCalDAV() // Changed elsewhere: the current version
 				}
 				if (done) done(err.message, null)
 				return
@@ -307,6 +310,9 @@ CalendarManager {
 	function restoreEvent(calendarId, eventId, copy, done) {
 		var key = calendarId + '\n' + eventId
 		var token = undoTokens[key]
+		// The copy as a new task only when there's nothing to restore (NOTFOUND, or no token): after
+		// a network error, a conflict or a helper that died without saying why the task may be back
+		// already, and a copy would be a second one (a new UID).
 		var fromCopy = function(err) {
 			if (copy) {
 				createEventFromData(calendarId, Tasks.restoreBody(copy), function(createErr) {
@@ -321,13 +327,20 @@ CalendarManager {
 			fromCopy(null)
 			return
 		}
-		delete undoTokens[key]
+		// The token stays until it worked: a restore that failed (offline) can be tried again.
 		helper(['restore', '--undo', token], function(err) {
-			if (err) {
+			if (err && err.kind === 'NOTFOUND') {
+				delete undoTokens[key]
 				fromCopy(err)
 				return
 			}
-			caldavTasksManager.refresh() // Shown again with the list's next read
+			if (err) {
+				report(err)
+				if (done) done(err.message)
+				return
+			}
+			delete undoTokens[key]
+			caldavTasksManager.refreshCalDAV() // Shown again with the list's next read
 			if (done) done(null)
 		})
 	}

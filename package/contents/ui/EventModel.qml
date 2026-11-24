@@ -136,6 +136,9 @@ CalendarManager {
 		calendarManager.eventDeleted.connect(eventDeletedListener)
 		calendarManager.eventUpdated.connect(eventUpdatedListener)
 		calendarManager.refresh.connect(deferredUpdate.restart)
+		if (typeof calendarManager.refreshCalDAV === 'function') {
+			calendarManager.refreshCalDAV.connect(caldavRefresh.restart) // CalDAVTasksManager
+		}
 
 		calendarManager.error.connect(error)
 
