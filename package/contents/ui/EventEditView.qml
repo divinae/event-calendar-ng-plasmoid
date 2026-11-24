@@ -873,8 +873,12 @@ Rectangle {
 		var occurrenceStart = new Date(item.startDateTime)
 		var rule = repeatRule()
 		var ruleChanged = repeatChanged
-		// A series without a zone of its own gets the editor's (as withTimeZone does).
-		var seriesZone = timeZone || calendarTimeZone()
+		// A series without a zone of its own gets the editor's (as withTimeZone does). CalDAV: unless
+		// a zone was picked, its calendar's or none (floating, as EventMover sends it), so caldav.py
+		// keeps the series' own zone (one without an IANA name).
+		var calendar = calendarSelector.selectedCalendar
+		var seriesZone = caldavFeatures && !timeZoneTouched ? (calendar && calendar.timeZone || '')
+			: timeZone || calendarTimeZone()
 		var guestEdit = guestsChanged
 		var initial = initialGuests
 		var edited = guests
