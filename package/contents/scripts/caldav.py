@@ -1275,11 +1275,15 @@ def move_event(client, href, etag, to_url):
 		client.request("MOVE", href, None, {
 			"Destination": target, "Overwrite": "F", "If-Match": match}, ok=(201, 204))
 	except CalDavError as error:
-		# The server can't MOVE (405, 501, ...), or won't between these calendars (403).
-		if error.kind != "PROTOCOL" and error.status != 403:
+		# The server can't MOVE (405, 501; 502 from a proxy that doesn't pass it on), or won't
+		# between these calendars (403). Anything else (500, 503, ...) may have moved it: no copy.
+		if error.status not in MOVE_UNSUPPORTED:
 			raise
 		return copy_and_delete(client, href, match, target)
 	return {"href": target, "etag": fetch_etag(client, target)}
+
+
+MOVE_UNSUPPORTED = (403, 405, 501, 502)
 
 
 def copy_and_delete(client, href, match, target):

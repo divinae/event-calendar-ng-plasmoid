@@ -761,6 +761,12 @@ class PutTests(unittest.TestCase):
 			caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other/")
 		self.assertEqual(ctx.exception.kind, "CONFLICT")
 		self.assertEqual(len(client.sent), 1)
+		# Another server error (it may have moved it all the same): no copy.
+		client = FakeClient([(500, {}, "")])
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other/")
+		self.assertEqual(ctx.exception.kind, "PROTOCOL")
+		self.assertEqual(len(client.sent), 1)
 
 	def test_move_without_server_support_copies_and_deletes(self):
 		client = FakeClient([(405, {}, ""), (200, {}, self.EXISTING), (201, {"ETag": '"c"'}, ""), (204, {}, "")])
