@@ -239,7 +239,7 @@ CalendarManager {
 
 	// The task lists of each CalDAV account (those picked in Settings > Calendars > CalDAV), a
 	// manager per account id: a changed account (also a list made in the Tasks view) keeps its
-	// manager, and everything is fetched again.
+	// manager, and the CalDAV calendars and lists are fetched again (refreshCalDAV).
 	property var caldavAccountIds: []
 	function updateCaldavAccountIds() {
 		var ids = (appletConfig.caldavAccounts.value || []).map(function(a) { return String(a && a.id) })
@@ -268,7 +268,51 @@ CalendarManager {
 		target: appletConfig.caldavAccounts
 		function onValueChanged() {
 			eventModel.updateCaldavAccountIds()
+			caldavRefresh.restart()
+		}
+	}
+	// caldavAccounts changed (the CalDAV settings, or a list made, renamed, recolored or deleted in
+	// the Tasks tab): only the CalDAV calendars and task lists are fetched again, not every source
+	// (Google's quota is shared by every user of the built-in client). Calendars no longer picked,
+	// or of an account removed, leave the views. While a fetch is under way: a full round as before
+	// (a manager restarted in a round would leave the round's count unfinished).
+	property var caldavRefresh: Timer {
+		interval: 200
+		onTriggered: eventModel.refreshCalDAV()
+	}
+	function isCalDAVManager(calendarManager) {
+		return calendarManager.calendarManagerId === 'CalDAV' || calendarManager.calendarManagerId === 'CalDAVTasks'
+	}
+	function refreshCalDAV() {
+		if (dateMin >= dateMax) {
+			return // Nothing fetched yet: the first round reads them
+		}
+		if (fetchRound || asyncRequestsDone < asyncRequests) {
 			deferredUpdate.restart()
+			return
+		}
+		var managers = calendarManagerList.filter(isCalDAVManager)
+		var picked = {}
+		managers.forEach(function(calendarManager) {
+			calendarManager.getCalendarList().forEach(function(calendar) { picked[calendar.id] = true })
+		})
+		for (var calendarId in eventModel.eventsByCalendar) {
+			if (/^caldav(tasks)?-/.test(calendarId) && !picked[calendarId]) {
+				delete eventModel.eventsByCalendar[calendarId]
+				delete eventModel.calendarPluginMap[calendarId]
+			}
+		}
+		forgetRanges() // The months in memory hold the CalDAV calendars as they were
+		// Merged once the last one is done (allDataFetched); not before they've all started.
+		eventModel.clearingData = true
+		managers.forEach(function(calendarManager) {
+			calendarManager.fetchAll(dateMin, dateMax)
+		})
+		eventModel.clearingData = false
+		if (managers.length) {
+			checkIfDone()
+		} else {
+			mergeEvents()
 		}
 	}
 
