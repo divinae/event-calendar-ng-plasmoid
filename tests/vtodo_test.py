@@ -171,6 +171,52 @@ class WriteTests(unittest.TestCase):
 		_, body = vtodo.build_updated_task(last, {"status": "completed"}, STAMP)
 		self.assertEqual(str(todo_of(body)["STATUS"]), "COMPLETED")
 
+	def test_repeating_task_with_a_due_only_moves_on(self):
+		# Nextcloud Tasks' and the widget's own repeating tasks: DUE, no DTSTART.
+		weekly = vcal("BEGIN:VTODO\r\nUID:r-1\r\nDTSTAMP:20261101T000000Z\r\nSUMMARY:Bins\r\n"
+			"DUE;TZID=Europe/Berlin:20261120T170000\r\nRRULE:FREQ=WEEKLY\r\nSTATUS:NEEDS-ACTION\r\nEND:VTODO\r\n")
+		_, body = vtodo.build_updated_task(weekly, {"status": "completed"}, STAMP)
+		todo = todo_of(body)
+		self.assertEqual(str(todo["STATUS"]), "NEEDS-ACTION")
+		self.assertNotIn("COMPLETED", todo)
+		self.assertNotIn("DTSTART", todo, "no start added")
+		self.assertEqual(todo["DUE"].dt.isoformat(), "2026-11-27T17:00:00+01:00")
+		self.assertEqual(todo["DUE"].params["TZID"], "Europe/Berlin")
+		# Until a day after the next instance: moves on once, then the series ends (done).
+		until = weekly.replace("RRULE:FREQ=WEEKLY", "RRULE:FREQ=WEEKLY;UNTIL=20261128T000000Z")
+		_, body = vtodo.build_updated_task(until, {"status": "completed"}, STAMP)
+		todo = todo_of(body)
+		self.assertEqual((str(todo["STATUS"]), todo["DUE"].dt.isoformat()), ("NEEDS-ACTION", "2026-11-27T17:00:00+01:00"))
+		_, body = vtodo.build_updated_task(body, {"status": "completed"}, STAMP)
+		self.assertEqual(str(todo_of(body)["STATUS"]), "COMPLETED", "past UNTIL: the series ends")
+
+	def test_repeating_day_task_with_a_count(self):
+		daily = vcal("BEGIN:VTODO\r\nUID:r-2\r\nDTSTAMP:20261101T000000Z\r\nSUMMARY:Water plants\r\n"
+			"DUE;VALUE=DATE:20261120\r\nRRULE:FREQ=DAILY;INTERVAL=2;COUNT=2\r\nEND:VTODO\r\n")
+		_, body = vtodo.build_updated_task(daily, {"status": "completed"}, STAMP)
+		todo = todo_of(body)
+		self.assertEqual((str(todo["STATUS"]), todo["DUE"].dt), ("NEEDS-ACTION", datetime.date(2026, 11, 22)))
+		self.assertEqual(todo["RRULE"]["COUNT"], [1])
+		_, body = vtodo.build_updated_task(body, {"status": "completed"}, STAMP)
+		todo = todo_of(body)
+		self.assertEqual((str(todo["STATUS"]), todo["DUE"].dt), ("COMPLETED", datetime.date(2026, 11, 22)), "its last instance")
+
+	def test_repeating_task_that_cant_be_expanded_stays_open(self):
+		weekly = vcal("BEGIN:VTODO\r\nUID:r-3\r\nSUMMARY:x\r\nDUE;VALUE=DATE:20261120\r\nRRULE:FREQ=WEEKLY\r\nEND:VTODO\r\n")
+		broken = mock.Mock()
+		broken.of.side_effect = ValueError("bad rule")
+		with mock.patch.object(vtodo.icsjson, "recurring_ical_events", broken):
+			with self.assertRaises(vtodo.TaskInputError):
+				vtodo.build_updated_task(weekly, {"status": "completed"}, STAMP)
+		with mock.patch.object(vtodo.icsjson, "recurring_ical_events", None):
+			with self.assertRaises(vtodo.TaskInputError):
+				vtodo.build_updated_task(weekly, {"status": "completed"}, STAMP)
+		# A task that doesn't repeat is done whether the module is there or not.
+		once = weekly.replace("RRULE:FREQ=WEEKLY\r\n", "")
+		with mock.patch.object(vtodo.icsjson, "recurring_ical_events", None):
+			_, body = vtodo.build_updated_task(once, {"status": "completed"}, STAMP)
+		self.assertEqual(str(todo_of(body)["STATUS"]), "COMPLETED")
+
 	def test_reminders_replace_only_their_alarms(self):
 		_, body = vtodo.build_updated_task(FULL, {"reminders": [10]}, STAMP)
 		alarms = todo_of(body).walk("VALARM")

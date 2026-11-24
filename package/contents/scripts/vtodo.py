@@ -267,24 +267,38 @@ def due_related(alarm):
 
 def next_instance(todo):
 	"""A repeating task's next instance after its current one: (DTSTART, DUE), each maybe None; None
-	when the series ends (or can't be expanded)."""
-	rie = icsjson.recurring_ical_events
-	start = icsjson.get_event_date(todo, "DTSTART")
-	base = start if start is not None else icsjson.get_event_date(todo, "DUE")
-	if todo.get("RRULE") is None or rie is None or base is None:
+	when it doesn't repeat or the series ends. TaskInputError when the next instance can't be found
+	(the rule can't be expanded): the task isn't completed for good then, which would end the series
+	for every client."""
+	if todo.get("RRULE") is None:
 		return None
+	start = icsjson.get_event_date(todo, "DTSTART")
+	due = icsjson.get_event_date(todo, "DUE")
+	base = start if start is not None else due
+	if base is None:
+		return None
+	rie = icsjson.recurring_ical_events
+	if rie is None:
+		raise TaskInputError("Can't find the next date of a repeating task: the recurring_ical_events module is missing")
+	probe = copy.deepcopy(todo)
+	if start is None:
+		# DUE only (Nextcloud Tasks' default, the widget's own tasks): the rule repeats the DUE. It's
+		# expanded as the start (with its TZID or VALUE=DATE), whatever the library makes of a DUE.
+		probe["DTSTART"] = probe.pop("DUE")
 	cal = Calendar()
-	cal.add_component(copy.deepcopy(todo))
+	cal.add_component(probe)
 	step = datetime.timedelta(seconds=1) if isinstance(base, datetime.datetime) else datetime.timedelta(days=1)
 	try:
 		found = list(rie.of(cal, components=["VTODO"]).between(base + step, base + datetime.timedelta(days=3660)))
-	except Exception:
-		return None
-	key = lambda o: icsjson.ensure_date_time(icsjson.get_event_date(o, "DTSTART") or icsjson.get_event_date(o, "DUE"))
-	later = [o for o in found if key(o) > icsjson.ensure_date_time(base)]
+		key = lambda o: icsjson.ensure_date_time(icsjson.get_event_date(o, "DTSTART") or icsjson.get_event_date(o, "DUE"))
+		later = [o for o in found if key(o) > icsjson.ensure_date_time(base)]
+	except Exception as error:  # eg: UNTIL a date while the start is a date-time
+		raise TaskInputError("Can't find the next date of this repeating task: {}".format(error))
 	if not later:
-		return None
+		return None  # The series ended (COUNT, UNTIL): done
 	first = min(later, key=key)
+	if start is None:
+		return None, icsjson.get_event_date(first, "DTSTART")
 	return icsjson.get_event_date(first, "DTSTART"), icsjson.get_event_date(first, "DUE")
 
 
