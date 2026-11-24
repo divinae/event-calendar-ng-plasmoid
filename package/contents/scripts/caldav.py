@@ -729,6 +729,18 @@ def set_date(event, key, value):
 	event.add(key, value)
 
 
+def in_own_zone(value, given, old_start):
+	"""A time sent without a time zone name (UTC, an offset, or floating: this computer's clock, as
+	the widget sends a series whose zone has no IANA name) in the zone the event had, so it keeps it
+	(a custom VTIMEZONE doesn't become UTC or floating). A named zone, a date, or an event that had
+	no zone: as given."""
+	if not isinstance(value, datetime.datetime) or (isinstance(given, dict) and given.get("timeZone")):
+		return value
+	if not isinstance(old_start, datetime.datetime) or old_start.tzinfo is None:
+		return value
+	return value.astimezone(old_start.tzinfo)  # A floating time is taken as local time
+
+
 def apply_event_fields(event, data):
 	"""Change only the given fields of a VEVENT (summary, location, description, start, end, and
 	those of apply_extra_fields)."""
@@ -737,15 +749,17 @@ def apply_event_fields(event, data):
 	set_text(event, "DESCRIPTION", data.get("description"))
 	if data.get("recurrence") is not None:
 		set_recurrence(event, data["recurrence"])
+	old_start = icsjson.get_event_date(event, "DTSTART")
 	start = parse_when(data["start"], "start") if data.get("start") is not None else None
 	end = parse_when(data["end"], "end") if data.get("end") is not None else None
+	start = in_own_zone(start, data.get("start"), old_start)
+	end = in_own_zone(end, data.get("end"), old_start)
 	if start is not None and end is not None:
 		if is_all_day(start) != is_all_day(end):
 			raise CalDavError("INPUT", "start and end must both be dates or both date-times")
 		if icsjson.ensure_date_time(end) < icsjson.ensure_date_time(start) or (is_all_day(start) and end <= start):
 			raise CalDavError("INPUT", "end is before start")
 	if start is not None:
-		old_start = icsjson.get_event_date(event, "DTSTART")
 		if end is None and event.get("DTEND") is not None and old_start is not None:
 			# Keep the duration when only the start moves (and the kind of value matches).
 			old_end = icsjson.get_event_date(event, "DTEND")

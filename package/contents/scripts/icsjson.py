@@ -186,7 +186,9 @@ def time_zone_name(dt):
 		return ""
 	name = getattr(tz, "key", None) or getattr(tz, "zone", None) or ""
 	if not name:
-		if dt.utcoffset() == datetime.timedelta(0):
+		# Only UTC itself ("Z"): an unnamed zone at offset 0 now (a custom London VTIMEZONE in
+		# winter) isn't UTC all year.
+		if isinstance(tz, datetime.timezone) and dt.utcoffset() == datetime.timedelta(0):
 			return "UTC"
 		return ""
 	try:

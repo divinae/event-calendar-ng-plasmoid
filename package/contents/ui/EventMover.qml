@@ -88,8 +88,9 @@ Item {
 		var seriesId = eventItem.recurringEventId
 		var occurrenceStart = new Date(eventItem.startDateTime)
 		var calendar = eventModel.getCalendarList().filter(function(c) { return c.id === calendarId })[0]
-		// No zone of its own (CalDAV): the series' own, else it stays in floating time (SeriesEdit).
-		var timeZone = (calendar && calendar.timeZone) || ''
+		// No zone of its own (CalDAV): the series' own, else it's sent in floating time (SeriesEdit;
+		// caldav.py puts it back in the series' zone). Google needs a zone: UTC as before.
+		var timeZone = (calendar && calendar.timeZone) || (eventModel.isCalDAVCalendar(calendarId) ? '' : 'UTC')
 		var seriesTimes = null // The series' times before the move, for undo.
 		eventModel.updateEventFromServer(calendarId, seriesId, function(series) {
 			seriesTimes = Undo.savedTimes(series)

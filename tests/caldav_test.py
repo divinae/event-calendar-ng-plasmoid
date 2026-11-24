@@ -9,6 +9,7 @@ import os
 import pathlib
 import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -1093,6 +1094,42 @@ class RecurringEditTests(unittest.TestCase):
 		self.assertTrue(items[0]["caldavReadOnly"])
 		items = caldav.resource_items(BASE + "/cal/r.ics", '"e"', BERLIN, datetime.datetime(2026, 11, 1), datetime.datetime(2026, 11, 30))
 		self.assertFalse(any("caldavReadOnly" in i for i in items))
+
+	def test_series_in_a_zone_without_iana_name_keeps_it(self):
+		# A custom VTIMEZONE (as Outlook writes them): a time sent in UTC or floating (EventMover
+		# has no zone name to send) goes into the series' own zone, not UTC or floating.
+		custom = vcal(
+			"BEGIN:VTIMEZONE\r\nTZID:My London\r\n"
+			"BEGIN:STANDARD\r\nDTSTART:19701025T020000\r\nRRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\r\n"
+			"TZOFFSETFROM:+0100\r\nTZOFFSETTO:+0000\r\nEND:STANDARD\r\n"
+			"BEGIN:DAYLIGHT\r\nDTSTART:19700329T010000\r\nRRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\r\n"
+			"TZOFFSETFROM:+0000\r\nTZOFFSETTO:+0100\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE\r\n"
+			"BEGIN:VEVENT\r\nUID:ldn\r\nDTSTAMP:20261001T000000Z\r\nDTSTART;TZID=My London:20261102T090000\r\n"
+			"DTEND;TZID=My London:20261102T100000\r\nRRULE:FREQ=WEEKLY\r\nSUMMARY:Standup\r\nEND:VEVENT\r\n")
+		# In winter its offset is 0, but it isn't UTC: no "UTC" zone name for the editor.
+		series = caldav.get_series(FakeClient([(200, {"ETag": '"v1"'}, custom)]), BASE + "/cal/ldn.ics")
+		self.assertNotEqual(series["start"].get("timeZone"), "UTC")
+		_, body = caldav.build_updated_calendar(custom, {
+			"start": {"dateTime": "2026-11-03T10:00:00Z"}, "end": {"dateTime": "2026-11-03T11:00:00Z"}})
+		self.assertIn(b"DTSTART;TZID=My London:20261103T100000", body)
+		saved_tz = os.environ.get("TZ")
+		os.environ["TZ"] = "Europe/Berlin"
+		time.tzset()
+		try:
+			_, body = caldav.build_updated_calendar(custom, {
+				"start": {"dateTime": "2026-11-03T12:00:00"}, "end": {"dateTime": "2026-11-03T13:00:00"}})
+		finally:
+			if saved_tz is None:
+				os.environ.pop("TZ", None)
+			else:
+				os.environ["TZ"] = saved_tz
+			time.tzset()
+		self.assertIn(b"DTSTART;TZID=My London:20261103T110000", body)  # 12:00 in Berlin
+		# A zone named by the editor: that one.
+		_, body = caldav.build_updated_calendar(custom, {
+			"start": {"dateTime": "2026-11-03T10:00:00", "timeZone": "Europe/Berlin"},
+			"end": {"dateTime": "2026-11-03T11:00:00", "timeZone": "Europe/Berlin"}})
+		self.assertIn(b"DTSTART;TZID=Europe/Berlin:20261103T100000", body)
 
 	def test_get_series(self):
 		client = FakeClient([(200, {"ETag": '"v1"'}, BERLIN)])
