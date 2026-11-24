@@ -90,7 +90,8 @@ CalendarManager {
 		// calendar menu or the Day view): the plugin tells an event's color, not its calendar.
 		// Named after the calendars of that color (akonadiColors, PlasmaCalendarUtils.namesByColor),
 		// else KDE PIM (Akonadi) when the colors can't be read; calendars of one color share one.
-		// Not the Google calendars of an account signed in here: they are with that account.
+		// Not the copies of calendars read here (a Google account signed in here, a CalDAV calendar):
+		// they are with that account.
 		var namesByColor = PlasmaCalendarUtils.namesByColor(rows.filter(function(row) {
 			return !mirroredCollections[row.id]
 		}), akonadiColors)
@@ -124,11 +125,11 @@ CalendarManager {
 			})
 		}
 	}
-	// Akonadi's calendar colors by collection id and its Google calendars, from its database
+	// Akonadi's calendar colors by collection id and its Google and DAV calendars, from its database
 	// (PlasmaCalendarUtils.akonadiCalendarsCommand), read at the start and again with a fetch at most
 	// every 10 minutes.
 	property var akonadiColors: ({})
-	property string akonadiGoogleCollections: ""
+	property string akonadiDatabase: "" // akonadiCalendarsCommand's output
 	property real akonadiColorsReadAt: 0
 	function readAkonadiColors() {
 		if (Date.now() - akonadiColorsReadAt < 10 * 60 * 1000) {
@@ -139,7 +140,8 @@ CalendarManager {
 			var colors = PlasmaCalendarUtils.parseAkonadiColors(stdout)
 			var changed = JSON.stringify(colors) !== JSON.stringify(akonadiColors)
 			akonadiColors = colors
-			akonadiGoogleCollections = String(stdout || "")
+			akonadiDatabase = String(stdout || "")
+			akonadiDavUrls = PlasmaCalendarUtils.akonadiDavUrlKeys(stdout)
 			if (updateMirroredCollections() || changed) {
 				refresh() // The calendars named anew (the reading is throttled: no loop)
 			}
@@ -149,9 +151,21 @@ CalendarManager {
 	// (set by EventModel). Akonadi's copies of them (mirroredCollections) are left out: their events
 	// come from the sign-in, and the calendar menu lists them with the account.
 	property var googleCalendarIds: ({})
+	// The same for the CalDAV calendars the widget could read (set by EventModel); one it can't read
+	// keeps its Akonadi copy.
+	property var caldavCalendarUrls: []
+	// Akonadi's DAV calendars by URL (PlasmaCalendarUtils.davUrlKey): { key: true }.
+	property var akonadiDavUrls: ({})
+	// A CalDAV event of a calendar Akonadi syncs too (its id "caldav-<account>::<url>"): its
+	// Akonadi copy is the same calendar's, whatever its color (EventModel's pimDuplicates).
+	function isAkonadiCopyOf(eventItem) {
+		var id = String(eventItem && eventItem.calendarId || "")
+		var at = id.indexOf("::")
+		return id.indexOf("caldav-") === 0 && at > 0 && !!akonadiDavUrls[PlasmaCalendarUtils.davUrlKey(id.slice(at + 2))]
+	}
 	property var mirroredCollections: ({})
 	function updateMirroredCollections() {
-		var mirrored = PlasmaCalendarUtils.akonadiMirroredCollections(akonadiGoogleCollections, googleCalendarIds)
+		var mirrored = PlasmaCalendarUtils.akonadiMirroredCollections(akonadiDatabase, googleCalendarIds, caldavCalendarUrls)
 		if (JSON.stringify(mirrored) === JSON.stringify(mirroredCollections)) {
 			return false
 		}
@@ -159,6 +173,11 @@ CalendarManager {
 		return true
 	}
 	onGoogleCalendarIdsChanged: {
+		if (updateMirroredCollections()) {
+			refresh()
+		}
+	}
+	onCaldavCalendarUrlsChanged: {
 		if (updateMirroredCollections()) {
 			refresh()
 		}
@@ -464,7 +483,7 @@ CalendarManager {
 
 	onFetchAllCalendars: {
 		var allEvents = getEventsForDuration(dateMin, dateMax)
-		// Akonadi events in a color only Akonadi's copies of signed-in Google calendars have: theirs.
+		// Akonadi events in a color only the copies of calendars read here have: theirs.
 		var mirroredKeys = PlasmaCalendarUtils.mirroredColorKeys(
 			PlasmaCalendarUtils.pimCalendarRows(pimCalendarModel(), Qt.UserRole, Qt.DisplayRole), akonadiColors, mirroredCollections)
 		allEvents = allEvents.filter(function(event) {

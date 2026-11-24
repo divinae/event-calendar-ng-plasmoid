@@ -366,6 +366,7 @@ CalendarManager {
 
 	PlasmaCalendarManager {
 		id: plasmaCalendarManager
+		caldavCalendarUrls: caldavManager.readUrls
 	}
 	// The selected calendars of the Google accounts that fetch (only theirs come from the sign-in),
 	// for Akonadi's copies of them. Set again on each change: an account is updated in place (no
@@ -742,8 +743,9 @@ CalendarManager {
 				&& !Shared.isHiddenCalendar(eventItem.calendarId, hiddenCalendars)
 		}))
 		// A calendar both synced by Akonadi and signed in to directly: only the direct copy.
+		// A calendar Akonadi syncs too (CalDAV) counts even when it's read-only: the copy is its own.
 		var pimDuplicates = PlasmaCalendarEventState.pimDuplicates(all, function(eventItem) {
-			return !!eventItem.canEdit || !!Shared.myResponse(eventItem)
+			return !!eventItem.canEdit || !!Shared.myResponse(eventItem) || plasmaCalendarManager.isAkonadiCopyOf(eventItem)
 		})
 		var shown = []
 		for (var i = 0; i < all.length; i++) {
