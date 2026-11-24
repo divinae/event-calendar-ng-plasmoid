@@ -25,8 +25,8 @@ function assertOrdered(body, markers, message) {
 
 const completion = functionBody('onNewData: function', '\n\tsignal exited')
 assertOrdered(completion, [
-	'var listener = listeners[cmd]',
-	'delete listeners[cmd]',
+	'var listener = listeners.get(cmd)',
+	'listeners.delete(cmd)',
 	'disconnectSource(sourceName)',
 	'listener(cmd, exitCode, exitStatus, stdout, stderr)',
 	'exited(cmd, exitCode, exitStatus, stdout, stderr)',
@@ -34,12 +34,17 @@ assertOrdered(completion, [
 
 const runCommand = functionBody('function runCommand', '\n\tfunction exec(')
 assertOrdered(runCommand, [
-	'delete listeners[cmd]',
+	'listeners.delete(cmd)',
 	'disconnectSource(cmd)',
 	"if (typeof callback === 'function')",
-	'listeners[cmd] = listener',
+	'listeners.set(cmd, listener)',
 	'\n\t\tconnectSource(cmd)',
 ], 'every replacement run must clear stale state before reconnecting')
+
+assert.ok(
+	source.includes('property var listeners: new Map()') && !/listeners\[/.test(source),
+	'listeners is a Map: a plain object with a new key per command line crashed the QML engine'
+)
 
 assert.ok(
 	!runCommand.includes('exited.disconnect'),
