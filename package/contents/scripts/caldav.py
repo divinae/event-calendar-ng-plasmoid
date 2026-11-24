@@ -7,10 +7,14 @@ DEPS or KEYRING (the keyring couldn't be read, eg: not up yet at login; try agai
 Commands (all take --account ID --user USERNAME):
 	discover --url URL
 	query --url CALENDAR START END            (YYYY-MM-DD, END exclusive)
+	      [--match TEXT]                      (only events with every word in title, place or notes)
 	put --url CALENDAR [--href RES --etag E [--recurrence-id RID]] [--event-b64 B64]
 	                                          (event JSON as base64 of UTF-8, else on stdin)
 	delete --href RES --etag E [--recurrence-id RID]
-	get --href RES                            (a repeating event's series, as an import gives it)
+	                                          (gives "undo": a token for restore)
+	restore --undo TOKEN                      (puts a deleted event or occurrence back)
+	move --href RES --etag E --to CALENDAR    (an event or series to another calendar, same server)
+	get --href RES                            (an event, or a repeating event's series, as an import gives it)
 	import --url CALENDAR --file PATH
 
 Repeating events: a query gives each occurrence its caldavRecurrenceId (the original start, as
@@ -33,7 +37,10 @@ import ipaddress
 import json
 import os
 import re
+import secrets
 import socket
+import time
+import unicodedata
 import sys
 import urllib.error
 import urllib.parse
@@ -49,10 +56,10 @@ if SCRIPT_DIR not in sys.path:
 # command answers "DEPS: ..." (the widget offers to install them), not a traceback.
 try:
 	import icsjson  # noqa: E402  (also puts the bundled icalendar / recurring_ical_events on sys.path)
-	from icalendar import Calendar, Event  # noqa: E402
+	from icalendar import Alarm, Calendar, Event  # noqa: E402
 except ImportError as import_error:
 	icsjson = None
-	Calendar = Event = None
+	Alarm = Calendar = Event = None
 	MISSING_MODULE = getattr(import_error, "name", None) or str(import_error)
 else:
 	MISSING_MODULE = ""
@@ -80,11 +87,12 @@ def tag(ns, name):
 
 
 class CalDavError(Exception):
-	def __init__(self, kind, message):
+	def __init__(self, kind, message, status=None):
 		assert kind in ERROR_KINDS
 		super().__init__(message)
 		self.kind = kind
 		self.message = message
+		self.status = status  # The HTTP status, when the server sent one
 
 	def line(self):
 		return "{}: {}".format(self.kind, " ".join(str(self.message).split()))
@@ -101,12 +109,12 @@ def url_path(url):
 def error_for_status(status, url):
 	path = url_path(url)
 	if status in (401, 403):
-		return CalDavError("AUTH", "Access denied (HTTP {}) for {}".format(status, path))
+		return CalDavError("AUTH", "Access denied (HTTP {}) for {}".format(status, path), status)
 	if status in (404, 410):
-		return CalDavError("NOTFOUND", "Not found (HTTP {}): {}".format(status, path))
+		return CalDavError("NOTFOUND", "Not found (HTTP {}): {}".format(status, path), status)
 	if status == 412:
-		return CalDavError("CONFLICT", "Changed on the server (HTTP 412): {}".format(path))
-	return CalDavError("PROTOCOL", "Unexpected HTTP {} for {}".format(status, path))
+		return CalDavError("CONFLICT", "Changed on the server (HTTP 412): {}".format(path), status)
+	return CalDavError("PROTOCOL", "Unexpected HTTP {} for {}".format(status, path), status)
 
 
 #--- URL rules
@@ -540,10 +548,62 @@ def calendar_ctag(client, url):
 	return ""
 
 
-def query(client, url, start, end, if_ctag="", probe_ctag=True):
+def search_text(text):
+	"""Lower case without accents ("Kraków" matches "krakow"), as the widget's EventSearch.js."""
+	text = unicodedata.normalize("NFD", str(text or "").lower())
+	return "".join(c for c in text if not "\u0300" <= c <= "\u036f")
+
+
+def plain_text(html):
+	return re.sub(r"<[^>]*>", " ", str(html or "")).replace("&nbsp;", " ").replace("&amp;", "&")
+
+
+MAX_MATCHES = 100  # Per calendar, the ones nearest to now (Google's search gives 50)
+
+
+def has_words(words, *texts):
+	haystack = search_text(" ".join(plain_text(t) for t in texts))
+	return all(word in haystack for word in words)
+
+
+def resource_has_words(calendar_data, words):
+	"""Any VEVENT of the resource with all the words (before its repeats are expanded)."""
+	try:
+		cal = Calendar.from_ical(calendar_data)
+	except Exception:
+		return True  # resource_items says what's wrong with it
+	return any(has_words(words, icsjson.stringify(e.get("SUMMARY")), icsjson.stringify(e.get("LOCATION")),
+		icsjson.stringify(e.get("DESCRIPTION"))) for e in cal.walk("VEVENT"))
+
+
+def matching_items(items, match, now=None):
+	"""The items with every word of match in their title, location or description: at most
+	MAX_MATCHES, those nearest to now."""
+	words = search_text(match).split()
+	if not words:
+		return []
+	found = [item for item in items if has_words(words, item.get("summary") or "", item.get("location") or "", item.get("description") or "")]
+	if len(found) > MAX_MATCHES:
+		now = now or datetime.datetime.now(datetime.timezone.utc)
+
+		def distance(item):
+			value = item["start"].get("dateTime") or item["start"].get("date")
+			try:
+				when = datetime.datetime.fromisoformat(value)
+			except ValueError:
+				return datetime.timedelta.max
+			if when.tzinfo is None:
+				when = when.astimezone()
+			return abs(when - now)
+		found = sorted(found, key=distance)[:MAX_MATCHES]
+	return found
+
+
+def query(client, url, start, end, if_ctag="", probe_ctag=True, match=None):
 	"""start/end: naive datetimes (local midnight), end exclusive. if_ctag: the calendar's change tag
 	at the last fetch of the same range: unchanged, the events aren't downloaded again ({"unchanged":
-	true}). The tag is read before the events, so a change meanwhile is seen next time."""
+	true}). The tag is read before the events, so a change meanwhile is seen next time. match: only
+	the events that have its words (matching_items), for search."""
 	ctag = calendar_ctag(client, url) if probe_ctag else ""
 	if if_ctag and ctag and ctag == if_ctag:
 		return {"unchanged": True, "ctag": ctag}
@@ -555,7 +615,14 @@ def query(client, url, start, end, if_ctag="", probe_ctag=True):
 		{"Depth": "1", "Content-Type": "application/xml; charset=utf-8"},
 		ok=(207,),
 	)
-	return {"items": query_items(parse_multistatus(data, final_url), start, end), "ctag": ctag}
+	entries = parse_multistatus(data, final_url)
+	if match is not None:
+		words = search_text(match).split()
+		entries = [e for e in entries if resource_has_words(prop_text(e["props"], tag(NS_CALDAV, "calendar-data")) or "", words)]
+	items = query_items(entries, start, end)
+	if match is not None:
+		items = matching_items(items, match)
+	return {"items": items, "ctag": ctag}
 
 
 #--- put
@@ -648,7 +715,8 @@ def set_date(event, key, value):
 
 
 def apply_event_fields(event, data):
-	"""Change only the given fields of a VEVENT (summary, location, description, start, end)."""
+	"""Change only the given fields of a VEVENT (summary, location, description, start, end, and
+	those of apply_extra_fields)."""
 	set_text(event, "SUMMARY", data.get("summary"))
 	set_text(event, "LOCATION", data.get("location"))
 	set_text(event, "DESCRIPTION", data.get("description"))
@@ -672,6 +740,81 @@ def apply_event_fields(event, data):
 	if end is not None:
 		event.pop("DURATION", None)
 		set_date(event, "DTEND", end)
+	apply_extra_fields(event, data)
+
+
+EXTRA_FIELDS = ("transparency", "visibility", "caldavColor", "reminders")
+
+
+def extra_values(event):
+	"""The apply_extra_fields values of a VEVENT as they compare: TRANSP, CLASS, COLOR, reminders."""
+	start, end = icsjson.get_event_bounds(event)
+	return {
+		"transparency": icsjson.stringify(event.get("TRANSP")).strip().upper() or "OPAQUE",
+		"visibility": icsjson.stringify(event.get("CLASS")).strip().upper(),
+		"caldavColor": icsjson.stringify(event.get("COLOR")).strip().lower(),
+		"reminders": icsjson.reminder_minutes(event, start, end) if start is not None and end is not None else [],
+	}
+
+
+TRANSPARENCY = {"opaque": "OPAQUE", "transparent": "TRANSPARENT"}
+VISIBILITY = {"default": None, "public": "PUBLIC", "private": "PRIVATE", "confidential": "CONFIDENTIAL"}
+MAX_REMINDERS = 50
+MAX_REMINDER_MINUTES = 366 * 1440  # A year: alarms set in other apps may be weeks ahead
+
+
+def apply_extra_fields(event, data):
+	"""Show as (transparency: TRANSP), visibility (CLASS; "default": none), color (caldavColor: a
+	CSS color name as COLOR, RFC 7986; null: none) and reminders (Google style: its "popup"
+	overrides as display alarms; the event's other alarms, eg: email, stay)."""
+	if data.get("transparency") is not None:
+		if data["transparency"] not in TRANSPARENCY:
+			raise CalDavError("INPUT", "transparency must be opaque or transparent")
+		event.pop("TRANSP", None)
+		event.add("TRANSP", TRANSPARENCY[data["transparency"]])
+	if data.get("visibility") is not None:
+		if data["visibility"] not in VISIBILITY:
+			raise CalDavError("INPUT", "visibility must be default, public, private or confidential")
+		event.pop("CLASS", None)
+		if VISIBILITY[data["visibility"]]:
+			event.add("CLASS", VISIBILITY[data["visibility"]])
+	if "caldavColor" in data:
+		color = data["caldavColor"]
+		if color is not None and not (isinstance(color, str) and re.fullmatch(r"[a-z]{3,30}", color)):
+			raise CalDavError("INPUT", "caldavColor must be a CSS color name")
+		event.pop("COLOR", None)
+		if color:
+			event.add("COLOR", color)
+	if data.get("reminders") is not None:
+		set_reminders(event, data["reminders"])
+
+
+def set_reminders(event, reminders):
+	if not isinstance(reminders, dict):
+		raise CalDavError("INPUT", "reminders must be an object")
+	minutes = []
+	for override in reminders.get("overrides") or []:
+		if not isinstance(override, dict) or override.get("method") != "popup":
+			continue
+		value = override.get("minutes")
+		if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= MAX_REMINDER_MINUTES:
+			raise CalDavError("INPUT", "A reminder's minutes must be 0 to {}".format(MAX_REMINDER_MINUTES))
+		if value not in minutes:
+			minutes.append(value)
+	if len(minutes) > MAX_REMINDERS:
+		raise CalDavError("INPUT", "At most {} reminders".format(MAX_REMINDERS))
+	start, end = icsjson.get_event_bounds(event)
+	if start is None or end is None:
+		raise CalDavError("INPUT", "Reminders need the event's start")
+	# The alarms the widget shows as reminders go; the others (email, after the start) stay.
+	event.subcomponents = [c for c in event.subcomponents if icsjson.alarm_minutes(c, event, start, end) is None]
+	summary = icsjson.stringify(event.get("SUMMARY")) or "Reminder"
+	for value in sorted(minutes):
+		alarm = Alarm()
+		alarm.add("ACTION", "DISPLAY")
+		alarm.add("DESCRIPTION", summary)
+		alarm.add("TRIGGER", datetime.timedelta(minutes=-value))
+		event.add_component(alarm)
 
 
 def now_utc():
@@ -746,6 +889,7 @@ def build_updated_calendar(existing, data, stamp=None):
 	stamp = stamp or now_utc()
 	old_bounds = icsjson.get_event_bounds(event)
 	old_texts = {key: icsjson.stringify(event.get(key)) for _, key in TEXT_FIELDS}
+	old_extras = extra_values(event)
 	apply_event_fields(event, data)
 	touch(event, stamp)
 	new_bounds = icsjson.get_event_bounds(event)
@@ -759,6 +903,16 @@ def build_updated_calendar(existing, data, stamp=None):
 			if data.get(name) is not None and icsjson.stringify(override.get(key)) == old_texts[key]:
 				set_text(override, key, data[name])
 				changed.add(id(override))
+		# Show as, visibility, color and reminders likewise: where the occurrence had the series' one.
+		kept = extra_values(override)
+		same = {}
+		for name in EXTRA_FIELDS:
+			given = name in data and (data[name] is not None or name == "caldavColor")  # caldavColor null: none
+			if given and kept[name] == old_extras[name]:
+				same[name] = data[name]
+		if same:
+			apply_extra_fields(override, same)
+			changed.add(id(override))
 	if None not in old_bounds and None not in new_bounds and old_bounds != new_bounds:
 		# A new rule from the editor (recurrence given) has the end the user chose: UNTIL stays.
 		changed |= shift_instances(cal, event, old_bounds, new_bounds, shift_until=data.get("recurrence") is None)
@@ -1061,23 +1215,123 @@ def put_event(client, cal_url, data, href=None, etag=None, recurrence_id=None):
 
 def delete_event(client, href, etag, recurrence_id=None):
 	"""Delete an event or a whole series; with recurrence_id only that occurrence (the series stays,
-	changed: its new etag is returned)."""
-	if recurrence_id is None:
-		client.request("DELETE", href, None, {"If-Match": quote_etag(etag)}, ok=(200, 202, 204))
-		return {"ok": True}
+	changed: its new etag is returned). "undo": a token for restore_event (the resource as it was)."""
 	href = check_url(href)
 	match = quote_etag(etag)
 	_, _, existing, href = client.request("GET", href, ok=(200,))
+	if recurrence_id is None:
+		client.request("DELETE", href, None, {"If-Match": match}, ok=(200, 202, 204))
+		return {"ok": True, "undo": save_undo({"href": href, "body": existing.decode("utf-8", "replace"), "etag": ""})}
 	final_url, new_etag = put_calendar(client, href, build_deleted_occurrence(existing, recurrence_id), {"If-Match": match})
-	return {"ok": True, "href": final_url, "etag": new_etag}
+	undo = save_undo({"href": final_url, "body": existing.decode("utf-8", "replace"), "etag": new_etag})
+	return {"ok": True, "href": final_url, "etag": new_etag, "undo": undo}
+
+
+def move_event(client, href, etag, to_url):
+	"""Move an event or series (its resource) to another calendar of the same server: WebDAV MOVE,
+	or where the server can't (405, 501, ...), a copy there and the original deleted."""
+	href = check_url(href)
+	match = quote_etag(etag)
+	to_url = collection_url(check_url(to_url))
+	if origin(href) != origin(to_url):
+		raise CalDavError("INPUT", "--to is on another server")
+	target = to_url + href.rstrip("/").rsplit("/", 1)[-1]
+	if same_resource(href, target):
+		raise CalDavError("INPUT", "The event is already in that calendar")
+	try:
+		client.request("MOVE", href, None, {
+			"Destination": target, "Overwrite": "F", "If-Match": match}, ok=(201, 204))
+	except CalDavError as error:
+		# The server can't MOVE (405, 501, ...), or won't between these calendars (403).
+		if error.kind != "PROTOCOL" and error.status != 403:
+			raise
+		return copy_and_delete(client, href, match, target)
+	return {"href": target, "etag": fetch_etag(client, target)}
+
+
+def copy_and_delete(client, href, match, target):
+	_, _, existing, href = client.request("GET", href, ok=(200,))
+	# Changed meanwhile: the DELETE's If-Match fails, and the copy goes again.
+	final_url, new_etag = put_calendar(client, target, existing, {"If-None-Match": "*"})
+	try:
+		client.request("DELETE", href, None, {"If-Match": match}, ok=(200, 202, 204))
+	except CalDavError as error:
+		if error.kind == "NOTFOUND":
+			return {"href": final_url, "etag": new_etag}  # Gone already: moved
+		if error.kind == "NETWORK":
+			raise  # It may have been deleted: the copy stays (in both calendars, never in none)
+		try:  # Refused (changed meanwhile, not allowed): not in both calendars
+			client.request("DELETE", final_url, None, {"If-Match": quote_etag(new_etag)} if new_etag else {}, ok=(200, 202, 204))
+		except CalDavError:
+			pass
+		raise
+	return {"href": final_url, "etag": new_etag}
+
+
+#--- Undo of deletes: the resource as it was, kept for a day in a private file (the user's runtime
+# directory: memory only, gone at logout), only its token goes to the widget.
+
+UNDO_MAX_AGE = 24 * 3600
+UNDO_TOKEN = re.compile(r"[0-9a-f]{32}")
+
+
+def undo_dir():
+	base = os.environ.get("XDG_RUNTIME_DIR") or os.path.join(os.path.expanduser("~"), ".cache", "plasma-eventcalendar")
+	path = os.path.join(base, "eventcalendar-caldav-undo")
+	os.makedirs(path, mode=0o700, exist_ok=True)
+	return path
+
+
+def prune_undo(path, now):
+	for name in os.listdir(path):
+		try:
+			if now - os.path.getmtime(os.path.join(path, name)) > UNDO_MAX_AGE:
+				os.remove(os.path.join(path, name))
+		except OSError:
+			pass
+
+
+def save_undo(entry):
+	"""The token, or "" when it can't be kept (no undo then, the delete still counts)."""
+	try:
+		path = undo_dir()
+		prune_undo(path, time.time())
+		token = secrets.token_hex(16)
+		fd = os.open(os.path.join(path, token + ".json"), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+		with os.fdopen(fd, "w", encoding="utf-8") as out:
+			json.dump(entry, out)
+		return token
+	except OSError:
+		return ""
+
+
+def restore_event(client, token):
+	"""Put a deleted event back as it was: a deleted resource again at its href (If-None-Match), a
+	deleted occurrence by the series before its EXDATE (If-Match: unless it changed since)."""
+	if not UNDO_TOKEN.fullmatch(token or ""):
+		raise CalDavError("INPUT", "Not an undo token")
+	file_path = os.path.join(undo_dir(), token + ".json")
+	try:
+		with open(file_path, encoding="utf-8") as source:
+			entry = json.load(source)
+	except (OSError, ValueError):
+		raise CalDavError("NOTFOUND", "Nothing to undo (too old, or already undone)")
+	href = check_url(entry["href"])
+	headers = {"If-Match": quote_etag(entry["etag"])} if entry.get("etag") else {"If-None-Match": "*"}
+	final_url, etag = put_calendar(client, href, entry["body"], headers)
+	try:
+		os.remove(file_path)
+	except OSError:
+		pass
+	return {"href": final_url, "etag": etag}
 
 
 def get_series(client, href):
-	"""A repeating event's series in Google style (as the editor takes it), with href and etag."""
+	"""A series (or a single event) in Google style (as the editor takes it), with href and etag."""
 	href = check_url(href)
 	_, headers, existing, href = client.request("GET", href, ok=(200,))
-	master, _ = series_parts(parse_existing(existing))
-	series = icsjson.event_to_raw(master)
+	master = master_event(parse_existing(existing))
+	series = icsjson.event_to_raw(master) if master is not None else None
 	if series is None:
 		raise CalDavError("PROTOCOL", "The series has no start")
 	etag = (headers.get("ETag") or "").strip() if headers is not None else ""
@@ -1208,6 +1462,7 @@ def build_parser():
 	cmd.add_argument("--url", required=True)
 	cmd.add_argument("--if-ctag", default="", help="The change tag of the last fetch: unchanged, no events are downloaded")
 	cmd.add_argument("--no-ctag", action="store_true", help="Don't ask for the change tag (the server has none)")
+	cmd.add_argument("--match", default=None, help="Only events with every word of this in their title, location or description")
 	cmd.add_argument("start")
 	cmd.add_argument("end")
 	common(cmd)
@@ -1224,6 +1479,16 @@ def build_parser():
 	cmd.add_argument("--href", required=True)
 	cmd.add_argument("--etag", required=True)
 	cmd.add_argument("--recurrence-id", default=None, help="Only this occurrence of the series (its caldavRecurrenceId JSON)")
+	common(cmd)
+
+	cmd = sub.add_parser("restore")
+	cmd.add_argument("--undo", required=True, help="The token a delete gave")
+	common(cmd)
+
+	cmd = sub.add_parser("move")
+	cmd.add_argument("--href", required=True)
+	cmd.add_argument("--etag", required=True)
+	cmd.add_argument("--to", required=True, help="The other calendar's URL")
 	common(cmd)
 
 	cmd = sub.add_parser("get")
@@ -1277,7 +1542,7 @@ def run(args, stdin):
 	if args.command == "discover":
 		return discover(client, args.url)
 	if args.command == "query":
-		return query(client, args.url, start, end, args.if_ctag, not args.no_ctag)
+		return query(client, args.url, start, end, args.if_ctag, not args.no_ctag and args.match is None, args.match)
 	if args.command == "put":
 		try:
 			if args.event_b64 is not None:
@@ -1289,6 +1554,10 @@ def run(args, stdin):
 		return put_event(client, args.url, data, args.href or None, args.etag or None, recurrence_id)
 	if args.command == "delete":
 		return delete_event(client, args.href, args.etag, recurrence_id)
+	if args.command == "restore":
+		return restore_event(client, args.undo)
+	if args.command == "move":
+		return move_event(client, args.href, args.etag, args.to)
 	if args.command == "get":
 		return get_series(client, args.href)
 	if args.command == "import":

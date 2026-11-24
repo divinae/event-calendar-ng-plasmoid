@@ -38,6 +38,18 @@ function parallel(tasks, finalCallback) {
 	}
 }
 
+// settleAll's results of tasks that give lists, as one: { err (the first, only when nothing was
+// found), items: all of them }.
+function joinedLists(results) {
+	var items = []
+	var firstError = null
+	results.forEach(function(result) {
+		firstError = firstError || result.err
+		items = items.concat(result.data || [])
+	})
+	return { err: items.length ? null : firstError, items: items }
+}
+
 // Runs every task(callback(err, data)) at once and waits for all of them, failed ones too.
 // done(results): results[i] = { err, data } of tasks[i] (err null when it worked). A task that
 // calls back twice counts once.

@@ -5,6 +5,7 @@ import datetime
 import importlib.util
 import io
 import json
+import os
 import pathlib
 import sys
 import tempfile
@@ -23,6 +24,17 @@ from icalendar import Calendar  # noqa: E402
 
 HAS_RIE = icsjson.recurring_ical_events is not None
 BASE = "https://cloud.example.com"
+
+# Undo files (delete / restore) in a directory of the tests, not the user's runtime directory.
+UNDO_HOME = tempfile.TemporaryDirectory()
+
+
+def setUpModule():
+	os.environ["XDG_RUNTIME_DIR"] = UNDO_HOME.name
+
+
+def tearDownModule():
+	UNDO_HOME.cleanup()
 
 
 class FakeClient(caldav.Client):
@@ -430,6 +442,37 @@ class QueryTests(unittest.TestCase):
 		self.assertFalse(item["recurring"])
 		self.assertNotIn("recurringEventId", item)
 
+	def test_match_keeps_events_with_every_word(self):
+		krakow = vcal("BEGIN:VEVENT\r\nUID:k-1\r\nDTSTART:20261104T100000Z\r\nDTEND:20261104T110000Z\r\n"
+			"SUMMARY:Trip\r\nLOCATION:Kraków\r\nDESCRIPTION:<b>Train</b>&nbsp;tickets\r\nEND:VEVENT\r\n")
+		resources = [("/cal/single-1.ics", '"e1"', SINGLE), ("/cal/k-1.ics", '"e2"', krakow)]
+		for match, found in (("krakow TRAIN", ["Trip"]), ("standup room", ["Standup"]), ("train tickets", ["Trip"]),
+				("trip standup", []), ("b", []), ("", []), ("ROOM 1", ["Standup"])):
+			client = FakeClient([(207, {}, report_response(*resources))])
+			result = caldav.query(client, BASE + "/cal/", self.start, self.end, probe_ctag=False, match=match)
+			self.assertEqual([i["summary"] for i in result["items"]], found, match)
+			self.assertEqual(client.sent[0][0], "REPORT") # No change tag asked for
+
+	def test_match_skips_other_resources_and_keeps_the_nearest(self):
+		daily = vcal("BEGIN:VEVENT\r\nUID:d-1\r\nDTSTART:20250101T080000Z\r\nDTEND:20250101T083000Z\r\n"
+			"RRULE:FREQ=DAILY\r\nSUMMARY:Standup daily\r\nEND:VEVENT\r\n")
+		other = vcal("BEGIN:VEVENT\r\nUID:o-1\r\nDTSTART:20250101T080000Z\r\nDTEND:20250101T083000Z\r\n"
+			"RRULE:FREQ=DAILY\r\nSUMMARY:Lunch\r\nEND:VEVENT\r\n")
+		calls = []
+		real = caldav.resource_items
+
+		def counting(href, *args):
+			calls.append(href)
+			return real(href, *args)
+		client = FakeClient([(207, {}, report_response(("/cal/d-1.ics", '"e1"', daily), ("/cal/o-1.ics", '"e2"', other)))])
+		with mock.patch.object(caldav, "resource_items", counting):
+			result = caldav.query(client, BASE + "/cal/", datetime.datetime(2025, 11, 15), datetime.datetime(2027, 11, 15), probe_ctag=False, match="standup")
+		self.assertEqual(calls, [BASE + "/cal/d-1.ics"], "Lunch isn't expanded")
+		self.assertEqual(len(result["items"]), caldav.MAX_MATCHES)
+		now = datetime.datetime.now(datetime.timezone.utc)
+		far = max(abs(datetime.datetime.fromisoformat(i["start"]["dateTime"]) - now) for i in result["items"])
+		self.assertLess(far, datetime.timedelta(days=caldav.MAX_MATCHES), "the nearest to now")
+
 	def test_all_day_event(self):
 		item = self.run_query(("/cal/allday-1.ics", '"e2"', ALLDAY))[0]
 		self.assertEqual(item["start"], {"date": "2026-11-04"})
@@ -554,6 +597,49 @@ class PutTests(unittest.TestCase):
 		self.assertEqual(master["DTSTART"].dt.isoformat(), "2026-11-02T08:00:00+00:00")
 		self.assertEqual(str(override["SUMMARY"]), "Override")
 
+	ALARMS = vcal(
+		"BEGIN:VEVENT\r\nUID:al-1\r\nDTSTAMP:20261001T000000Z\r\nDTSTART:20261102T080000Z\r\n"
+		"DTEND:20261102T090000Z\r\nSUMMARY:Alarms\r\nTRANSP:OPAQUE\r\nCLASS:PUBLIC\r\nCOLOR:teal\r\n"
+		"BEGIN:VALARM\r\nACTION:DISPLAY\r\nTRIGGER:-PT15M\r\nDESCRIPTION:x\r\nEND:VALARM\r\n"
+		"BEGIN:VALARM\r\nACTION:AUDIO\r\nTRIGGER;RELATED=END:-PT2H\r\nEND:VALARM\r\n"
+		"BEGIN:VALARM\r\nACTION:EMAIL\r\nTRIGGER:-P1D\r\nSUMMARY:m\r\nDESCRIPTION:m\r\nATTENDEE:mailto:a@example.com\r\nEND:VALARM\r\n"
+		"BEGIN:VALARM\r\nACTION:DISPLAY\r\nTRIGGER:PT5M\r\nDESCRIPTION:after\r\nEND:VALARM\r\nEND:VEVENT\r\n")
+
+	def test_reminders_color_and_availability(self):
+		item = caldav.resource_items(BASE + "/cal/al-1.ics", '"e"', self.ALARMS, datetime.datetime(2026, 11, 1), datetime.datetime(2026, 11, 9))[0]
+		self.assertEqual(item["reminderMinutes"], [15, 60]) # RELATED=END: 2 h before the end, 1 h long
+		self.assertEqual((item["icalColor"], item["visibility"]), ("teal", "public"))
+		self.assertNotIn("transparency", item) # Busy, the default
+		data = {"reminders": {"useDefault": False, "overrides": [{"method": "popup", "minutes": 30}, {"method": "popup", "minutes": 0},
+			{"method": "email", "minutes": 99}]}, "caldavColor": "red", "transparency": "transparent", "visibility": "private"}
+		_, body = caldav.build_updated_calendar(self.ALARMS, data, stamp=self.stamp)
+		event = Calendar.from_ical(body).walk("VEVENT")[0]
+		alarms = event.walk("VALARM")
+		# The two shown as reminders replaced; the email and the one after the start kept.
+		self.assertEqual(sorted((str(a["ACTION"]), a["TRIGGER"].dt) for a in alarms), [
+			("DISPLAY", datetime.timedelta(minutes=-30)), ("DISPLAY", datetime.timedelta(0)),
+			("DISPLAY", datetime.timedelta(minutes=5)), ("EMAIL", datetime.timedelta(days=-1))])
+		self.assertEqual([str(a["DESCRIPTION"]) for a in alarms if a["TRIGGER"].dt == datetime.timedelta(minutes=-30)], ["Alarms"])
+		self.assertEqual((str(event["COLOR"]), str(event["TRANSP"]), str(event["CLASS"])), ("red", "TRANSPARENT", "PRIVATE"))
+		item = caldav.resource_items(BASE + "/cal/al-1.ics", '"e"', body, datetime.datetime(2026, 11, 1), datetime.datetime(2026, 11, 9))[0]
+		self.assertEqual((item["reminderMinutes"], item["transparency"], item["visibility"], item["icalColor"]),
+			([0, 30], "transparent", "private", "red"))
+		# None of them, and the calendar's color: removed; untouched without the keys.
+		_, body = caldav.build_updated_calendar(body, {"reminders": {"useDefault": False, "overrides": []},
+			"caldavColor": None, "visibility": "default"}, stamp=self.stamp)
+		event = Calendar.from_ical(body).walk("VEVENT")[0]
+		self.assertEqual(len(event.walk("VALARM")), 2)
+		self.assertNotIn("COLOR", event)
+		self.assertNotIn("CLASS", event)
+		_, body = caldav.build_updated_calendar(body, {"summary": "Only this"}, stamp=self.stamp)
+		self.assertEqual(len(Calendar.from_ical(body).walk("VEVENT")[0].walk("VALARM")), 2)
+		for bad in ({"caldavColor": "#ff0000"}, {"transparency": "busy"}, {"visibility": "secret"},
+				{"reminders": {"overrides": [{"method": "popup", "minutes": -5}]}},
+				{"reminders": {"overrides": [{"method": "popup", "minutes": m} for m in range(51)]}}):
+			with self.assertRaises(caldav.CalDavError) as ctx:
+				caldav.build_updated_calendar(self.ALARMS, bad, stamp=self.stamp)
+			self.assertEqual(ctx.exception.kind, "INPUT", bad)
+
 	def test_update_start_keeps_duration_and_recurrence_replacement(self):
 		_, body = caldav.build_updated_calendar(self.EXISTING, {"start": {"dateTime": "2026-11-02T10:00:00Z"}})
 		master = Calendar.from_ical(body).walk("VEVENT")[0]
@@ -617,10 +703,97 @@ class PutTests(unittest.TestCase):
 		self.assertTrue(err.getvalue().startswith("INPUT: "))
 
 	def test_delete(self):
-		client = FakeClient([(204, {}, "")])
-		self.assertEqual(caldav.delete_event(client, BASE + "/cal/x.ics", '"e"'), {"ok": True})
-		self.assertEqual(client.sent[0][:2], ("DELETE", BASE + "/cal/x.ics"))
-		self.assertEqual(client.sent[0][3]["If-Match"], '"e"')
+		client = FakeClient([(200, {}, self.EXISTING), (204, {}, "")])
+		result = caldav.delete_event(client, BASE + "/cal/x.ics", '"e"')
+		self.assertEqual([s[:2] for s in client.sent], [("GET", BASE + "/cal/x.ics"), ("DELETE", BASE + "/cal/x.ics")])
+		self.assertEqual(client.sent[1][3]["If-Match"], '"e"')
+		self.assertTrue(result["ok"])
+		self.assertRegex(result["undo"], "^[0-9a-f]{32}$")
+
+	def test_restore_puts_a_deleted_event_back_once(self):
+		client = FakeClient([(200, {}, self.EXISTING), (204, {}, "")])
+		token = caldav.delete_event(client, BASE + "/cal/x.ics", '"e"')["undo"]
+		undo_file = os.path.join(caldav.undo_dir(), token + ".json")
+		self.assertEqual(os.stat(undo_file).st_mode & 0o777, 0o600)
+		self.assertEqual(os.stat(caldav.undo_dir()).st_mode & 0o777, 0o700)
+		client = FakeClient([(201, {"ETag": '"back"'}, "")])
+		self.assertEqual(caldav.restore_event(client, token), {"href": BASE + "/cal/x.ics", "etag": '"back"'})
+		method, url, body, headers = client.sent[0]
+		self.assertEqual((method, url), ("PUT", BASE + "/cal/x.ics"))
+		self.assertEqual(headers["If-None-Match"], "*")
+		self.assertEqual(body.decode("utf-8"), self.EXISTING)
+		self.assertFalse(os.path.exists(undo_file))
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.restore_event(FakeClient([]), token)
+		self.assertEqual(ctx.exception.kind, "NOTFOUND")
+		for bad in ("", "../x", "A" * 32):
+			with self.assertRaises(caldav.CalDavError) as ctx:
+				caldav.restore_event(FakeClient([]), bad)
+			self.assertEqual(ctx.exception.kind, "INPUT")
+
+	def test_move_to_another_calendar(self):
+		client = FakeClient([(201, {}, ""), (207, {}, ms(resp("/other/x.ics", '<d:getetag>"m"</d:getetag>')))])
+		result = caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other")
+		self.assertEqual(result, {"href": BASE + "/other/x.ics", "etag": '"m"'})
+		method, url, _, headers = client.sent[0]
+		self.assertEqual((method, url), ("MOVE", BASE + "/cal/x.ics"))
+		self.assertEqual(headers["Destination"], BASE + "/other/x.ics")
+		self.assertEqual(headers["Overwrite"], "F")
+		self.assertEqual(headers["If-Match"], '"e"')
+		for to in ("https://elsewhere.example.com/cal/", BASE + "/cal/"):
+			with self.assertRaises(caldav.CalDavError) as ctx:
+				caldav.move_event(FakeClient([]), BASE + "/cal/x.ics", '"e"', to)
+			self.assertEqual(ctx.exception.kind, "INPUT")
+		# Changed meanwhile, or the name taken there: a conflict, nothing else tried.
+		client = FakeClient([(412, {}, "")])
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other/")
+		self.assertEqual(ctx.exception.kind, "CONFLICT")
+		self.assertEqual(len(client.sent), 1)
+
+	def test_move_without_server_support_copies_and_deletes(self):
+		client = FakeClient([(405, {}, ""), (200, {}, self.EXISTING), (201, {"ETag": '"c"'}, ""), (204, {}, "")])
+		result = caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other/")
+		self.assertEqual(result, {"href": BASE + "/other/x.ics", "etag": '"c"'})
+		self.assertEqual([s[:2] for s in client.sent], [("MOVE", BASE + "/cal/x.ics"), ("GET", BASE + "/cal/x.ics"),
+			("PUT", BASE + "/other/x.ics"), ("DELETE", BASE + "/cal/x.ics")])
+		self.assertEqual(client.sent[2][3]["If-None-Match"], "*")
+		self.assertEqual(client.sent[2][2].decode("utf-8"), self.EXISTING)
+		self.assertEqual(client.sent[3][3]["If-Match"], '"e"')
+		# 403 for MOVE (not between these calendars): copied too.
+		client = FakeClient([(403, {}, ""), (200, {}, self.EXISTING), (201, {"ETag": '"c"'}, ""), (204, {}, "")])
+		self.assertEqual(caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other/")["href"], BASE + "/other/x.ics")
+		# The original already gone: moved. No answer to its delete: the copy stays (never in neither).
+		client = FakeClient([(405, {}, ""), (200, {}, self.EXISTING), (201, {"ETag": '"c"'}, ""), (404, {}, "")])
+		self.assertEqual(caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other/")["etag"], '"c"')
+		client = FakeClient([(405, {}, ""), (200, {}, self.EXISTING), (201, {"ETag": '"c"'}, "")])
+		client._send_orig = client._send
+
+		def timeout_on_delete(method, url, body, headers, client=client):
+			if method == "DELETE":
+				client.sent.append((method, url, body, dict(headers or {})))
+				raise caldav.CalDavError("NETWORK", "The server did not answer in time")
+			return client._send_orig(method, url, body, headers)
+		client._send = timeout_on_delete
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other/")
+		self.assertEqual(ctx.exception.kind, "NETWORK")
+		self.assertEqual([m for m, *_ in client.sent].count("DELETE"), 1, "the copy isn't deleted")
+		# The original changed meanwhile: the copy is removed again.
+		client = FakeClient([(501, {}, ""), (200, {}, self.EXISTING), (201, {"ETag": '"c"'}, ""), (412, {}, ""), (204, {}, "")])
+		with self.assertRaises(caldav.CalDavError) as ctx:
+			caldav.move_event(client, BASE + "/cal/x.ics", '"e"', BASE + "/other/")
+		self.assertEqual(ctx.exception.kind, "CONFLICT")
+		self.assertEqual(client.sent[4][:2], ("DELETE", BASE + "/other/x.ics"))
+		self.assertEqual(client.sent[4][3]["If-Match"], '"c"')
+
+	def test_old_undo_files_are_removed(self):
+		token = caldav.save_undo({"href": BASE + "/cal/x.ics", "body": "", "etag": ""})
+		undo_file = os.path.join(caldav.undo_dir(), token + ".json")
+		old = os.path.getmtime(undo_file) - caldav.UNDO_MAX_AGE - 10
+		os.utime(undo_file, (old, old))
+		caldav.save_undo({"href": BASE + "/cal/y.ics", "body": "", "etag": ""})
+		self.assertFalse(os.path.exists(undo_file))
 
 
 # Weekly on Mondays at 10:00 in Berlin from 19 Oct 2026, over the end of summer time (25 Oct): one
@@ -864,6 +1037,23 @@ class RecurringEditTests(unittest.TestCase):
 		self.assertEqual(len(caldav.overrides(Calendar.from_ical(body))), 2)
 		self.assertIn(b"EXDATE", body)
 
+	def test_series_extras_reach_overrides_that_kept_them(self):
+		# 26 Oct's override kept the series' alarm (copied); 9 Nov's got its own color.
+		body = BERLIN.replace("SUMMARY:Team\r\nLOCATION:Room 2\r\nEND:VEVENT\r\nEND:VCALENDAR",
+			"SUMMARY:Team\r\nLOCATION:Room 2\r\nCOLOR:teal\r\nEND:VEVENT\r\nEND:VCALENDAR")
+		body = body.replace("SUMMARY:Team (renamed)\r\nLOCATION:Room 2\r\n",
+			"SUMMARY:Team (renamed)\r\nLOCATION:Room 2\r\nBEGIN:VALARM\r\nACTION:DISPLAY\r\nTRIGGER:-PT10M\r\nDESCRIPTION:x\r\nEND:VALARM\r\n")
+		_, out = caldav.build_updated_calendar(body, {"reminders": {"useDefault": False, "overrides": [{"method": "popup", "minutes": 60}]},
+			"caldavColor": "red", "transparency": "transparent"}, stamp=datetime.datetime(2026, 10, 1, tzinfo=datetime.timezone.utc))
+		master, renamed, moved = Calendar.from_ical(out).walk("VEVENT")
+		minutes = lambda e: [a["TRIGGER"].dt for a in e.walk("VALARM")]
+		self.assertEqual(minutes(master), [datetime.timedelta(minutes=-60)])
+		self.assertEqual(minutes(renamed), [datetime.timedelta(minutes=-60)], "had the series' alarm")
+		self.assertEqual(minutes(moved), [], "had none of its own: the series' old one was 10 min, not none")
+		self.assertEqual((str(master["COLOR"]), str(renamed["COLOR"]), str(moved["COLOR"])), ("red", "red", "teal"))
+		self.assertEqual([str(e["TRANSP"]) for e in (master, renamed, moved)], ["TRANSPARENT"] * 3)
+		self.assertEqual(int(moved["SEQUENCE"]), 1, "changed: stamped")
+
 	def test_changed_overrides_are_stamped(self):
 		_, body = caldav.build_updated_calendar(BERLIN, {
 			"start": {"dateTime": "2026-10-20T11:00:00", "timeZone": "Europe/Berlin"},
@@ -890,9 +1080,10 @@ class RecurringEditTests(unittest.TestCase):
 		self.assertEqual(series["start"], {"dateTime": "2026-10-19T10:00:00+02:00", "timeZone": "Europe/Berlin"})
 		self.assertEqual(series["recurrence"], ["RRULE:FREQ=WEEKLY;COUNT=6", "EXDATE:20261102T090000Z"])
 		self.assertEqual((series["caldavHref"], series["caldavEtag"]), (BASE + "/cal/berlin-1.ics", '"v1"'))
-		with self.assertRaises(caldav.CalDavError) as ctx:
-			caldav.get_series(FakeClient([(200, {"ETag": '"v1"'}, SINGLE)]), BASE + "/cal/single-1.ics")
-		self.assertEqual(ctx.exception.kind, "PROTOCOL")
+		# A single event too (eg: changed right after a move, before it's loaded there).
+		single = caldav.get_series(FakeClient([(200, {"ETag": '"v1"'}, SINGLE)]), BASE + "/cal/single-1.ics")
+		self.assertEqual((single["id"], single["caldavEtag"]), ("single-1", '"v1"'))
+		self.assertNotIn("recurrence", single)
 
 	def test_occurrence_requests(self):
 		rid = berlin(11, 16, 10)
@@ -905,7 +1096,14 @@ class RecurringEditTests(unittest.TestCase):
 		result = caldav.delete_event(client, BASE + "/cal/berlin-1.ics", '"v2"', rid)
 		self.assertEqual([s[0] for s in client.sent], ["GET", "PUT"])
 		self.assertEqual(client.sent[1][3]["If-Match"], '"v2"')
+		token = result.pop("undo")
 		self.assertEqual(result, {"ok": True, "href": BASE + "/cal/berlin-1.ics", "etag": '"v3"'})
+		# Undo: the series as it was, unless it changed since the delete.
+		client = FakeClient([(204, {"ETag": '"v4"'}, "")])
+		self.assertEqual(caldav.restore_event(client, token)["etag"], '"v4"')
+		self.assertEqual(client.sent[0][3]["If-Match"], '"v3"')
+		self.assertNotIn("If-None-Match", client.sent[0][3])
+		self.assertEqual(client.sent[0][2].decode("utf-8"), BERLIN)
 		with self.assertRaises(caldav.CalDavError) as ctx:
 			caldav.put_event(FakeClient([]), BASE + "/cal/", {"summary": "x"}, recurrence_id=rid)
 		self.assertEqual(ctx.exception.kind, "INPUT")

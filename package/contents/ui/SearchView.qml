@@ -9,7 +9,8 @@ import "EventSearch.js" as EventSearch
 import "Tasks.js" as Tasks
 
 // Search events by title, location and description: the loaded events right away, then Google
-// Calendar a year back and ahead (the server also matches guests and other fields). The loaded
+// Calendar (the server also matches guests and other fields) and the CalDAV calendars a year back
+// and ahead. The loaded
 // tasks that match (title, notes) come first, as task rows (a click opens the task).
 Item {
 	id: searchView
@@ -30,7 +31,7 @@ Item {
 	property bool searching: false
 	property bool remoteFailed: false
 	property int generation: 0 // Answers to older queries are ignored.
-	property bool canSearchRemote: false // Any calendar that can be searched on the server (Google)
+	property bool canSearchRemote: false // Any calendar that can be searched beyond the loaded range (Google, CalDAV)
 
 	readonly property var localResults: {
 		var _ = eventModel.eventsData // Search again when events are refetched.
@@ -102,9 +103,7 @@ Item {
 
 	Keys.onEscapePressed: closeRequested()
 	Component.onCompleted: {
-		canSearchRemote = eventModel.calendarManagerList.some(function(m) {
-			return typeof m.searchEvents === 'function'
-		})
+		canSearchRemote = eventModel.calendarManagerList.some(eventModel.canSearch)
 		searchField.forceActiveFocus()
 	}
 
@@ -335,8 +334,8 @@ Item {
 						opacity: 0.6
 						font: Kirigami.Theme.smallFont
 						text: searchView.remoteFailed
-							? i18n("Couldn't search Google Calendar")
-							: i18n("Searching Google Calendar…")
+							? i18n("Couldn't search the online calendars")
+							: i18n("Searching the online calendars…")
 					}
 				}
 			}

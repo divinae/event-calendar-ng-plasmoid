@@ -10,6 +10,7 @@ msgstr ""
 "eventcalendar\n"
 "POT-Creation-Date: 2026-11-15 19:16+0100\n"
 "POT-Creation-Date: 2026-11-15 14:39+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: 2019-10-30 13:29+0900\n"
 "Last-Translator: Mathieu Provençal <mth.provencal@gmail.com>\n"
 "Language-Team: French <LL@li.org>\n"
@@ -4297,12 +4298,12 @@ msgid "Show more"
 msgstr "Afficher plus"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Impossible de chercher dans Google Calendar"
+msgid "Couldn't search the online calendars"
+msgstr "Impossible de chercher dans les agendas en ligne"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Recherche dans Google Calendar…"
+msgid "Searching the online calendars…"
+msgstr "Recherche dans les agendas en ligne…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4913,6 +4914,12 @@ msgstr "Plus d'événements aujourd'hui"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Lieu de travail : %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Impossible de chercher dans Google Calendar"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Recherche dans Google Calendar…"
 
 #~ msgid ""
 #~ "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "

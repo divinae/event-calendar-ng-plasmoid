@@ -10,6 +10,7 @@ msgstr ""
 "eventcalendar\n"
 "POT-Creation-Date: 2026-11-15 19:16+0100\n"
 "POT-Creation-Date: 2026-11-15 14:39+0100\n"
+"POT-Creation-Date: 2026-11-15 18:26+0100\n"
 "PO-Revision-Date: 2022-04-05 13:49+0200\n"
 "Last-Translator: Heimen Stoffels <vistausss@fastmail.com>\n"
 "Language-Team: Dutch <>\n"
@@ -4283,12 +4284,12 @@ msgid "Show more"
 msgstr "Meer tonen"
 
 #: ../contents/ui/SearchView.qml
-msgid "Couldn't search Google Calendar"
-msgstr "Kan niet zoeken in Google Agenda"
+msgid "Couldn't search the online calendars"
+msgstr "Kan niet zoeken in de online agenda's"
 
 #: ../contents/ui/SearchView.qml
-msgid "Searching Google Calendar…"
-msgstr "Zoeken in Google Agenda…"
+msgid "Searching the online calendars…"
+msgstr "Zoeken in de online agenda's…"
 
 #: ../contents/ui/TaskCheck.qml ../contents/ui/TaskDetailsBody.qml
 msgid "Mark as not done"
@@ -4900,6 +4901,12 @@ msgstr "Vandaag geen afspraken meer"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "Werklocatie: %1"
+
+#~ msgid "Couldn't search Google Calendar"
+#~ msgstr "Kan niet zoeken in Google Agenda"
+
+#~ msgid "Searching Google Calendar…"
+#~ msgstr "Zoeken in Google Agenda…"
 
 #~ msgid ""
 #~ "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and "
