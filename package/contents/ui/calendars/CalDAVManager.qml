@@ -222,6 +222,13 @@ CalendarManager {
 						return
 					}
 					calendarParsing(calendar.id, data)
+					// Changed and deleted through the loaded copy (its etag, its occurrence): hits
+					// outside the loaded range only show their details.
+					data.items.forEach(function(item) {
+						if (!getEvent(calendar.id, item.id)) {
+							item.canEdit = false
+						}
+					})
 					done(null, data.items)
 				})
 			}
@@ -248,8 +255,9 @@ CalendarManager {
 			// Its own color (COLOR): one of Google's event colors, else the CSS color as it is.
 			event.colorId = CalDAVColors.colorIdOf(event.icalColor)
 			event.backgroundColor = event.colorId ? eventColor(event.colorId) : (event.icalColor || calendar.backgroundColor)
-			// Its alarms are its own (as Google's reminders), also so a copy (EventCopy, Undo) keeps them.
-			event.reminderOwn = Shared.isList(event.reminderMinutes) && Shared.toArray(event.reminderMinutes).length > 0
+			// Its alarms, for the editor and a copy (EventCopy, Undo). They decide when it's notified
+			// only with "Use the reminder times set in the calendar" (UpcomingEvents.reminderMinutesFor):
+			// many apps put an alarm on every event. No reminderOwn, so the widget's default otherwise.
 			event.reminders = { useDefault: false, overrides: Shared.toArray(event.reminderMinutes).map(function(minutes) {
 				return { method: 'popup', minutes: minutes }
 			}) }
