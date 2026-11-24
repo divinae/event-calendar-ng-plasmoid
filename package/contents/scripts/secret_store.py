@@ -95,6 +95,63 @@ def kwallet_query_path() -> str | None:
     return shutil.which("kwallet-query")
 
 
+KWALLET_DBUS = (("org.kde.kwalletd6", "/modules/kwalletd6"), ("org.kde.kwalletd5", "/modules/kwalletd5"))
+
+
+def qdbus_path() -> str | None:
+    """qdbus of Qt 6 (qdbus6 on Debian/Ubuntu/Arch, qdbus-qt6 on Fedora), else plain qdbus."""
+    return shutil.which("qdbus6") or shutil.which("qdbus-qt6") or shutil.which("qdbus")
+
+
+def kwallet_dbus(service: str, path: str, method: str, *args: str) -> str | None:
+    """One org.kde.KWallet call through qdbus: its output, or None when it failed.
+    Never pass a secret here: the arguments are visible in the process list."""
+    qdbus = qdbus_path()
+    if not qdbus:
+        return None
+    try:
+        proc = subprocess.run([qdbus, service, path, "org.kde.KWallet." + method, *args],
+                              text=True, capture_output=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return proc.stdout.strip() if proc.returncode == 0 else None
+
+
+def with_kwallet_handle(wallet_name: str, action):
+    """Runs action(service, path, handle) with the wallet opened over D-Bus; None if it can't open."""
+    for service, path in KWALLET_DBUS:
+        handle = kwallet_dbus(service, path, "open", wallet_name, "0", APP_ID)
+        if handle is None or not handle.lstrip("-").isdigit() or int(handle) < 0:
+            continue
+        try:
+            return action(service, path, handle)
+        finally:
+            kwallet_dbus(service, path, "close", handle, "false", APP_ID)
+    return None
+
+
+def ensure_kwallet_entry(wallet_name: str, entry: str) -> tuple[bool, bool]:
+    """kwallet-query -w only overwrites an existing password entry: for a new one (or a missing
+    folder) it writes nothing and still exits 0. So the folder and a placeholder entry are made
+    over D-Bus first, and kwallet-query then writes the secret from stdin (never on argv).
+    Returns (ok, created): created when the placeholder was written here."""
+    def action(service, path, handle):
+        if kwallet_dbus(service, path, "hasFolder", handle, KWALLET_FOLDER, APP_ID) != "true":
+            if kwallet_dbus(service, path, "createFolder", handle, KWALLET_FOLDER, APP_ID) != "true":
+                return False, False
+        if kwallet_dbus(service, path, "hasEntry", handle, KWALLET_FOLDER, entry, APP_ID) == "true":
+            return True, False
+        ok = kwallet_dbus(service, path, "writePassword", handle, KWALLET_FOLDER, entry,
+                          "placeholder", APP_ID) == "0"
+        return ok, ok
+    return with_kwallet_handle(wallet_name, action) or (False, False)
+
+
+def remove_kwallet_entry(wallet_name: str, entry: str) -> None:
+    with_kwallet_handle(wallet_name, lambda service, path, handle: kwallet_dbus(
+        service, path, "removeEntry", handle, KWALLET_FOLDER, entry, APP_ID))
+
+
 def detect_kwallet_name(kwallet_query: str) -> str | None:
     for wallet_name in KWALLET_NAMES:
         proc = subprocess.run(
@@ -114,19 +171,30 @@ def store_with_kwallet(attributes: list[tuple[str, str]], value: str) -> tuple[b
     wallet_name = detect_kwallet_name(kwallet_query)
     if not wallet_name:
         return False, "No supported KWallet is available or unlocked."
+    entry = kwallet_entry_name(attributes)
+    created = False
+    if qdbus_path():
+        ok, created = ensure_kwallet_entry(wallet_name, entry)
+        if not ok:
+            return False, "Couldn't create the KWallet entry (folder {}) over D-Bus.".format(KWALLET_FOLDER)
+    # Without qdbus kwallet-query can still overwrite an existing entry; the read back tells.
     cmd = [
         kwallet_query,
         "-f",
         KWALLET_FOLDER,
         "-w",
-        kwallet_entry_name(attributes),
+        entry,
         wallet_name,
     ]
     proc = subprocess.run(cmd, input=value, text=True, capture_output=True)
-    if proc.returncode == 0:
+    # kwallet-query exits 0 even when it wrote nothing: read the value back to be sure.
+    if proc.returncode == 0 and lookup_with_kwallet(attributes) == (True, value):
         return True, ""
-    detail = (proc.stderr or proc.stdout or "").strip()
-    return False, "kwallet-query failed{}".format(": " + detail if detail else ".")
+    if created:
+        remove_kwallet_entry(wallet_name, entry)
+    detail = (proc.stderr or proc.stdout or "").strip() or (
+        "the value read back differs" if qdbus_path() else "a new entry needs qdbus6 (qdbus-qt6) to be created")
+    return False, "kwallet-query failed: {}".format(detail)
 
 
 def lookup_with_kwallet(attributes: list[tuple[str, str]]) -> tuple[bool, str]:
@@ -157,16 +225,17 @@ def clear_with_kwallet(attributes: list[tuple[str, str]]) -> bool:
     wallet_name = detect_kwallet_name(kwallet_query)
     if not wallet_name:
         return False
-    cmd = [
-        kwallet_query,
-        "-f",
-        KWALLET_FOLDER,
-        "-w",
-        kwallet_entry_name(attributes),
-        wallet_name,
-    ]
-    proc = subprocess.run(cmd, input="", text=True, capture_output=True)
-    return proc.returncode == 0
+    # Removed over D-Bus (kwallet-query can't remove; writing "" left an empty secret that a
+    # lookup then "found"). removeEntry answers 0 when it removed one.
+    entry = kwallet_entry_name(attributes)
+    if not qdbus_path():
+        # No qdbus: emptied as before (better than the secret staying).
+        proc = subprocess.run([kwallet_query, "-f", KWALLET_FOLDER, "-w", entry, wallet_name],
+                              input="", text=True, capture_output=True)
+        return proc.returncode == 0
+    result = with_kwallet_handle(wallet_name, lambda service, path, handle: kwallet_dbus(
+        service, path, "removeEntry", handle, KWALLET_FOLDER, entry, APP_ID))
+    return result == "0"
 
 
 def store_secret(attributes: list[tuple[str, str]], label: str, value: str) -> tuple[bool, str]:
