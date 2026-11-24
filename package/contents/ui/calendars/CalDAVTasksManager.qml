@@ -8,7 +8,6 @@ import "../TaskLists.js" as TaskLists
 import "../Tasks.js" as Tasks
 import "../lib"
 import "../lib/Base64Compat.js" as Base64Compat
-import "CalDAVErrors.js" as CalDAVErrors
 
 // The task lists of one CalDAV account (Nextcloud Tasks, …): its calendars for tasks (VTODO) picked
 // in Settings > Calendars > CalDAV, through scripts/caldav.py (fields: scripts/vtodo.py). Same
@@ -24,11 +23,17 @@ CalendarManager {
 	readonly property string accountLabel: account ? String(account.label || account.username || "") : ""
 	property string helperPath: ScriptPath.scriptPath("caldav.py")
 
-	ExecUtil { id: executable }
 	Logger {
 		id: logger
 		name: "eventcalendar-caldav-tasks"
 		showDebug: plasmoid.configuration.debugging
+	}
+	CalDAVHelper {
+		id: caldavHelper
+		helperPath: caldavTasksManager.helperPath
+		helperLogger: logger
+		logName: "caldavTasks"
+		onKeyringRetry: caldavTasksManager.fetchAll() // The lists again, as at login
 	}
 
 	function listIdOf(calendar) {
@@ -62,47 +67,13 @@ CalendarManager {
 	}
 
 	//--- The helper
-	function helperError(stderr) {
-		var parsed = CalDAVErrors.parse(stderr)
-		if (parsed.kind === "AUTH") {
-			return { kind: parsed.kind, message: i18n("CalDAV: %1 didn't accept the user name or password", accountLabel) }
-		}
-		if (parsed.kind === "NETWORK") {
-			return { kind: parsed.kind, message: i18n("Could not connect") }
-		}
-		if (parsed.kind === "KEYRING") {
-			return { kind: parsed.kind, message: i18n("CalDAV: the password couldn't be read from the keyring") }
-		}
-		if (parsed.kind === "DEPS") {
-			return { kind: parsed.kind, message: i18n("CalDAV needs Python modules: install them in Settings > Calendars > CalDAV") }
-		}
-		if (parsed.kind === "CONFLICT") {
-			return { kind: parsed.kind, message: i18n("The event was changed elsewhere meanwhile; it's loaded again") }
-		}
-		return { kind: parsed.kind, message: i18n("CalDAV: %1", parsed.text || i18n("Unknown error")) }
-	}
 	// helper(args, callback(err, data)): caldav.py with this account (the password stays in the keyring).
 	function helper(args, callback) {
 		if (!account) {
 			callback({ kind: "INPUT", message: i18n("CalDAV: %1", i18n("Unknown error")) }, null)
 			return
 		}
-		var argv = ['python3', helperPath].concat(args).concat(['--account', account.id, '--user', String(account.username || '')])
-		executable.execArgv(argv, function(cmd, exitCode, exitStatus, stdout, stderr) {
-			if (exitCode) {
-				logger.log('caldavTasks.helperError', args[0], exitCode) // No task data or URLs in logs
-				callback(helperError(stderr), null)
-				return
-			}
-			var data
-			try {
-				data = JSON.parse(stdout)
-			} catch (e) {
-				callback({ kind: "PROTOCOL", message: i18n("CalDAV: an unexpected answer") }, null)
-				return
-			}
-			callback(null, data)
-		})
+		caldavHelper.run(args, account.id, account.username, accountLabel, callback)
 	}
 	function report(err) {
 		caldavTasksManager.error(err.message, err.kind === "NETWORK" ? ErrorType.NetworkError : ErrorType.UnknownError)
@@ -142,9 +113,12 @@ CalendarManager {
 			try {
 				if (err) {
 					restorePreviousCalendar(list.id)
-					report(err)
+					if (!caldavHelper.retryKeyring(err)) { // Quietly: at login the keyring may not be up yet
+						report(err)
+					}
 					return
 				}
+				caldavHelper.keyringRead()
 				if (data && data.unchanged && previous) {
 					setCalendarData(list.id, previous)
 					return

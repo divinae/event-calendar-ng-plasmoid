@@ -10,7 +10,6 @@ import "../Shared.js" as Shared
 import "../code/ColorIdMap.js" as ColorIdMap
 import "../code/GooglePalette.js" as GooglePalette
 import "CalDAVColors.js" as CalDAVColors
-import "CalDAVErrors.js" as CalDAVErrors
 
 // CalDAV calendars (Nextcloud, Fastmail, iCloud, Radicale, …) through scripts/caldav.py: the
 // selected calendars of the accounts in caldavAccounts (Settings > Calendars > CalDAV), read for the shown
@@ -25,7 +24,6 @@ CalendarManager {
 	calendarManagerId: "CalDAV"
 	property var accounts: [] // caldavAccounts: [{ id, label, url, username, calendars: [{ href, name, color, writable, selected, userColor }] }]
 
-	ExecUtil { id: executable }
 	Logger {
 		id: logger
 		name: "eventcalendar-caldav"
@@ -33,6 +31,17 @@ CalendarManager {
 	}
 
 	property string helperPath: ScriptPath.scriptPath("caldav.py") // (A test harness points it elsewhere)
+	CalDAVHelper {
+		id: caldavHelper
+		helperPath: caldavManager.helperPath
+		helperLogger: logger
+		logName: "caldav"
+		onKeyringRetry: {
+			if (caldavManager.dateMin < caldavManager.dateMax) {
+				caldavManager.fetchAll() // The last range
+			}
+		}
+	}
 
 	// The URLs of the calendars whose last read worked (Akonadi's copies of these are left out,
 	// PlasmaCalendarManager.caldavCalendarUrls). A new array only when it changes.
@@ -84,47 +93,9 @@ CalendarManager {
 		return out
 	}
 
-	// The helper's error (CalDAVErrors.parse) as a message for the user.
-	function helperError(stderr, calendarName) {
-		var parsed = CalDAVErrors.parse(stderr)
-		var kind = parsed.kind
-		var text = parsed.text
-		if (kind === "AUTH") {
-			return { kind: kind, message: i18n("CalDAV: %1 didn't accept the user name or password", calendarName) }
-		}
-		if (kind === "NETWORK") {
-			return { kind: kind, message: i18n("Could not connect") }
-		}
-		if (kind === "KEYRING") {
-			return { kind: kind, message: i18n("CalDAV: the password couldn't be read from the keyring") }
-		}
-		if (kind === "DEPS") {
-			return { kind: kind, message: i18n("CalDAV needs Python modules: install them in Settings > Calendars > CalDAV") }
-		}
-		if (kind === "CONFLICT") {
-			return { kind: kind, message: i18n("The event was changed elsewhere meanwhile; it's loaded again") }
-		}
-		return { kind: kind, message: i18n("CalDAV: %1", text || i18n("Unknown error")) }
-	}
-
 	// helper(args, calendar, callback(err, data)): runs caldav.py with the calendar's account.
 	function helper(args, calendar, callback) {
-		var argv = ['python3', helperPath].concat(args).concat(['--account', calendar.accountId, '--user', calendar.username])
-		executable.execArgv(argv, function(cmd, exitCode, exitStatus, stdout, stderr) {
-			if (exitCode) {
-				logger.log('caldav.helperError', args[0], exitCode) // No event data or URLs in logs
-				callback(helperError(stderr, calendar.summary), null)
-				return
-			}
-			var data
-			try {
-				data = JSON.parse(stdout)
-			} catch (e) {
-				callback({ kind: "PROTOCOL", message: i18n("CalDAV: an unexpected answer") }, null)
-				return
-			}
-			callback(null, data)
-		})
+		caldavHelper.run(args, calendar.accountId, calendar.username, calendar.summary, callback)
 	}
 
 	// The event's fields as the helper takes them (Google style), base64 JSON on its command line.
@@ -140,21 +111,6 @@ CalendarManager {
 			body.caldavColor = CalDAVColors.cssName(fields.colorId)
 		}
 		return Base64Compat.base64EncodeString(JSON.stringify(body)) // UTF-8
-	}
-
-	// The keyring couldn't be read (KEYRING): at login the Secret Service or KWallet may answer only
-	// a little after the widget's first fetch. Fetched again a few times before it's an error.
-	Timer {
-		id: keyringRetry
-		property int attempts: 0
-		readonly property int maxAttempts: 6
-		interval: 15000
-		onTriggered: {
-			attempts += 1
-			if (caldavManager.dateMin < caldavManager.dateMax) {
-				caldavManager.fetchAll() // The last range
-			}
-		}
 	}
 
 	//--- Reading
@@ -183,14 +139,13 @@ CalendarManager {
 				setRead(calendar.caldavHref, !err)
 				if (err) {
 					restorePreviousCalendar(calendarId) // Keep what was shown
-					if (err.kind === "KEYRING" && keyringRetry.attempts < keyringRetry.maxAttempts) {
-						keyringRetry.start() // Quietly: at login the keyring may not be up yet
-						return
+					if (caldavHelper.retryKeyring(err)) {
+						return // Quietly: at login the keyring may not be up yet
 					}
 					caldavManager.error(err.message, err.kind === "NETWORK" ? ErrorType.NetworkError : ErrorType.UnknownError)
 					return
 				}
-				keyringRetry.attempts = 0
+				caldavHelper.keyringRead()
 				if (data && data.unchanged && previous) {
 					setCalendarData(calendarId, previous) // This range's, current; parsed again
 					return
