@@ -1,3 +1,24 @@
+## v1.24.0 - November 24 2026
+
+Thanks to Thokas (#47–#53).
+
+### CalDAV
+* **Repeating events can be changed and deleted** in the widget, for this event or the whole series: a moved series takes its exceptions and changed occurrences along, also over daylight saving changes (#49).
+* **Undo after deleting** an event, an occurrence or a whole series; the guests of a meeting get the restored event too (#50).
+* **Move an event or a series to another calendar** of the same account, in the editor (#50).
+* **Search finds CalDAV events** a year back and ahead (#50).
+* **The editor sets reminders, the event's color, show as busy / free and visibility** for CalDAV events, new ones too (#50, #52). Alarms of other kinds (eg: email) stay as they are. The calendar's reminders decide the notification times only with "Use the reminder times set in the calendar" (Settings > Events), as before.
+* **Task lists** (Nextcloud Tasks and others) in the Tasks tab: picked in Settings > Calendars > CalDAV; tasks added, edited, checked off, deleted with Undo, moved between lists, subtasks under their parent; a checked repeating task moves on to its next date (#51). Lists that hold only tasks can be made, renamed, recolored and deleted; a calendar that also has events is never deleted from the Tasks tab. Accounts added before: Refresh the calendars to find their task lists.
+* **Account and list changes** fetch only the CalDAV calendars again, not Google.
+
+### KDE PIM (Akonadi)
+* **Akonadi's copies of the CalDAV tab's calendars are left out**, so a Nextcloud set up in both no longer shows its events twice (#48).
+* **Akonadi on SQLite** (its default) gives calendar colors and the Google calendars' grouping too, as PostgreSQL did (#48).
+
+### Fixes
+* **KWallet stores new passwords** (a first sign-in): before, the entry was never made, and the password was taken as saved (#47).
+* **No plasmashell crash** from the commands the widget runs (seen on Plasma 6.6 / Qt 6.10 with CalDAV) (#53).
+
 ## v1.23.1 - November 14 2026
 
 Thanks to frispete (#44–#46).

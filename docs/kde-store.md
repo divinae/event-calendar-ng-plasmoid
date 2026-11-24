@@ -28,7 +28,7 @@ version, the changelog and the file for each release.
 
 **Version**
 
-    1.23.1
+    1.24.0
 
 **License**
 
@@ -89,6 +89,17 @@ Bugs and ideas: https://github.com/divinae/event-calendar-ng-plasmoid/issues
 
 Support: https://ko-fi.com/divinae4535
 Made with AI: the changes in this fork are mostly written with Claude, Anthropic's AI assistant. I decide what goes in and review every change before a release.
+```
+
+**Changelog (1.24.0)**
+
+```
+- CalDAV: repeating events changed and deleted (this event or the series), Undo, moves between calendars, search
+- CalDAV editor: reminders, color, show as busy / free, visibility
+- CalDAV task lists (Nextcloud Tasks and others) in the Tasks tab
+- KDE PIM: Akonadi's copies of CalDAV calendars left out; colors on SQLite too
+- KWallet stores new passwords; a plasmashell crash fixed
+- Thanks to Thokas
 ```
 
 **Changelog (1.23.1)**
@@ -237,8 +248,8 @@ Made with AI: the changes in this fork are mostly written with Claude, Anthropic
 
 ## Files
 
-- **Product file:** `eventcalendar-ng-v1.23.1.plasmoid` from the
-  [v1.23.1 release](https://github.com/divinae/event-calendar-ng-plasmoid/releases/tag/v1.23.1),
+- **Product file:** `eventcalendar-ng-v1.24.0.plasmoid` from the
+  [v1.24.0 release](https://github.com/divinae/event-calendar-ng-plasmoid/releases/tag/v1.24.0),
   or `./build`.
 - **Screenshots** (`docs/screenshots/`, mock data; the store takes at most 5), in this order:
   1. `month.png` (the cover)
