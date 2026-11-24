@@ -501,10 +501,11 @@ CalendarManager {
 		var calendar = getCalendar(calendarId)
 		var key = calendarId + '\n' + eventId
 		var token = undoTokens[key]
-		// The copy as a new event only when there's nothing to restore: after a network error or a
-		// conflict the resource may be back already.
+		// The copy as a new event only when there's nothing to restore (NOTFOUND, or no token): after
+		// a network error, a conflict or a helper that died without saying why (no kind) the
+		// resource may be back already.
 		var fallback = function(report, kind) {
-			if (copy && calendar && (!kind || kind === 'NOTFOUND')) {
+			if (copy && calendar && kind === 'NOTFOUND') {
 				createEventFromData(calendarId, copy, done)
 			} else {
 				report()
@@ -512,7 +513,7 @@ CalendarManager {
 			}
 		}
 		if (!calendar || !token) {
-			fallback(function() { reportError(i18n("CalDAV: %1", i18n("Unknown error"))) })
+			fallback(function() { reportError(i18n("CalDAV: %1", i18n("Unknown error"))) }, 'NOTFOUND')
 			return
 		}
 		// The token stays until it worked: a restore that failed (offline) can be tried again.
