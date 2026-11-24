@@ -18,25 +18,22 @@ Rectangle {
 
 	function offer(task) {
 		item = task
-		offered = { calendarId: task.calendarId, id: task.id, due: dueKey(task) }
+		offered = { calendarId: task.calendarId, id: task.id }
 		shown = true
 		extensions = 0
 		timer.restart()
 	}
-	// The checked task as it was when offered (the loaded item may be changed in place once saved).
+	// The checked task (the loaded item may be changed in place once saved).
 	property var offered: null
-	function dueKey(task) {
-		return String(task && task.due || '') + ' ' + String(task && task.dueTime || '')
-	}
-	// A repeating task (CalDAV) comes back saved still open, moved on to its next due date: Undo
-	// would only mark it not done again and leave the skipped date behind, so it isn't offered.
+	// A repeating task (CalDAV) comes back saved still open, moved on to its next date (its due, or
+	// only its start): Undo would only mark it not done again and leave the skipped date behind, so
+	// it isn't offered. Any saved copy not done after the check means the same.
 	Connections {
 		target: undoBar.eventModel
 		enabled: undoBar.shown && !!undoBar.offered
 		function onEventUpdated(calendarId, eventId, data) {
 			var was = undoBar.offered
-			if (was && calendarId === was.calendarId && eventId === was.id && data
-					&& !Tasks.isDone(data) && undoBar.dueKey(data) !== was.due) {
+			if (was && calendarId === was.calendarId && eventId === was.id && data && !Tasks.isDone(data)) {
 				undoBar.shown = false
 				undoBar.item = null
 				undoBar.offered = null
