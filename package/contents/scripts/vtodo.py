@@ -21,6 +21,9 @@ import icsjson
 COMPLETED_DAYS = 30  # Done tasks shown: completed in the last 30 days (as Tasks.COMPLETED_DAYS)
 MAX_REMINDERS = 5
 MAX_REMINDER_MINUTES = 40320
+# How far ahead a repeating task's next instance is looked for: a year, then ten, then 400 (every
+# weekday on every day of the Gregorian calendar, eg: the 29th of February on a Monday).
+NEXT_INSTANCE_DAYS = (366, 3660, 146097)
 
 
 class TaskInputError(ValueError):
@@ -267,9 +270,9 @@ def due_related(alarm):
 
 def next_instance(todo):
 	"""A repeating task's next instance after its current one: (DTSTART, DUE), each maybe None; None
-	when it doesn't repeat or the series ends. TaskInputError when the next instance can't be found
-	(the rule can't be expanded): the task isn't completed for good then, which would end the series
-	for every client."""
+	when it doesn't repeat or the series ends (COUNT, UNTIL). TaskInputError when the next instance
+	can't be found (the rule can't be expanded, or gives no date though it has no end): the task
+	isn't completed for good then, which would end the series for every client."""
 	if todo.get("RRULE") is None:
 		return None
 	start = icsjson.get_event_date(todo, "DTSTART")
@@ -288,14 +291,22 @@ def next_instance(todo):
 	cal = Calendar()
 	cal.add_component(probe)
 	step = datetime.timedelta(seconds=1) if isinstance(base, datetime.datetime) else datetime.timedelta(days=1)
+	key = lambda o: icsjson.ensure_date_time(icsjson.get_event_date(o, "DTSTART") or icsjson.get_event_date(o, "DUE"))
+	later = []
 	try:
-		found = list(rie.of(cal, components=["VTODO"]).between(base + step, base + datetime.timedelta(days=3660)))
-		key = lambda o: icsjson.ensure_date_time(icsjson.get_event_date(o, "DTSTART") or icsjson.get_event_date(o, "DUE"))
-		later = [o for o in found if key(o) > icsjson.ensure_date_time(base)]
+		for days in NEXT_INSTANCE_DAYS:
+			found = list(rie.of(cal, components=["VTODO"]).between(base + step, base + datetime.timedelta(days=days)))
+			later = [o for o in found if key(o) > icsjson.ensure_date_time(base)]
+			if later:
+				break
 	except Exception as error:  # eg: UNTIL a date while the start is a date-time
 		raise TaskInputError("Can't find the next date of this repeating task: {}".format(error))
 	if not later:
-		return None  # The series ended (COUNT, UNTIL): done
+		rule = todo.get("RRULE")
+		if rule.get("COUNT") or rule.get("UNTIL"):
+			return None  # The series ended (COUNT, UNTIL): done
+		# A rule without an end that gives no date (eg: the 30th of February): not ended.
+		raise TaskInputError("Can't find the next date of this repeating task")
 	first = min(later, key=key)
 	if start is None:
 		return None, icsjson.get_event_date(first, "DTSTART")

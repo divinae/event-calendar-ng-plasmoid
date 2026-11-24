@@ -201,6 +201,25 @@ class WriteTests(unittest.TestCase):
 		todo = todo_of(body)
 		self.assertEqual((str(todo["STATUS"]), todo["DUE"].dt), ("COMPLETED", datetime.date(2026, 11, 22)), "its last instance")
 
+	def test_repeating_task_years_apart_moves_on(self):
+		# Every 11 years: further than the first windows looked at, not the series' end.
+		rare = vcal("BEGIN:VTODO\r\nUID:r-4\r\nDTSTAMP:20261101T000000Z\r\nSUMMARY:Renew passport\r\n"
+			"DUE;VALUE=DATE:20261120\r\nRRULE:FREQ=YEARLY;INTERVAL=11\r\nEND:VTODO\r\n")
+		_, body = vtodo.build_updated_task(rare, {"status": "completed"}, STAMP)
+		todo = todo_of(body)
+		self.assertEqual((str(todo["STATUS"]), todo["DUE"].dt), ("NEEDS-ACTION", datetime.date(2037, 11, 20)))
+		# Its next one past UNTIL: the series ends.
+		until = rare.replace("INTERVAL=11", "INTERVAL=11;UNTIL=20300101")
+		_, body = vtodo.build_updated_task(until, {"status": "completed"}, STAMP)
+		self.assertEqual(str(todo_of(body)["STATUS"]), "COMPLETED")
+
+	def test_repeating_task_without_a_next_date_stays_open(self):
+		# No end, but no date either (the 30th of February): not completed for good.
+		never = vcal("BEGIN:VTODO\r\nUID:r-5\r\nSUMMARY:x\r\nDUE;VALUE=DATE:20261120\r\n"
+			"RRULE:FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=30\r\nEND:VTODO\r\n")
+		with self.assertRaises(vtodo.TaskInputError):
+			vtodo.build_updated_task(never, {"status": "completed"}, STAMP)
+
 	def test_repeating_task_that_cant_be_expanded_stays_open(self):
 		weekly = vcal("BEGIN:VTODO\r\nUID:r-3\r\nSUMMARY:x\r\nDUE;VALUE=DATE:20261120\r\nRRULE:FREQ=WEEKLY\r\nEND:VTODO\r\n")
 		broken = mock.Mock()
