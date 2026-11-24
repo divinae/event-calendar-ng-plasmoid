@@ -18,6 +18,7 @@ assert.deepStrictEqual(plain(R.split(20160)), { value: 2, unit: 'weeks' })
 assert.deepStrictEqual(plain(R.split(0)), { value: 0, unit: 'minutes' })
 assert.strictEqual(R.toMinutes({ value: 3, unit: 'days' }), 4320)
 assert.strictEqual(R.toMinutes({ value: 9, unit: 'weeks' }), 40320, 'capped at 4 weeks')
+assert.strictEqual(R.toMinutes(R.split(50400), Infinity), 50400, 'uncapped (a CalDAV task\'s alarm 5 weeks before) as it was read')
 
 assert.deepStrictEqual(plain(R.fromEvent({})), { custom: false, items: [], others: [] }, 'no reminders: default')
 assert.deepStrictEqual(plain(R.fromEvent({ reminders: { useDefault: true } })).custom, false)

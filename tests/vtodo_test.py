@@ -243,6 +243,9 @@ class WriteTests(unittest.TestCase):
 			[("DISPLAY", datetime.timedelta(minutes=-10)), ("EMAIL", datetime.timedelta(days=-1))])
 		_, body = vtodo.build_updated_task(FULL, {"reminders": []}, STAMP)
 		self.assertEqual([str(a["ACTION"]) for a in todo_of(body).walk("VALARM")], ["EMAIL"])
+		# More than Google's 5, and further ahead than its 4 weeks (set in other apps).
+		_, body = vtodo.build_updated_task(FULL, {"reminders": [0, 5, 10, 15, 30, 60, 50400]}, STAMP)
+		self.assertEqual(vtodo.resource_task(body, NOW)["reminders"], [50400, 60, 30, 15, 10, 5, 0])
 
 	def test_parent_priority_and_validation(self):
 		_, body = vtodo.build_updated_task(FULL, {"parentId": "", "priority": 0}, STAMP)
@@ -250,7 +253,7 @@ class WriteTests(unittest.TestCase):
 		self.assertNotIn("RELATED-TO", todo)
 		self.assertNotIn("PRIORITY", todo)
 		for bad in ({"due": "tomorrow"}, {"dueTime": "25:00"}, {"priority": 2}, {"status": "done"}, {"reminders": [1.5]},
-				{"reminders": list(range(6))}, {"title": 5}, {"timeZone": "Mars/Base", "due": "2026-11-20", "dueTime": "10:00"},
+				{"reminders": list(range(51))}, {"reminders": [366 * 1440 + 1]}, {"title": 5}, {"timeZone": "Mars/Base", "due": "2026-11-20", "dueTime": "10:00"},
 				{"repeatRule": "RRULE:FREQ=SOMETIMES"}):
 			with self.assertRaises(vtodo.TaskInputError, msg=bad):
 				vtodo.build_updated_task(FULL, bad, STAMP)

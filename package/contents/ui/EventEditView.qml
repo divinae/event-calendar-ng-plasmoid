@@ -100,6 +100,12 @@ Rectangle {
 		list.splice(index, 1)
 		taskSubtasks = list
 	}
+	// The reminders before the due time in minutes: a CalDAV task's as far ahead as they are (an
+	// alarm set elsewhere 5 weeks before isn't changed by editing the title), others up to 4 weeks.
+	function taskReminderMinutes() {
+		var max = taskCaps.remindersAsSet ? Infinity : undefined
+		return reminderItems.map(function(item) { return Reminders.toMinutes(item, max) })
+	}
 	// The task's fields as the form has them, for Tasks.editorChanges.
 	function taskForm(title) {
 		var dueDay = taskHasDue ? Shared.localeDateString(taskDue) : ''
@@ -110,7 +116,7 @@ Rectangle {
 			// Data, not display: always "HH:mm" in ASCII digits (Qt.formatTime: the C locale).
 			dueTime: taskTimed ? Qt.formatTime(taskTime, "HH:mm") : '',
 			priority: taskPriority,
-			reminders: reminderItems.map(Reminders.toMinutes).concat(taskRemindersAfter),
+			reminders: taskReminderMinutes().concat(taskRemindersAfter),
 			// A checklist item typed but not added yet (no Enter) counts too.
 			subtasks: taskSubtasks.concat(newSubtaskField.text.trim() ? [{ id: "", title: newSubtaskField.text, done: false }] : []),
 		}

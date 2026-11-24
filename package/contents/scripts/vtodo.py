@@ -19,8 +19,9 @@ from icalendar import Alarm, Calendar, Todo
 import icsjson
 
 COMPLETED_DAYS = 30  # Done tasks shown: completed in the last 30 days (as Tasks.COMPLETED_DAYS)
-MAX_REMINDERS = 5
-MAX_REMINDER_MINUTES = 40320
+# As many and as far ahead as other apps set them (as caldav.py's for events), not Google's 5 and 4 weeks.
+MAX_REMINDERS = 50
+MAX_REMINDER_MINUTES = 366 * 1440
 # How far ahead a repeating task's next instance is looked for: a year, then ten, then 400 (every
 # weekday on every day of the Gregorian calendar, eg: the 29th of February on a Monday).
 NEXT_INSTANCE_DAYS = (366, 3660, 146097)

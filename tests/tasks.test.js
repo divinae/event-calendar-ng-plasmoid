@@ -665,9 +665,9 @@ same(T.subtaskProgress(task({ subtasks: [{ id: 'a', done: true }, { id: 'b' }, n
 same(T.subtaskProgress(task({})), { done: 0, total: 0 })
 
 // capabilities: TickTick has them all, Google none.
-same(T.capabilities('TickTick'), { dueTime: true, priority: true, repeat: true, reminders: true, subtasks: true })
-same(T.capabilities('CalDAVTasks'), { dueTime: true, priority: true, repeat: false, reminders: true, subtasks: false })
-same(T.capabilities('GoogleTasks'), { dueTime: false, priority: false, repeat: false, reminders: false, subtasks: false })
+same(T.capabilities('TickTick'), { dueTime: true, priority: true, repeat: true, reminders: true, subtasks: true, remindersAsSet: false })
+same(T.capabilities('CalDAVTasks'), { dueTime: true, priority: true, repeat: false, reminders: true, subtasks: false, remindersAsSet: true })
+same(T.capabilities('GoogleTasks'), { dueTime: false, priority: false, repeat: false, reminders: false, subtasks: false, remindersAsSet: false })
 
 // Subtasks in the rows: right under their parent, indented.
 {
@@ -742,6 +742,11 @@ same(T.capabilities('GoogleTasks'), { dueTime: false, priority: false, repeat: f
 	const unchanged = { title: 'Buy milk', notes: 'n', dueDay: '2026-10-28', dueTime: '09:30', priority: 3, reminders: [15],
 		subtasks: [{ id: 'a', title: 'Oat', done: false }] }
 	same(T.editorChanges(item, unchanged, all), {}, 'nothing changed (repeat left out: not touched)')
+	// A CalDAV task's 7 reminders, one 5 weeks before (set in another app): only the title changed.
+	const caldav = T.capabilities('CalDAVTasks')
+	const many = task({ title: 'Renew', summary: 'Renew', due: '2026-10-28T00:00:00.000Z', reminders: [50400, 60, 30, 15, 10, 5, 0] })
+	same(T.editorChanges(many, { title: 'Renew passport', dueDay: '2026-10-28', reminders: [50400, 60, 30, 15, 10, 5, 0] }, caldav),
+		{ title: 'Renew passport' }, 'the reminders as they were: not sent')
 	same(T.editorChanges(item, Object.assign({}, unchanged, { dueTime: '' }), all), { dueTime: '' }, 'all-day now')
 	same(T.editorChanges(item, Object.assign({}, unchanged, { dueDay: '2026-10-29' }), all), { dueDay: '2026-10-29' }, 'day only: keeps its time')
 	same(T.editorChanges(item, Object.assign({}, unchanged, { repeatRule: '' }), all), { repeatRule: '' }, 'no repeat')
