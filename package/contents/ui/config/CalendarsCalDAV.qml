@@ -353,7 +353,7 @@ ConfigSection {
 			}
 		}
 		FormCard.FormSectionText {
-			text: i18n("Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now.")
+			text: i18n("Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring.")
 		}
 	}
 }

@@ -8,6 +8,7 @@ msgstr ""
 "Project-Id-Version: eventcalendar\n"
 "Report-Msgid-Bugs-To: https://github.com/divinae/plasma-applet-eventcalendar\n"
 "POT-Creation-Date: 2026-11-15 19:16+0100\n"
+"POT-Creation-Date: 2026-11-15 14:39+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: yamato kobayashi <Kb_yamato@protonmail.com>\n"
 "Language-Team: \n"
@@ -459,8 +460,8 @@ msgid "Plain http works only for a server on your own network; the password isn'
 msgstr "暗号化されていない http は自分のネットワーク内のサーバーでのみ使えます。パスワードは途中で暗号化されません。"
 
 #: ../contents/ui/config/CalendarsCalDAV.qml
-msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now."
-msgstr "Nextcloud、Fastmail、iCloud (アプリ用パスワードを使用)、Radicale、Baïkal など。パスワードはシステムのキーリングに保存されます。繰り返しの予定は表示されますが、今のところ変更はそれぞれのアプリでのみ行えます。"
+msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring."
+msgstr "Nextcloud、Fastmail、iCloud (アプリ用パスワードを使用)、Radicale、Baïkal など。パスワードはシステムのキーリングに保存されます。"
 
 #: ../contents/ui/config/CalendarsGeneral.qml
 msgid "Import Events from a File…"
@@ -4361,6 +4362,9 @@ msgstr "今日はこれ以上予定がありません"
 msgctxt "%1 = Home, Office, ..."
 msgid "Working location: %1"
 msgstr "勤務場所: %1"
+
+#~ msgid "Nextcloud, Fastmail, iCloud (with an app password), Radicale, Baïkal and others. The password is kept in the system keyring. Repeating events are shown, but changed only in their own app for now."
+#~ msgstr "Nextcloud、Fastmail、iCloud (アプリ用パスワードを使用)、Radicale、Baïkal など。パスワードはシステムのキーリングに保存されます。繰り返しの予定は表示されますが、今のところ変更はそれぞれのアプリでのみ行えます。"
 
 #~ msgctxt "event time on the hour (24 hour clock)"
 #~ msgid "h"
