@@ -3,6 +3,8 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents3
 
+import "Tasks.js" as Tasks
+
 // "Completed · Undo" for a few seconds after a task was checked (Tasks view, Day view's tasks), like
 // TickTick's: a small pill, Undo unchecks it again. offer(item) shows it (a newer one replaces it);
 // the pointer on it keeps it a little longer (twice at most: it shows up under the pointer that
@@ -16,15 +18,37 @@ Rectangle {
 
 	function offer(task) {
 		item = task
+		offered = { calendarId: task.calendarId, id: task.id, due: dueKey(task) }
 		shown = true
 		extensions = 0
 		timer.restart()
+	}
+	// The checked task as it was when offered (the loaded item may be changed in place once saved).
+	property var offered: null
+	function dueKey(task) {
+		return String(task && task.due || '') + ' ' + String(task && task.dueTime || '')
+	}
+	// A repeating task (CalDAV) comes back saved still open, moved on to its next due date: Undo
+	// would only mark it not done again and leave the skipped date behind, so it isn't offered.
+	Connections {
+		target: undoBar.eventModel
+		enabled: undoBar.shown && !!undoBar.offered
+		function onEventUpdated(calendarId, eventId, data) {
+			var was = undoBar.offered
+			if (was && calendarId === was.calendarId && eventId === was.id && data
+					&& !Tasks.isDone(data) && undoBar.dueKey(data) !== was.due) {
+				undoBar.shown = false
+				undoBar.item = null
+				undoBar.offered = null
+			}
+		}
 	}
 	property int extensions: 0
 	function undo() {
 		var task = item
 		shown = false
 		item = null
+		offered = null
 		if (task && eventModel) {
 			eventModel.toggleTask(task, false)
 		}
