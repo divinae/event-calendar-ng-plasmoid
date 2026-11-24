@@ -370,6 +370,11 @@ CalendarManager {
 		}, done, options && options.failed)
 	}
 
+	// A series by an occurrence; an event just moved here (not loaded yet) by where it went.
+	function serverResource(calendarId, eventId) {
+		return seriesOccurrence(calendarId, eventId) || movedResources[calendarId + '\n' + eventId] || null
+	}
+
 	// The server copy of an event, or of a series' master by its UID. callback(err, event)
 	function fetchEvent(calendarId, eventId, callback) {
 		var event = getEvent(calendarId, eventId)
@@ -378,8 +383,7 @@ CalendarManager {
 			return
 		}
 		var calendar = getCalendar(calendarId)
-		// A series by an occurrence; an event just moved here (not loaded yet) by where it went.
-		var resource = seriesOccurrence(calendarId, eventId) || movedResources[calendarId + '\n' + eventId]
+		var resource = serverResource(calendarId, eventId)
 		if (!calendar || !resource) {
 			callback('fetchEvent: event not loaded', null)
 			return
@@ -403,9 +407,18 @@ CalendarManager {
 			return
 		}
 		var calendar = getCalendar(calendarId)
+		// The helper's errors are for the user; fetchEvent's own (nothing to fetch) are not.
+		var known = !!calendar && !!serverResource(calendarId, eventId)
 		fetchEvent(calendarId, eventId, function(err, series) {
 			if (err || !series || !calendar) {
-				reportError(err ? String(err) : i18n("CalDAV: %1", i18n("Unknown error")), failed)
+				var message = err && known ? String(err) : i18n("CalDAV: %1", i18n("Unknown error"))
+				reportError(message, failed)
+				// As write: done is still called (an editor's done reads the calendars again, so an
+				// event just moved here shows up before the next poll).
+				caldavManager.refresh()
+				if (done && !failed) {
+					done(message)
+				}
 				return
 			}
 			write(calendar, ['put', '--url', calendar.caldavHref, '--href', series.caldavHref,
